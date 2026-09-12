@@ -76,6 +76,10 @@ export default function DiscoverScreen() {
     setStreak(0);
   }
 
+  function openProfile(a: Athlete) {
+    router.push({ pathname: '/athlete/[id]', params: { id: String(a.id) } });
+  }
+
   const current = queue[0];
   const next = queue[1];
   const next2 = queue[2];
@@ -117,8 +121,8 @@ export default function DiscoverScreen() {
           <EmptyState onReset={resetDeck} />
         ) : (
           <>
-            {next2 ? <NextCard athlete={next2} depth={2} /> : null}
-            {next ? <NextCard athlete={next} depth={1} /> : null}
+            {next2 ? <NextCard athlete={next2} depth={2} onOpenProfile={() => openProfile(next2)} /> : null}
+            {next ? <NextCard athlete={next} depth={1} onOpenProfile={() => openProfile(next)} /> : null}
             {current ? (
               <SwipeCard
                 key={current.id}
@@ -126,6 +130,7 @@ export default function DiscoverScreen() {
                 exit={exit}
                 onSwiped={(dir) => commitSwipe(current, dir)}
                 onLike={pressLike}
+                onOpenProfile={() => openProfile(current)}
               />
             ) : null}
           </>
@@ -140,11 +145,13 @@ function SwipeCard({
   exit,
   onSwiped,
   onLike,
+  onOpenProfile,
 }: {
   athlete: Athlete;
   exit: SwipeDirection | null;
   onSwiped: (direction: SwipeDirection) => void;
   onLike: () => void;
+  onOpenProfile: () => void;
 }) {
   const pan = useRef(new Animated.ValueXY()).current;
   const enter = useRef(new Animated.Value(0)).current;
@@ -204,17 +211,24 @@ function SwipeCard({
       ]}
       {...panResponder.panHandlers}
     >
-      <PhotoSlot
-        label={athlete.name}
-        shape="rect"
-        source={ATHLETE_ACTION_PHOTOS[athlete.slotId]}
-        style={styles.cardPhoto}
-      />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`View ${athlete.name}'s profile`}
+        onPress={onOpenProfile}
+        style={({ pressed }) => [styles.cardPhoto, pressed ? styles.photoPressed : null]}
+      >
+        <PhotoSlot
+          label={athlete.name}
+          shape="rect"
+          source={ATHLETE_ACTION_PHOTOS[athlete.slotId]}
+          style={styles.cardPhoto}
+        />
+      </Pressable>
 
-      <Animated.View style={[styles.stamp, styles.likeStamp, { opacity: likeOpacity }]}>
+      <Animated.View pointerEvents="none" style={[styles.stamp, styles.likeStamp, { opacity: likeOpacity }]}>
         <Text style={[styles.stampText, { color: colors.mint, borderColor: colors.mint }]}>LIKE</Text>
       </Animated.View>
-      <Animated.View style={[styles.stamp, styles.passStamp, { opacity: passOpacity }]}>
+      <Animated.View pointerEvents="none" style={[styles.stamp, styles.passStamp, { opacity: passOpacity }]}>
         <Text style={[styles.stampText, { color: colors.ember, borderColor: colors.ember }]}>PASS</Text>
       </Animated.View>
 
@@ -248,16 +262,31 @@ function SwipeCard({
   );
 }
 
-function NextCard({ athlete, depth }: { athlete: Athlete; depth: 1 | 2 }) {
+function NextCard({
+  athlete,
+  depth,
+  onOpenProfile,
+}: {
+  athlete: Athlete;
+  depth: 1 | 2;
+  onOpenProfile: () => void;
+}) {
   const style = depth === 1 ? styles.nextCard : styles.nextCard2;
   return (
     <View style={[styles.card, style]}>
-      <PhotoSlot
-        label={athlete.name}
-        shape="rect"
-        source={ATHLETE_ACTION_PHOTOS[athlete.slotId]}
-        style={styles.cardPhoto}
-      />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`View ${athlete.name}'s profile`}
+        onPress={onOpenProfile}
+        style={({ pressed }) => [styles.cardPhoto, pressed ? styles.photoPressed : null]}
+      >
+        <PhotoSlot
+          label={athlete.name}
+          shape="rect"
+          source={ATHLETE_ACTION_PHOTOS[athlete.slotId]}
+          style={styles.cardPhoto}
+        />
+      </Pressable>
     </View>
   );
 }
@@ -325,6 +354,7 @@ const styles = StyleSheet.create({
   nextCard: { transform: [{ scale: 0.95 }, { translateY: 10 }], opacity: 0.7 },
   nextCard2: { transform: [{ scale: 0.9 }, { translateY: 20 }], opacity: 0.45 },
   cardPhoto: { width: '100%', height: '100%' },
+  photoPressed: { opacity: 0.9 },
   // Stats panel sits over the photo's lower third — the photo owns
   // the card, the panel owns the data, joined by the fade above.
   panel: {

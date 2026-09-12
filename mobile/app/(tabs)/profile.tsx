@@ -30,7 +30,7 @@ export default function ProfileScreen() {
           accessibilityRole="button"
           accessibilityLabel="Settings"
           onPress={() => router.push('/settings')}
-          style={styles.settingsBtn}
+          style={[styles.settingsBtn, { top: insets.top + 12 }]}
         >
           <Icon name="settings" size={18} color={colors.bone} />
         </Pressable>
@@ -81,7 +81,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ink },
   settingsBtn: {
     position: 'absolute',
-    top: 12,
     right: 16,
     width: 40,
     height: 40,

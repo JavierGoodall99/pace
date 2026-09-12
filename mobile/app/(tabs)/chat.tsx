@@ -63,7 +63,13 @@ export default function ChatScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ink },
-  header: { paddingHorizontal: 20, paddingBottom: 4 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+  },
   title: {
     fontFamily: fonts.display,
     fontSize: 32,

@@ -28,18 +28,35 @@ export interface Athlete {
   pace: string;
   city: string;
   bio: string;
+  weekly: number;
 }
 
 export const ATHLETES: Athlete[] = [
-  { id: 1, slotId: 'athlete-1', name: 'Lerato', age: 27, discipline: 'RUNNING', pace: '4:45/KM', city: 'Cape Town', bio: 'Sunrise road runner training for Two Oceans. Early starts, no excuses.' },
-  { id: 2, slotId: 'athlete-2', name: 'Sipho', age: 31, discipline: 'CYCLING', pace: '32 KM/H AVG', city: 'Johannesburg', bio: 'Weekend gravel grinder, weekday commuter. Always down for a coffee-stop ride.' },
-  { id: 3, slotId: 'athlete-3', name: 'Amahle', age: 26, discipline: 'TRAIL', pace: '6:10/KM', city: 'Cape Town', bio: 'Table Mountain most Saturdays. Slow and steady, big views over big pace.' },
-  { id: 4, slotId: 'athlete-4', name: 'Jacques', age: 34, discipline: 'SWIMMING', pace: '1:35/100M', city: 'Durban', bio: 'Open water through summer, pool laps the rest of the year.' },
-  { id: 5, slotId: 'athlete-5', name: 'Naledi', age: 29, discipline: 'CROSSFIT', pace: '5X / WEEK', city: 'Pretoria', bio: 'Competing at regionals next year. Coffee after WODs, always.' },
-  { id: 6, slotId: 'athlete-6', name: 'Dean', age: 30, discipline: 'CLIMBING', pace: 'V6 PROJECT', city: 'Cape Town', bio: 'Bouldering most nights, sport climbing on weekends.' },
-  { id: 7, slotId: 'athlete-7', name: 'Zanele', age: 28, discipline: 'TRIATHLON', pace: 'OLYMPIC DIST.', city: 'Johannesburg', bio: 'Swim-bike-run, in that order, always. Racing three events this season.' },
-  { id: 8, slotId: 'athlete-8', name: 'Kagiso', age: 32, discipline: 'RUNNING', pace: '3:55/KM', city: 'Pretoria', bio: 'Track sessions Tuesdays, long run Sundays. Chasing a sub-3 marathon.' },
+  { id: 1, slotId: 'athlete-1', name: 'Lerato', age: 27, discipline: 'RUNNING', pace: '4:45/KM', city: 'Cape Town', bio: 'Sunrise road runner training for Two Oceans. Early starts, no excuses.', weekly: 5 },
+  { id: 2, slotId: 'athlete-2', name: 'Sipho', age: 31, discipline: 'CYCLING', pace: '32 KM/H AVG', city: 'Johannesburg', bio: 'Weekend gravel grinder, weekday commuter. Always down for a coffee-stop ride.', weekly: 4 },
+  { id: 3, slotId: 'athlete-3', name: 'Amahle', age: 26, discipline: 'TRAIL', pace: '6:10/KM', city: 'Cape Town', bio: 'Table Mountain most Saturdays. Slow and steady, big views over big pace.', weekly: 3 },
+  { id: 4, slotId: 'athlete-4', name: 'Jacques', age: 34, discipline: 'SWIMMING', pace: '1:35/100M', city: 'Durban', bio: 'Open water through summer, pool laps the rest of the year.', weekly: 5 },
+  { id: 5, slotId: 'athlete-5', name: 'Naledi', age: 29, discipline: 'CROSSFIT', pace: '5X / WEEK', city: 'Pretoria', bio: 'Competing at regionals next year. Coffee after WODs, always.', weekly: 5 },
+  { id: 6, slotId: 'athlete-6', name: 'Dean', age: 30, discipline: 'CLIMBING', pace: 'V6 PROJECT', city: 'Cape Town', bio: 'Bouldering most nights, sport climbing on weekends.', weekly: 4 },
+  { id: 7, slotId: 'athlete-7', name: 'Zanele', age: 28, discipline: 'TRIATHLON', pace: 'OLYMPIC DIST.', city: 'Johannesburg', bio: 'Swim-bike-run, in that order, always. Racing three events this season.', weekly: 3 },
+  { id: 8, slotId: 'athlete-8', name: 'Kagiso', age: 32, discipline: 'RUNNING', pace: '3:55/KM', city: 'Pretoria', bio: 'Track sessions Tuesdays, long run Sundays. Chasing a sub-3 marathon.', weekly: 6 },
 ];
+
+// Companion activities that round out a one-line profile to the
+// multi-activity card the design calls for (3 tiles, as in the mock).
+export const SECONDARY_TAGS: Record<Discipline, [Discipline, Discipline]> = {
+  RUNNING: ['TRAIL', 'CYCLING'],
+  CYCLING: ['RUNNING', 'TRAIL'],
+  TRAIL: ['RUNNING', 'CLIMBING'],
+  SWIMMING: ['TRIATHLON', 'RUNNING'],
+  CROSSFIT: ['CLIMBING', 'RUNNING'],
+  CLIMBING: ['TRAIL', 'CROSSFIT'],
+  TRIATHLON: ['SWIMMING', 'CYCLING'],
+};
+
+export function tagsForDiscipline(d: Discipline): Discipline[] {
+  return [d, ...SECONDARY_TAGS[d]];
+}
 
 export function athleteById(id: number): Athlete | undefined {
   return ATHLETES.find((a) => a.id === id);
@@ -92,18 +109,17 @@ export interface FeedItem {
   who: string;
   time: string;
   type: string;
-  icon: 'activity' | 'zap' | 'map' | 'repeat';
   stat: string;
   kudos: number;
   hasPhoto: boolean;
 }
 
 export const FEED_ITEMS: FeedItem[] = [
-  { id: 1, athleteId: 1, who: 'Lerato', time: '2H AGO', type: 'RUN', icon: 'activity', stat: '12.4km · 4:38/km · 54:02', kudos: 14, hasPhoto: false },
-  { id: 2, athleteId: 5, who: 'You', time: '5H AGO', type: 'CROSSFIT', icon: 'zap', stat: '5 rounds · 38 reps · new PB on cleans', kudos: 22, hasPhoto: true },
-  { id: 3, athleteId: 6, who: 'Dean', time: '8H AGO', type: 'CLIMB', icon: 'map', stat: 'V5 flash, 3 attempts', kudos: 9, hasPhoto: false },
-  { id: 4, athleteId: 7, who: 'Zanele', time: '1D AGO', type: 'TRI BRICK', icon: 'repeat', stat: '1.5km swim + 40km ride + 10km run', kudos: 31, hasPhoto: true },
-  { id: 5, athleteId: 8, who: 'Kagiso', time: '2D AGO', type: 'RUN', icon: 'activity', stat: '21.1km · 3:58/km', kudos: 47, hasPhoto: false },
+  { id: 1, athleteId: 1, who: 'Lerato', time: '2H AGO', type: 'RUN', stat: '12.4km · 4:38/km · 54:02', kudos: 14, hasPhoto: false },
+  { id: 2, athleteId: 5, who: 'You', time: '5H AGO', type: 'CROSSFIT', stat: '5 rounds · 38 reps · new PB on cleans', kudos: 22, hasPhoto: true },
+  { id: 3, athleteId: 6, who: 'Dean', time: '8H AGO', type: 'CLIMB', stat: 'V5 flash, 3 attempts', kudos: 9, hasPhoto: false },
+  { id: 4, athleteId: 7, who: 'Zanele', time: '1D AGO', type: 'TRI BRICK', stat: '1.5km swim + 40km ride + 10km run', kudos: 31, hasPhoto: true },
+  { id: 5, athleteId: 8, who: 'Kagiso', time: '2D AGO', type: 'RUN', stat: '21.1km · 3:58/km', kudos: 47, hasPhoto: false },
 ];
 
 export interface Session {

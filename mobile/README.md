@@ -34,9 +34,10 @@ src/
   theme/tokens.ts          colors, fonts, spacing, radii
 ```
 
-`PhotoSlot` stands in for the mockup's `<image-slot>` placeholders — it
-renders a tile with the subject's initial. Swap it for real `<Image>`s
-once photo assets/URLs are available.
+`PhotoSlot` stands in for the mockup's `<image-slot>` placeholders. It
+renders a real `<Image>` when given a `source` (see `src/data/photos.ts`,
+which maps mock athletes to the stock photos under `public/images`),
+falling back to a tile with the subject's initial otherwise.
 
 ## Run it
 

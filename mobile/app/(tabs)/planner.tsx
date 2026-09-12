@@ -11,6 +11,7 @@ import {
   PLANNER_PARTNER_IDS,
   SESSIONS,
 } from '../../src/data/mockData';
+import { ATHLETE_PHOTOS } from '../../src/data/photos';
 import { colors, fonts } from '../../src/theme/tokens';
 
 export default function PlannerScreen() {
@@ -84,6 +85,7 @@ export default function PlannerScreen() {
                   <PhotoSlot
                     label={a.name}
                     shape="circle"
+                    source={ATHLETE_PHOTOS[a.slotId]}
                     style={[
                       styles.partnerAvatar,
                       { borderWidth: 2, borderColor: active ? colors.ember : colors.line },

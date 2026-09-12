@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { athleteById, FEED_ITEMS } from '../../src/data/mockData';
+import { ACTIVITY_PHOTO, ATHLETE_PHOTOS, ME_AVATAR } from '../../src/data/photos';
 import { colors, fonts } from '../../src/theme/tokens';
 
 export default function FeedScreen() {
@@ -24,7 +25,12 @@ export default function FeedScreen() {
           return (
             <View key={f.id} style={styles.card}>
               <View style={styles.cardHead}>
-                <PhotoSlot label={f.who} shape="circle" style={styles.avatar} />
+                <PhotoSlot
+                  label={f.who}
+                  shape="circle"
+                  source={who ? ATHLETE_PHOTOS[who.slotId] : ME_AVATAR}
+                  style={styles.avatar}
+                />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.who}>{f.who}</Text>
                   <Text style={styles.time}>{f.time}</Text>
@@ -34,7 +40,12 @@ export default function FeedScreen() {
               </View>
               <Text style={styles.stat}>{f.stat}</Text>
               {f.hasPhoto ? (
-                <PhotoSlot label="Activity photo" shape="rect" style={styles.photo} />
+                <PhotoSlot
+                  label="Activity photo"
+                  shape="rect"
+                  source={ACTIVITY_PHOTO}
+                  style={styles.photo}
+                />
               ) : null}
               <View style={styles.kudosRow}>
                 <Icon name="heart" size={14} color={colors.fog} />

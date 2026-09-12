@@ -5,6 +5,7 @@ import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { IconButton, Input } from '../../src/components/ui';
 import { athleteById, THREAD_MESSAGES } from '../../src/data/mockData';
+import { ATHLETE_PHOTOS } from '../../src/data/photos';
 import { colors, fonts } from '../../src/theme/tokens';
 
 export default function ThreadScreen() {
@@ -28,7 +29,12 @@ export default function ThreadScreen() {
         <IconButton onPress={() => router.back()}>
           <Icon name="chevron-left" size={14} color={colors.bone} />
         </IconButton>
-        <PhotoSlot label={athlete.name} shape="circle" style={styles.avatar} />
+        <PhotoSlot
+          label={athlete.name}
+          shape="circle"
+          source={ATHLETE_PHOTOS[athlete.slotId]}
+          style={styles.avatar}
+        />
         <Text style={styles.name}>{athlete.name}</Text>
       </View>
 

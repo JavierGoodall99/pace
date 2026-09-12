@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { athleteById, CHAT_THREADS } from '../../src/data/mockData';
+import { ATHLETE_PHOTOS } from '../../src/data/photos';
 import { colors, fonts } from '../../src/theme/tokens';
 
 export default function ChatScreen() {
@@ -30,7 +31,12 @@ export default function ChatScreen() {
                 router.push({ pathname: '/thread/[athleteId]', params: { athleteId: String(a.id) } })
               }
             >
-              <PhotoSlot label={a.name} shape="circle" style={styles.avatar} />
+              <PhotoSlot
+                label={a.name}
+                shape="circle"
+                source={ATHLETE_PHOTOS[a.slotId]}
+                style={styles.avatar}
+              />
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={styles.name}>{a.name}</Text>
                 <Text style={styles.lastMsg} numberOfLines={1}>

@@ -15,6 +15,7 @@ import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { Badge, Chip } from '../../src/components/ui';
 import { ATHLETES, Athlete, DISCIPLINES, Discipline, MATCH_IDS } from '../../src/data/mockData';
+import { ATHLETE_ACTION_PHOTOS } from '../../src/data/photos';
 import { colors, fonts } from '../../src/theme/tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -279,7 +280,12 @@ function SwipeCard({
       ]}
       {...panResponder.panHandlers}
     >
-      <PhotoSlot label={athlete.name} shape="rect" style={styles.cardPhoto} />
+      <PhotoSlot
+        label={athlete.name}
+        shape="rect"
+        source={ATHLETE_ACTION_PHOTOS[athlete.slotId]}
+        style={styles.cardPhoto}
+      />
       <View style={styles.cardGradient} pointerEvents="none" />
 
       <View style={styles.verifiedRow} pointerEvents="none">
@@ -320,7 +326,12 @@ function NextCard({ athlete, depth }: { athlete: Athlete; depth: 1 | 2 }) {
   const style = depth === 1 ? styles.nextCard : styles.nextCard2;
   return (
     <View style={[styles.card, style]}>
-      <PhotoSlot label={athlete.name} shape="rect" style={styles.cardPhoto} />
+      <PhotoSlot
+        label={athlete.name}
+        shape="rect"
+        source={ATHLETE_ACTION_PHOTOS[athlete.slotId]}
+        style={styles.cardPhoto}
+      />
     </View>
   );
 }

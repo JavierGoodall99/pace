@@ -4,6 +4,7 @@ import { buildConfettiPieces, Confetti } from '../../src/components/Confetti';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { Button } from '../../src/components/ui';
 import { athleteById } from '../../src/data/mockData';
+import { ATHLETE_PHOTOS, ME_AVATAR } from '../../src/data/photos';
 import { colors, fonts } from '../../src/theme/tokens';
 
 // Ported from the "MATCH CELEBRATION OVERLAY" in `../../Pace App.dc.html`
@@ -35,10 +36,15 @@ export default function MatchScreen() {
 
       <View style={styles.avatars}>
         <View style={[styles.ring, styles.avatarLeft]}>
-          <PhotoSlot label="You" shape="circle" style={styles.avatar} />
+          <PhotoSlot label="You" shape="circle" source={ME_AVATAR} style={styles.avatar} />
         </View>
         <View style={[styles.ring, styles.avatarRight]}>
-          <PhotoSlot label={athlete.name} shape="circle" style={styles.avatar} />
+          <PhotoSlot
+            label={athlete.name}
+            shape="circle"
+            source={ATHLETE_PHOTOS[athlete.slotId]}
+            style={styles.avatar}
+          />
         </View>
       </View>
 

@@ -5,6 +5,7 @@ import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { Badge, Button, IconButton } from '../../src/components/ui';
 import { athleteById } from '../../src/data/mockData';
+import { ATHLETE_ACTION_PHOTOS } from '../../src/data/photos';
 import { colors, fonts } from '../../src/theme/tokens';
 
 export default function AthleteDetailScreen() {
@@ -31,7 +32,12 @@ export default function AthleteDetailScreen() {
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 24 }}>
-        <PhotoSlot label={athlete.name} shape="rect" style={styles.hero} />
+        <PhotoSlot
+          label={athlete.name}
+          shape="rect"
+          source={ATHLETE_ACTION_PHOTOS[athlete.slotId]}
+          style={styles.hero}
+        />
 
         <View style={styles.body}>
           <View style={styles.nameRow}>

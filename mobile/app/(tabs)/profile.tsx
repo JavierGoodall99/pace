@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { Badge } from '../../src/components/ui';
+import { ME_AVATAR, ME_COVER, TRAINING_PHOTOS } from '../../src/data/photos';
 import { colors, fonts } from '../../src/theme/tokens';
 
 const STATS = [
@@ -18,10 +19,15 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 24 }}>
-      <PhotoSlot label="Cover photo" shape="rect" style={{ width: '100%', height: 160, marginTop: insets.top }} />
+      <PhotoSlot
+        label="Cover photo"
+        shape="rect"
+        source={ME_COVER}
+        style={{ width: '100%', height: 160, marginTop: insets.top }}
+      />
 
       <View style={styles.body}>
-        <PhotoSlot label="Naledi" shape="circle" style={styles.avatar} />
+        <PhotoSlot label="Naledi" shape="circle" source={ME_AVATAR} style={styles.avatar} />
         <Text style={styles.name}>Naledi Khumalo</Text>
         <View style={styles.verifiedRow}>
           <Icon name="shield-check" size={13} color={colors.ember} />
@@ -46,9 +52,9 @@ export default function ProfileScreen() {
 
         <Text style={styles.photosLabel}>TRAINING PHOTOS</Text>
         <View style={styles.photoGrid}>
-          <PhotoSlot label="Photo" shape="rounded" style={styles.gridPhoto} />
-          <PhotoSlot label="Photo" shape="rounded" style={styles.gridPhoto} />
-          <PhotoSlot label="Photo" shape="rounded" style={styles.gridPhoto} />
+          <PhotoSlot label="Photo" shape="rounded" source={TRAINING_PHOTOS[0]} style={styles.gridPhoto} />
+          <PhotoSlot label="Photo" shape="rounded" source={TRAINING_PHOTOS[1]} style={styles.gridPhoto} />
+          <PhotoSlot label="Photo" shape="rounded" source={TRAINING_PHOTOS[2]} style={styles.gridPhoto} />
         </View>
 
         {__DEV__ ? (

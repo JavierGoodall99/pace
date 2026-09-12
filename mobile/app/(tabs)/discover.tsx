@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -21,7 +21,6 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.28;
 const SWIPE_OUT_DURATION = 240;
 const CARD_WIDTH = SCREEN_WIDTH - 40;
-const CARD_HEIGHT = CARD_WIDTH * 1.3;
 
 type SwipeDirection = 'like' | 'pass';
 
@@ -33,6 +32,9 @@ export default function DiscoverScreen() {
   const [swiped, setSwiped] = useState<Record<number, SwipeDirection>>({});
   const [history, setHistory] = useState<number[]>([]);
   const [streak, setStreak] = useState(0);
+  // When an action button is pressed, signal the top card to animate
+  // out the same way a manual swipe does instead of vanishing instantly.
+  const [exit, setExit] = useState<SwipeDirection | null>(null);
 
   const queue = useMemo(
     () =>
@@ -47,6 +49,7 @@ export default function DiscoverScreen() {
   }
 
   function commitSwipe(athlete: Athlete, direction: SwipeDirection) {
+    setExit(null);
     setSwiped((prev) => ({ ...prev, [athlete.id]: direction }));
     setHistory((prev) => [...prev, athlete.id]);
     if (direction === 'like') {
@@ -80,7 +83,16 @@ export default function DiscoverScreen() {
 
   const current = queue[0];
   const next = queue[1];
+  const next2 = queue[2];
   const exhausted = !current;
+
+  function pressLike() {
+    if (current) setExit('like');
+  }
+
+  function pressPass() {
+    if (current) setExit('pass');
+  }
 
   return (
     <View style={styles.screen}>
@@ -114,11 +126,13 @@ export default function DiscoverScreen() {
           <EmptyState onReset={resetDeck} />
         ) : (
           <>
-            {next ? <NextCard athlete={next} /> : null}
+            {next2 ? <NextCard athlete={next2} depth={2} /> : null}
+            {next ? <NextCard athlete={next} depth={1} /> : null}
             {current ? (
               <SwipeCard
                 key={current.id}
                 athlete={current}
+                exit={exit}
                 onSwiped={(dir) => commitSwipe(current, dir)}
                 onViewProfile={() =>
                   router.push({ pathname: '/athlete/[id]', params: { id: String(current.id) } })
@@ -130,95 +144,95 @@ export default function DiscoverScreen() {
       </View>
 
       {!exhausted && current ? (
-        <View style={[styles.dock, { marginBottom: Math.max(insets.bottom, 12) }]}>
-          <DockButton diameter={40} label="UNDO" labelColor={colors.fog} onPress={undo} disabled={!history.length}>
-            <Icon name="repeat" size={15} color={colors.fog} />
-          </DockButton>
-
-          <DockButton diameter={58} label="PASS" labelColor={colors.fog} onPress={() => commitSwipe(current, 'pass')} style={styles.passCircle}>
-            <Icon name="x" size={22} color={colors.bone} />
-          </DockButton>
-
-          <View style={styles.likeCol}>
-            <View style={styles.likeRing}>
-              <Pressable
-                style={styles.likeCircle}
-                onPress={() => commitSwipe(current, 'like')}
-                hitSlop={4}
-              >
-                <Icon name="heart" size={26} color={colors.ink} />
-              </Pressable>
-            </View>
-            <Text style={[styles.dockLabel, { color: colors.ember }]}>INTERESTED</Text>
-          </View>
+        <View style={[styles.actionRow, { marginBottom: Math.max(insets.bottom, 14) }]}>
+          <ActionCircle
+            diameter={44}
+            accessibilityLabel="Undo"
+            disabled={!history.length}
+            onPress={undo}
+          >
+            <Icon name="repeat" size={16} color={colors.fog} />
+          </ActionCircle>
+          <ActionCircle diameter={50} accessibilityLabel="Pass" onPress={pressPass}>
+            <Icon name="x" size={24} color={colors.bone} />
+          </ActionCircle>
+          <ActionCircle diameter={50} accessibilityLabel="Like" tone="accent" onPress={pressLike}>
+            <Icon name="heart" size={24} color={colors.ink} />
+          </ActionCircle>
         </View>
       ) : null}
     </View>
   );
 }
 
-function DockButton({
+// The action cluster is a bare row of standard-size circles floating
+// under the card — no panel, no labels. The gesture is the interface;
+// the buttons are just affordances for it, with the ember-filled like
+// carrying the only emphasis.
+function ActionCircle({
   diameter,
-  label,
-  labelColor,
+  tone = 'neutral',
+  accessibilityLabel,
   onPress,
   disabled,
-  style,
   children,
 }: {
   diameter: number;
-  label: string;
-  labelColor: string;
+  tone?: 'neutral' | 'accent';
+  accessibilityLabel: string;
   onPress: () => void;
   disabled?: boolean;
-  style?: object;
   children: React.ReactNode;
 }) {
+  const accent = tone === 'accent';
   return (
-    <View style={styles.dockCol}>
-      <Pressable
-        onPress={disabled ? undefined : onPress}
-        style={[
-          styles.dockCircle,
-          { width: diameter, height: diameter, borderRadius: diameter / 2, opacity: disabled ? 0.35 : 1 },
-          style,
-        ]}
-      >
-        {children}
-      </Pressable>
-      <Text style={[styles.dockLabel, { color: labelColor }]}>{label}</Text>
-    </View>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      onPress={disabled ? undefined : onPress}
+      style={({ pressed }) => [
+        styles.actionCircle,
+        {
+          width: diameter,
+          height: diameter,
+          borderRadius: diameter / 2,
+          backgroundColor: accent ? colors.ember : colors.ash,
+          borderWidth: accent ? 0 : 1,
+          borderColor: colors.line,
+          opacity: disabled ? 0.35 : 1,
+        },
+        accent ? styles.actionAccent : styles.actionNeutral,
+        pressed && !disabled ? styles.actionPressed : null,
+      ]}
+    >
+      {children}
+    </Pressable>
   );
 }
 
 function SwipeCard({
   athlete,
+  exit,
   onSwiped,
   onViewProfile,
 }: {
   athlete: Athlete;
+  exit: SwipeDirection | null;
   onSwiped: (direction: SwipeDirection) => void;
   onViewProfile: () => void;
 }) {
   const pan = useRef(new Animated.ValueXY()).current;
+  const enter = useRef(new Animated.Value(0)).current;
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 6 || Math.abs(gesture.dy) > 6,
-      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
-      onPanResponderRelease: (_, gesture) => {
-        if (gesture.dx > SWIPE_THRESHOLD) {
-          forceSwipe('like');
-        } else if (gesture.dx < -SWIPE_THRESHOLD) {
-          forceSwipe('pass');
-        } else {
-          resetPosition();
-        }
-      },
-    })
-  ).current;
+  useEffect(() => {
+    Animated.timing(enter, { toValue: 1, duration: 210, useNativeDriver: false }).start();
+  }, [enter]);
 
-  function forceSwipe(direction: SwipeDirection) {
+  useEffect(() => {
+    if (exit) forceSwipeFromRef(exit);
+  }, [exit]);
+
+  function forceSwipeFromRef(direction: SwipeDirection) {
     const x = direction === 'like' ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5;
     Animated.timing(pan, {
       toValue: { x, y: 0 },
@@ -227,22 +241,41 @@ function SwipeCard({
     }).start(() => onSwiped(direction));
   }
 
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 6 || Math.abs(gesture.dy) > 6,
+      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dx > SWIPE_THRESHOLD) {
+          forceSwipeFromRef('like');
+        } else if (gesture.dx < -SWIPE_THRESHOLD) {
+          forceSwipeFromRef('pass');
+        } else {
+          resetPosition();
+        }
+      },
+    })
+  ).current;
+
   function resetPosition() {
     Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 6, useNativeDriver: false }).start();
   }
 
   const rotate = pan.x.interpolate({
     inputRange: [-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
-    outputRange: ['-12deg', '0deg', '12deg'],
+    outputRange: ['-14deg', '0deg', '14deg'],
   });
   const likeOpacity = pan.x.interpolate({ inputRange: [20, SWIPE_THRESHOLD], outputRange: [0, 1], extrapolate: 'clamp' });
   const passOpacity = pan.x.interpolate({ inputRange: [-SWIPE_THRESHOLD, -20], outputRange: [1, 0], extrapolate: 'clamp' });
+  const enterSlide = enter.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
+  const enterScale = enter.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] });
+  const translateY = Animated.add(pan.y, enterSlide);
 
   return (
     <Animated.View
       style={[
         styles.card,
-        { transform: [{ translateX: pan.x }, { translateY: pan.y }, { rotate }] },
+        { transform: [{ translateX: pan.x }, { translateY }, { rotate }, { scale: enterScale }] },
       ]}
       {...panResponder.panHandlers}
     >
@@ -268,20 +301,25 @@ function SwipeCard({
         <Text style={styles.cardMeta}>
           {athlete.pace} · {athlete.city}
         </Text>
-        <View style={{ marginTop: 10, flexDirection: 'row' }}>
+        <Text style={styles.cardBio} numberOfLines={2}>
+          {athlete.bio}
+        </Text>
+        <View style={styles.cardFooter}>
           <Badge tone="accent">{athlete.discipline}</Badge>
+          <Pressable onPress={onViewProfile} hitSlop={8} style={styles.viewProfileRow}>
+            <Text style={styles.viewProfileText}>VIEW PROFILE</Text>
+            <Icon name="arrow-right" size={12} color={colors.ember} />
+          </Pressable>
         </View>
-        <Pressable onPress={onViewProfile} style={styles.viewProfileRow} hitSlop={8}>
-          <Text style={styles.viewProfileText}>VIEW PROFILE</Text>
-        </Pressable>
       </View>
     </Animated.View>
   );
 }
 
-function NextCard({ athlete }: { athlete: Athlete }) {
+function NextCard({ athlete, depth }: { athlete: Athlete; depth: 1 | 2 }) {
+  const style = depth === 1 ? styles.nextCard : styles.nextCard2;
   return (
-    <View style={[styles.card, styles.nextCard]}>
+    <View style={[styles.card, style]}>
       <PhotoSlot label={athlete.name} shape="rect" style={styles.cardPhoto} />
     </View>
   );
@@ -335,30 +373,43 @@ const styles = StyleSheet.create({
   card: {
     position: 'absolute',
     width: CARD_WIDTH,
-    height: CARD_HEIGHT,
+    height: '94%',
     borderRadius: 26,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.line,
     backgroundColor: colors.ash,
+    shadowColor: '#000',
+    shadowOpacity: 0.5,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 12,
   },
   nextCard: { transform: [{ scale: 0.95 }, { translateY: 10 }], opacity: 0.7 },
+  nextCard2: { transform: [{ scale: 0.9 }, { translateY: 20 }], opacity: 0.45 },
   cardPhoto: { width: '100%', height: '100%' },
   cardGradient: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    height: '55%',
-    backgroundColor: 'rgba(10,10,13,0.55)',
+    height: '62%',
+    backgroundColor: 'rgba(10,10,13,0.62)',
   },
   verifiedRow: { position: 'absolute', top: 14, left: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
   verifiedText: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 1.5, color: colors.ember },
-  cardInfo: { position: 'absolute', left: 18, right: 18, bottom: 20 },
-  cardName: { fontFamily: fonts.display, fontSize: 26, color: colors.bone, textTransform: 'uppercase', lineHeight: 26 },
+  cardInfo: { position: 'absolute', left: 18, right: 18, bottom: 18 },
+  cardName: { fontFamily: fonts.display, fontSize: 30, color: colors.bone, textTransform: 'uppercase', lineHeight: 30 },
   cardMeta: { fontFamily: fonts.mono, fontSize: 11, color: colors.fog, marginTop: 6, letterSpacing: 0.5 },
-  viewProfileRow: { marginTop: 12 },
-  viewProfileText: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.ember, textDecorationLine: 'underline' },
+  cardBio: { fontFamily: fonts.sans, fontSize: 12.5, color: 'rgba(244,241,234,0.72)', marginTop: 8, lineHeight: 17 },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  viewProfileRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  viewProfileText: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.ember },
   stamp: {
     position: 'absolute',
     top: 28,
@@ -377,57 +428,32 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     transform: [{ rotate: '-12deg' }],
   },
-  // The action dock reads as one control cluster (a stopwatch-bezel
-  // feel, echoing the app's lap/pace vocabulary) rather than three
-  // loose floating buttons. Sizing does the hierarchy work: bottoms
-  // align so INTERESTED — the button the whole screen exists for —
-  // rises above the other two, and only it carries the ember fill.
-  dock: {
+  actionRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    gap: 22,
-    marginHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 14,
-    borderRadius: 28,
-    backgroundColor: colors.coal,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  dockCol: { alignItems: 'center', gap: 8 },
-  dockCircle: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.ash,
+    gap: 26,
+    paddingTop: 14,
   },
-  passCircle: { borderColor: colors.lineHover },
-  dockLabel: { fontFamily: fonts.mono, fontSize: 8.5, letterSpacing: 1.5 },
-  likeCol: { alignItems: 'center', gap: 8 },
-  likeRing: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    borderWidth: 2,
-    borderColor: colors.emberBorder,
+  actionCircle: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  likeCircle: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: colors.ember,
-    alignItems: 'center',
-    justifyContent: 'center',
+  actionNeutral: {
+    shadowColor: '#000',
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+  },
+  actionAccent: {
     shadowColor: colors.ember,
     shadowOpacity: 0.45,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
     elevation: 8,
   },
+  actionPressed: { transform: [{ scale: 0.9 }] },
   empty: { alignItems: 'center', paddingHorizontal: 40, gap: 10 },
   emptyTitle: { fontFamily: fonts.display, fontSize: 22, color: colors.bone, textTransform: 'uppercase', marginTop: 8 },
   emptyBody: { color: colors.fog, fontSize: 13, textAlign: 'center', lineHeight: 20 },

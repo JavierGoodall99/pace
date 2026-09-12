@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
   PanResponder,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -12,7 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
-import { Badge, Chip, IconButton } from '../../src/components/ui';
+import { Badge, Chip } from '../../src/components/ui';
 import { ATHLETES, Athlete, DISCIPLINES, Discipline, MATCH_IDS } from '../../src/data/mockData';
 import { colors, fonts } from '../../src/theme/tokens';
 
@@ -97,11 +98,16 @@ export default function DiscoverScreen() {
         </View>
       </View>
 
-      <View style={styles.chipRow}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.chipScroller}
+        contentContainerStyle={styles.chipRow}
+      >
         {DISCIPLINES.map((d) => (
           <Chip key={d} label={d} selected={filters.includes(d)} onPress={() => toggleFilter(d)} />
         ))}
-      </View>
+      </ScrollView>
 
       <View style={styles.stack}>
         {exhausted ? (
@@ -124,18 +130,63 @@ export default function DiscoverScreen() {
       </View>
 
       {!exhausted && current ? (
-        <View style={styles.actions}>
-          <IconButton size={44} onPress={undo}>
-            <Icon name="repeat" size={16} color={colors.fog} />
-          </IconButton>
-          <Pressable style={[styles.actionButton, styles.passButton]} onPress={() => commitSwipe(current, 'pass')}>
+        <View style={[styles.dock, { marginBottom: Math.max(insets.bottom, 12) }]}>
+          <DockButton diameter={40} label="UNDO" labelColor={colors.fog} onPress={undo} disabled={!history.length}>
+            <Icon name="repeat" size={15} color={colors.fog} />
+          </DockButton>
+
+          <DockButton diameter={58} label="PASS" labelColor={colors.fog} onPress={() => commitSwipe(current, 'pass')} style={styles.passCircle}>
             <Icon name="x" size={22} color={colors.bone} />
-          </Pressable>
-          <Pressable style={[styles.actionButton, styles.likeButton]} onPress={() => commitSwipe(current, 'like')}>
-            <Icon name="heart" size={26} color={colors.ember} />
-          </Pressable>
+          </DockButton>
+
+          <View style={styles.likeCol}>
+            <View style={styles.likeRing}>
+              <Pressable
+                style={styles.likeCircle}
+                onPress={() => commitSwipe(current, 'like')}
+                hitSlop={4}
+              >
+                <Icon name="heart" size={26} color={colors.ink} />
+              </Pressable>
+            </View>
+            <Text style={[styles.dockLabel, { color: colors.ember }]}>INTERESTED</Text>
+          </View>
         </View>
       ) : null}
+    </View>
+  );
+}
+
+function DockButton({
+  diameter,
+  label,
+  labelColor,
+  onPress,
+  disabled,
+  style,
+  children,
+}: {
+  diameter: number;
+  label: string;
+  labelColor: string;
+  onPress: () => void;
+  disabled?: boolean;
+  style?: object;
+  children: React.ReactNode;
+}) {
+  return (
+    <View style={styles.dockCol}>
+      <Pressable
+        onPress={disabled ? undefined : onPress}
+        style={[
+          styles.dockCircle,
+          { width: diameter, height: diameter, borderRadius: diameter / 2, opacity: disabled ? 0.35 : 1 },
+          style,
+        ]}
+      >
+        {children}
+      </Pressable>
+      <Text style={[styles.dockLabel, { color: labelColor }]}>{label}</Text>
     </View>
   );
 }
@@ -273,9 +324,9 @@ const styles = StyleSheet.create({
   streakRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   streakText: { fontFamily: fonts.mono, fontSize: 13 },
   queueLabel: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 1, color: colors.fog },
+  chipScroller: { flexGrow: 0 },
   chipRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 8,
     paddingHorizontal: 20,
     paddingVertical: 12,
@@ -326,23 +377,57 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     transform: [{ rotate: '-12deg' }],
   },
-  actions: {
+  // The action dock reads as one control cluster (a stopwatch-bezel
+  // feel, echoing the app's lap/pace vocabulary) rather than three
+  // loose floating buttons. Sizing does the hierarchy work: bottoms
+  // align so INTERESTED — the button the whole screen exists for —
+  // rises above the other two, and only it carries the ember fill.
+  dock: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     justifyContent: 'center',
-    gap: 18,
-    paddingVertical: 20,
+    gap: 22,
+    marginHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 14,
+    borderRadius: 28,
+    backgroundColor: colors.coal,
+    borderWidth: 1,
+    borderColor: colors.line,
   },
-  actionButton: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
+  dockCol: { alignItems: 'center', gap: 8 },
+  dockCircle: {
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.ash,
   },
-  passButton: { backgroundColor: colors.ash, borderColor: colors.line, width: 62, height: 62, borderRadius: 31 },
-  likeButton: { backgroundColor: colors.emberSoft, borderColor: colors.emberBorder, width: 68, height: 68, borderRadius: 34 },
+  passCircle: { borderColor: colors.lineHover },
+  dockLabel: { fontFamily: fonts.mono, fontSize: 8.5, letterSpacing: 1.5 },
+  likeCol: { alignItems: 'center', gap: 8 },
+  likeRing: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    borderWidth: 2,
+    borderColor: colors.emberBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  likeCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: colors.ember,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.ember,
+    shadowOpacity: 0.45,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
+  },
   empty: { alignItems: 'center', paddingHorizontal: 40, gap: 10 },
   emptyTitle: { fontFamily: fonts.display, fontSize: 22, color: colors.bone, textTransform: 'uppercase', marginTop: 8 },
   emptyBody: { color: colors.fog, fontSize: 13, textAlign: 'center', lineHeight: 20 },

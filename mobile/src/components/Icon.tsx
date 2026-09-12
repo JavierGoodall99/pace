@@ -13,7 +13,8 @@ export type IconName =
   | 'repeat'
   | 'map-pin'
   | 'users'
-  | 'check';
+  | 'check'
+  | 'x';
 
 interface IconProps {
   name: IconName;
@@ -109,6 +110,13 @@ export function Icon({ name, size = 20, color = '#8f8d97' }: IconProps) {
       return (
         <Svg {...common}>
           <Path d="M20 6 9 17l-5-5" />
+        </Svg>
+      );
+    case 'x':
+      return (
+        <Svg {...common}>
+          <Path d="M18 6 6 18" />
+          <Path d="m6 6 12 12" />
         </Svg>
       );
     default:

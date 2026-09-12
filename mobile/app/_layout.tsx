@@ -47,6 +47,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="athlete/[id]" options={{ presentation: 'modal' }} />
         <Stack.Screen name="thread/[athleteId]" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="match/[athleteId]" options={{ presentation: 'modal' }} />
       </Stack>
     </SafeAreaProvider>
   );

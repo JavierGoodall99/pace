@@ -13,6 +13,9 @@ export const colors = {
   lineHover: 'rgba(244,241,234,0.25)',
   emberSoft: 'rgba(255,77,46,0.08)',
   emberBorder: 'rgba(255,77,46,0.3)',
+  // "LIKE" stamp / match-celebration accent — matches the raw hex the
+  // design uses inline (not a CSS custom property in the source app).
+  mint: '#3ddc84',
 } as const;
 
 export const radius = {

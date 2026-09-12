@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { buildConfettiPieces, Confetti } from '../src/components/Confetti';
 import { Icon } from '../src/components/Icon';
 import {
   Badge,
@@ -354,21 +355,7 @@ function SyncRow({
   );
 }
 
-interface ConfettiPiece {
-  color: string;
-  left: number;
-  round: boolean;
-  duration: number;
-  delay: number;
-}
-
-const CONFETTI_PIECES: ConfettiPiece[] = CONFETTI_COLORS.map((color, i) => ({
-  color,
-  left: (i * 37) % 100,
-  round: i % 2 !== 0,
-  duration: 1.6 + (i % 4) * 0.3,
-  delay: (i % 5) * 0.12,
-}));
+const CONFETTI_PIECES = buildConfettiPieces(CONFETTI_COLORS);
 
 function LaunchStep({
   profileStrength,
@@ -386,20 +373,9 @@ function LaunchStep({
   disciplines: Discipline[];
 }) {
   const badgeAnim = useRef(new Animated.Value(0)).current;
-  const confettiAnims = useRef(CONFETTI_PIECES.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     Animated.spring(badgeAnim, { toValue: 1, friction: 5, tension: 60, useNativeDriver: true }).start();
-    confettiAnims.forEach((v, i) => {
-      v.setValue(0);
-      Animated.timing(v, {
-        toValue: 1,
-        duration: CONFETTI_PIECES[i].duration * 1000,
-        delay: CONFETTI_PIECES[i].delay * 1000,
-        easing: Easing.in(Easing.quad),
-        useNativeDriver: true,
-      }).start();
-    });
     // Mount-once celebration — deliberately no deps, this should fire
     // exactly once when the Launch step appears.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -412,30 +388,7 @@ function LaunchStep({
       <Text style={styles.launchEyebrow}>PROFILE STRENGTH · {profileStrength}%</Text>
       <Text style={styles.launchTitle}>Welcome to the pack.</Text>
 
-      <View style={styles.confettiField} pointerEvents="none">
-        {CONFETTI_PIECES.map((piece, i) => {
-          const anim = confettiAnims[i];
-          return (
-            <Animated.View
-              key={i}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: `${piece.left}%`,
-                width: 6,
-                height: 6,
-                borderRadius: piece.round ? 3 : 1,
-                backgroundColor: piece.color,
-                opacity: anim.interpolate({ inputRange: [0, 0.1, 1], outputRange: [0, 1, 0] }),
-                transform: [
-                  { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [-20, 300] }) },
-                  { rotate: anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '240deg'] }) },
-                ],
-              }}
-            />
-          );
-        })}
-      </View>
+      <Confetti pieces={CONFETTI_PIECES} />
 
       <View style={styles.launchCard}>
         <View style={styles.launchHero}>
@@ -559,7 +512,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     textAlign: 'center',
   },
-  confettiField: { width: '100%', height: 0, overflow: 'visible' },
   launchCard: { width: '100%', marginTop: 16, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, backgroundColor: colors.ash },
   launchHero: { height: 260, backgroundColor: colors.coal, justifyContent: 'space-between', padding: 12 },
   launchBadge: { alignSelf: 'flex-end' },

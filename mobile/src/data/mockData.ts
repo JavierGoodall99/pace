@@ -121,3 +121,8 @@ export const SESSIONS: Session[] = [
 ];
 
 export const PLANNER_PARTNER_IDS = [1, 3, 5, 7];
+
+// Athletes who'll mutually match on a Discover "like" — same ids as
+// PLANNER_PARTNER_IDS (both mirror MATCH_IDS in the design's DC script,
+// which reuses one list for both).
+export const MATCH_IDS = PLANNER_PARTNER_IDS;

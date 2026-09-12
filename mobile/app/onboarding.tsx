@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../src/components/Icon';
 import {
@@ -17,11 +17,26 @@ import { colors, fonts } from '../src/theme/tokens';
 
 // Ported from `../Pace Onboarding.dc.html` — an 8-step flow (0-7):
 // Welcome, Basics, Disciplines, Cadence, Photos, Activity Sync, Verify,
-// Launch. Header/progress bar only show for steps 1-6.
+// Launch. Header/progress bar only show for steps 1-6. Also ports the
+// "+N% profile strength" toast on each step advance, and the
+// confetti + badge-pop celebration on Launch.
 
 const CADENCE_OPTIONS = ['2-3X/WK', '4-5X/WK', '6+X/WK'];
 const TIME_OPTIONS = ['EARLY MORNING', 'EVENING', 'WEEKENDS'];
 const STEP_WEIGHT = 100 / 6;
+
+const CONFETTI_COLORS = [
+  colors.ember,
+  colors.flare,
+  colors.bone,
+  colors.fog,
+  colors.ember,
+  colors.flare,
+  colors.bone,
+  colors.ember,
+  colors.flare,
+  colors.bone,
+];
 
 const NEXT_LABEL: Record<number, string> = {
   1: 'Continue',
@@ -46,6 +61,10 @@ export default function OnboardingScreen() {
   const [stravaConnected, setStravaConnected] = useState(false);
   const [garminConnected, setGarminConnected] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const toastAnim = useRef(new Animated.Value(0)).current;
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const stepsDone = {
     basics: name.trim().length > 0,
@@ -85,18 +104,57 @@ export default function OnboardingScreen() {
   function toggleTime(t: string) {
     setTimes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
   }
+  function showToast(msg: string) {
+    setToastMsg(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(toastAnim, { toValue: 1, duration: 200, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.delay(1400),
+      Animated.timing(toastAnim, { toValue: 0, duration: 200, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+    ]).start();
+    toastTimer.current = setTimeout(() => setToastMsg(null), 1800);
+  }
   function goNext() {
+    const midStep = step >= 1 && step <= 6;
+    if (midStep) showToast(`+${Math.round(STEP_WEIGHT)}% PROFILE STRENGTH`);
     setStep((s) => Math.min(s + 1, 7));
   }
   function goBack() {
     setStep((s) => Math.max(s - 1, 0));
   }
 
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
+
   const showHeader = step >= 1 && step <= 6;
   const showSkip = step === 5 && !stepsDone.sync;
 
   return (
     <View style={styles.screen}>
+      {toastMsg ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.toast,
+            {
+              top: insets.top + 60,
+              opacity: toastAnim,
+              transform: [
+                {
+                  translateY: toastAnim.interpolate({ inputRange: [0, 1], outputRange: [-8, 0] }),
+                },
+              ],
+            },
+          ]}
+        >
+          <Text style={styles.toastText}>{toastMsg}</Text>
+        </Animated.View>
+      ) : null}
+
       {showHeader ? (
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
           <View style={styles.headerRow}>
@@ -121,18 +179,18 @@ export default function OnboardingScreen() {
               <Icon name="zap" size={28} color={colors.ember} />
             </View>
             <Text style={styles.welcomeEyebrow}>FOUNDING COHORT · BATCH 01</Text>
-            <Text style={styles.welcomeTitle}>Build your{'\n'}pace profile.</Text>
+            <Text style={styles.welcomeTitle}>Let&apos;s build{'\n'}your profile.</Text>
             <Text style={styles.welcomeBody}>
-              Six quick steps. Every one sharpens your match — watch your profile take shape as
-              you go.
+              Six easy steps. Every one earns you profile strength and unlocks better matches —
+              watch it grow as you go.
             </Text>
           </View>
         )}
 
         {step === 1 && (
           <View>
-            <Text style={styles.stepTitle}>The basics.</Text>
-            <Text style={styles.stepSubtitle}>Just enough to say hello.</Text>
+            <Text style={styles.stepTitle}>Say hello.</Text>
+            <Text style={styles.stepSubtitle}>Just enough for a warm introduction.</Text>
             <View style={{ gap: 14 }}>
               <Input placeholder="FIRST NAME" value={name} onChangeText={setName} />
               <Input placeholder="AGE" value={age} onChangeText={setAge} />
@@ -172,7 +230,7 @@ export default function OnboardingScreen() {
 
         {step === 4 && (
           <View>
-            <Text style={styles.stepTitle}>Show up.</Text>
+            <Text style={styles.stepTitle}>Put a face to it.</Text>
             <Text style={styles.stepSubtitle}>One good photo beats a paragraph of bio.</Text>
             <View style={styles.photoGrid}>
               <View style={[styles.photoTile, styles.photoTileMain]} />
@@ -190,9 +248,9 @@ export default function OnboardingScreen() {
 
         {step === 5 && (
           <View>
-            <Text style={styles.stepTitle}>Prove your pace.</Text>
+            <Text style={styles.stepTitle}>Share your training.</Text>
             <Text style={styles.stepSubtitle}>
-              Connect training data. Verified stats beat self-reported ones — every time.
+              Connect your data so your matches see the real, verified you.
             </Text>
             <View style={{ gap: 10 }}>
               <SyncRow
@@ -240,31 +298,14 @@ export default function OnboardingScreen() {
         )}
 
         {step === 7 && (
-          <View style={styles.launch}>
-            <Text style={styles.launchEyebrow}>PROFILE STRENGTH · {profileStrength}%</Text>
-            <Text style={styles.launchTitle}>You&apos;re in.</Text>
-            <View style={styles.launchCard}>
-              <View style={styles.launchHero}>
-                <View style={styles.launchBadge}>
-                  <Badge tone="accent">{badgeTierLabel}</Badge>
-                </View>
-                <View style={styles.launchHeroInfo}>
-                  <Text style={styles.launchName}>
-                    {name || 'You'}, {age || '—'}
-                  </Text>
-                  <Text style={styles.launchCity}>{city || 'South Africa'}</Text>
-                </View>
-              </View>
-              <View style={styles.launchBadgeRow}>
-                {(disciplines.length ? disciplines : ['ATHLETE']).map((d) => (
-                  <Badge key={d}>{d}</Badge>
-                ))}
-              </View>
-            </View>
-            <Text style={styles.launchFooter}>
-              Your card is ready to be seen. Every step you took just made your matches sharper.
-            </Text>
-          </View>
+          <LaunchStep
+            profileStrength={profileStrength}
+            badgeTierLabel={badgeTierLabel}
+            name={name}
+            age={age}
+            city={city}
+            disciplines={disciplines}
+          />
         )}
       </ScrollView>
 
@@ -313,8 +354,140 @@ function SyncRow({
   );
 }
 
+interface ConfettiPiece {
+  color: string;
+  left: number;
+  round: boolean;
+  duration: number;
+  delay: number;
+}
+
+const CONFETTI_PIECES: ConfettiPiece[] = CONFETTI_COLORS.map((color, i) => ({
+  color,
+  left: (i * 37) % 100,
+  round: i % 2 !== 0,
+  duration: 1.6 + (i % 4) * 0.3,
+  delay: (i % 5) * 0.12,
+}));
+
+function LaunchStep({
+  profileStrength,
+  badgeTierLabel,
+  name,
+  age,
+  city,
+  disciplines,
+}: {
+  profileStrength: number;
+  badgeTierLabel: string;
+  name: string;
+  age: string;
+  city: string;
+  disciplines: Discipline[];
+}) {
+  const badgeAnim = useRef(new Animated.Value(0)).current;
+  const confettiAnims = useRef(CONFETTI_PIECES.map(() => new Animated.Value(0))).current;
+
+  useEffect(() => {
+    Animated.spring(badgeAnim, { toValue: 1, friction: 5, tension: 60, useNativeDriver: true }).start();
+    confettiAnims.forEach((v, i) => {
+      v.setValue(0);
+      Animated.timing(v, {
+        toValue: 1,
+        duration: CONFETTI_PIECES[i].duration * 1000,
+        delay: CONFETTI_PIECES[i].delay * 1000,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
+      }).start();
+    });
+    // Mount-once celebration — deliberately no deps, this should fire
+    // exactly once when the Launch step appears.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const badges = disciplines.length ? disciplines : ['ATHLETE'];
+
+  return (
+    <View style={styles.launch}>
+      <Text style={styles.launchEyebrow}>PROFILE STRENGTH · {profileStrength}%</Text>
+      <Text style={styles.launchTitle}>Welcome to the pack.</Text>
+
+      <View style={styles.confettiField} pointerEvents="none">
+        {CONFETTI_PIECES.map((piece, i) => {
+          const anim = confettiAnims[i];
+          return (
+            <Animated.View
+              key={i}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: `${piece.left}%`,
+                width: 6,
+                height: 6,
+                borderRadius: piece.round ? 3 : 1,
+                backgroundColor: piece.color,
+                opacity: anim.interpolate({ inputRange: [0, 0.1, 1], outputRange: [0, 1, 0] }),
+                transform: [
+                  { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [-20, 300] }) },
+                  { rotate: anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '240deg'] }) },
+                ],
+              }}
+            />
+          );
+        })}
+      </View>
+
+      <View style={styles.launchCard}>
+        <View style={styles.launchHero}>
+          <Animated.View
+            style={[
+              styles.launchBadge,
+              { opacity: badgeAnim, transform: [{ scale: badgeAnim.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0.5, 1.12, 1] }) }] },
+            ]}
+          >
+            <Badge tone="accent">{badgeTierLabel}</Badge>
+          </Animated.View>
+          <View>
+            <Text style={styles.launchName}>
+              {name || 'You'}, {age || '—'}
+            </Text>
+            <Text style={styles.launchCity}>{city || 'South Africa'}</Text>
+          </View>
+        </View>
+        <View style={styles.launchBadgeRow}>
+          {badges.map((d) => (
+            <Badge key={d}>{d}</Badge>
+          ))}
+        </View>
+      </View>
+      <Text style={styles.launchFooter}>
+        Your card looks great. Every step you took just made your matches feel a little more like
+        home.
+      </Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ink },
+  toast: {
+    position: 'absolute',
+    left: '50%',
+    marginLeft: -110,
+    width: 220,
+    zIndex: 40,
+    backgroundColor: colors.ember,
+    borderRadius: 999,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    alignItems: 'center',
+    shadowColor: colors.ember,
+    shadowOpacity: 0.35,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
+  },
+  toastText: { fontFamily: fonts.mono, fontSize: 11, letterSpacing: 1.5, color: colors.ink },
   header: { paddingHorizontal: 20, paddingBottom: 12, gap: 12 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   stepLabel: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 3, color: colors.fog },
@@ -383,12 +556,13 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     lineHeight: 32,
     marginTop: 12,
-    marginBottom: 20,
+    marginBottom: 4,
+    textAlign: 'center',
   },
-  launchCard: { width: '100%', borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, backgroundColor: colors.ash },
+  confettiField: { width: '100%', height: 0, overflow: 'visible' },
+  launchCard: { width: '100%', marginTop: 16, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, backgroundColor: colors.ash },
   launchHero: { height: 260, backgroundColor: colors.coal, justifyContent: 'space-between', padding: 12 },
   launchBadge: { alignSelf: 'flex-end' },
-  launchHeroInfo: {},
   launchName: { fontFamily: fonts.mono, fontSize: 14, color: colors.bone },
   launchCity: { fontFamily: fonts.mono, fontSize: 10, color: colors.fog, marginTop: 2 },
   launchBadgeRow: { padding: 14, flexDirection: 'row', gap: 8, flexWrap: 'wrap' },

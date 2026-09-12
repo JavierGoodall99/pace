@@ -143,3 +143,25 @@ export const PLANNER_PARTNER_IDS = [1, 3, 5, 7];
 // PLANNER_PARTNER_IDS (both mirror MATCH_IDS in the design's DC script,
 // which reuses one list for both).
 export const MATCH_IDS = PLANNER_PARTNER_IDS;
+
+export type NotificationKind = 'kudos' | 'message' | 'match' | 'invite' | 'comment';
+
+export interface AppNotification {
+  id: number;
+  athleteId: number;
+  kind: NotificationKind;
+  text: string;
+  time: string;
+  group: 'TODAY' | 'EARLIER';
+  unread: boolean;
+}
+
+export const NOTIFICATIONS: AppNotification[] = [
+  { id: 1, athleteId: 5, kind: 'kudos', text: 'liked your run', time: '2M', group: 'TODAY', unread: true },
+  { id: 2, athleteId: 1, kind: 'message', text: 'sent you a message', time: '14M', group: 'TODAY', unread: true },
+  { id: 3, athleteId: 7, kind: 'match', text: 'matched with you', time: '41M', group: 'TODAY', unread: true },
+  { id: 4, athleteId: 8, kind: 'invite', text: 'invited you to a run · Sat 06:00', time: '1H', group: 'TODAY', unread: false },
+  { id: 5, athleteId: 3, kind: 'comment', text: 'commented on your climb', time: '3H', group: 'TODAY', unread: false },
+  { id: 6, athleteId: 2, kind: 'kudos', text: 'liked your ride', time: '1D', group: 'EARLIER', unread: false },
+  { id: 7, athleteId: 6, kind: 'message', text: 'sent you a message', time: '2D', group: 'EARLIER', unread: false },
+];

@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Pressable,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TextStyle,
@@ -204,6 +205,33 @@ export function ProgressBar({ pct }: { pct: number }) {
   );
 }
 
+export function ToggleRow({
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <View style={styles.toggleRow}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.toggleLabel}>{label}</Text>
+        {hint ? <Text style={styles.toggleHint}>{hint}</Text> : null}
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onChange}
+        trackColor={{ false: colors.coal, true: colors.ember }}
+        thumbColor={value ? colors.bone : colors.fog}
+      />
+    </View>
+  );
+}
+
 export function ScreenHeading({
   eyebrow,
   title,
@@ -336,5 +364,26 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: colors.ember,
     borderRadius: 2,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+  },
+  toggleLabel: {
+    ...textStyle,
+    fontSize: 11,
+    letterSpacing: 1,
+    color: colors.bone,
+    textTransform: 'uppercase',
+  },
+  toggleHint: {
+    fontSize: 12,
+    color: colors.fog,
+    marginTop: 4,
+    lineHeight: 17,
   },
 });

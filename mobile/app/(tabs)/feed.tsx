@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { ActivityPanel } from '../../src/components/ActivityPanel';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { athleteById, Discipline, FEED_ITEMS, tagsForDiscipline } from '../../src/data/mockData';
@@ -44,6 +45,18 @@ export default function FeedScreen() {
             <View key={f.id} style={styles.card}>
               <PhotoSlot label={who ? who.name : 'You'} shape="rect" source={photo} style={styles.photo} />
               <View style={styles.panel}>
+                <View pointerEvents="none" style={styles.panelFade}>
+                  <Svg width="100%" height="100%">
+                    <Defs>
+                      <LinearGradient id="photoFadeFeed" x1="0" y1="0" x2="0" y2="1">
+                        <Stop offset="0" stopColor={colors.coal} stopOpacity={0} />
+                        <Stop offset="0.45" stopColor={colors.coal} stopOpacity={1} />
+                        <Stop offset="1" stopColor={colors.coal} stopOpacity={1} />
+                      </LinearGradient>
+                    </Defs>
+                    <Rect width="100%" height="100%" fill="url(#photoFadeFeed)" />
+                  </Svg>
+                </View>
                 <View style={styles.identity}>
                   <Text style={styles.who}>{f.who}</Text>
                   <Text style={styles.time}>{f.time}</Text>
@@ -88,11 +101,19 @@ const styles = StyleSheet.create({
   photo: { width: '100%', height: 230, borderRadius: 0 },
   panel: {
     backgroundColor: colors.coal,
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 14,
+  },
+  // Photo fades into the panel: the coal gradient starts above the
+  // panel's top edge (over the photo) and turns solid behind the
+  // stats, so there is no hard dividing line.
+  panelFade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: -90,
+    bottom: 0,
   },
   identity: {
     flexDirection: 'row',

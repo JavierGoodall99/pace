@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { ActivityPanel } from '../../src/components/ActivityPanel';
 import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
@@ -217,6 +218,19 @@ function SwipeCard({
         <Text style={[styles.stampText, { color: colors.ember, borderColor: colors.ember }]}>PASS</Text>
       </Animated.View>
 
+      <View pointerEvents="none" style={styles.fade}>
+        <Svg width="100%" height="100%">
+          <Defs>
+            <LinearGradient id="photoFade" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={colors.coal} stopOpacity={0} />
+              <Stop offset="0.45" stopColor={colors.coal} stopOpacity={1} />
+              <Stop offset="1" stopColor={colors.coal} stopOpacity={1} />
+            </LinearGradient>
+          </Defs>
+          <Rect width="100%" height="100%" fill="url(#photoFade)" />
+        </Svg>
+      </View>
+
       <View style={styles.panel}>
         <View style={styles.identity}>
           <Text style={styles.panelName}>
@@ -311,19 +325,27 @@ const styles = StyleSheet.create({
   nextCard: { transform: [{ scale: 0.95 }, { translateY: 10 }], opacity: 0.7 },
   nextCard2: { transform: [{ scale: 0.9 }, { translateY: 20 }], opacity: 0.45 },
   cardPhoto: { width: '100%', height: '100%' },
-  // Solid stats panel sits over the photo's lower third — the photo
-  // owns the card, the panel owns the data, no gradient needed.
+  // Stats panel sits over the photo's lower third — the photo owns
+  // the card, the panel owns the data, joined by the fade above.
   panel: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
     backgroundColor: colors.coal,
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 14,
+  },
+  // Photo fades into the panel: a coal gradient sits behind the panel
+  // and extends well above its top edge, so there is no hard dividing
+  // line between the photo and the stats.
+  fade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 220,
   },
   identity: { marginBottom: 10 },
   panelName: {

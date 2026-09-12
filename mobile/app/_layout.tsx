@@ -48,6 +48,12 @@ export default function RootLayout() {
         <Stack.Screen name="athlete/[id]" options={{ presentation: 'modal' }} />
         <Stack.Screen name="thread/[athleteId]" options={{ presentation: 'modal' }} />
         <Stack.Screen name="match/[athleteId]" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="settings" />
+        <Stack.Screen name="settings-preferences" />
+        <Stack.Screen name="settings-notifications" />
+        <Stack.Screen name="settings-privacy" />
+        <Stack.Screen name="settings-subscription" />
+        <Stack.Screen name="notifications" />
       </Stack>
     </SafeAreaProvider>
   );

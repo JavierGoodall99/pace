@@ -19,12 +19,22 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 24 }}>
-      <PhotoSlot
-        label="Cover photo"
-        shape="rect"
-        source={ME_COVER}
-        style={{ width: '100%', height: 160, marginTop: insets.top }}
-      />
+      <View>
+        <PhotoSlot
+          label="Cover photo"
+          shape="rect"
+          source={ME_COVER}
+          style={{ width: '100%', height: 160, marginTop: insets.top }}
+        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
+          onPress={() => router.push('/settings')}
+          style={styles.settingsBtn}
+        >
+          <Icon name="settings" size={18} color={colors.bone} />
+        </Pressable>
+      </View>
 
       <View style={styles.body}>
         <PhotoSlot label="Naledi" shape="circle" source={ME_AVATAR} style={styles.avatar} />
@@ -69,6 +79,19 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ink },
+  settingsBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(10,10,13,0.55)',
+    borderWidth: 1,
+    borderColor: colors.lineHover,
+  },
   body: { paddingHorizontal: 20, marginTop: -40 },
   avatar: { width: 84, height: 84, borderWidth: 3, borderColor: colors.ink },
   name: {

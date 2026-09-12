@@ -1,7 +1,9 @@
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
+import { IconButton } from '../../src/components/ui';
 import { athleteById, CHAT_THREADS } from '../../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
 import { colors, fonts } from '../../src/theme/tokens';
@@ -17,6 +19,10 @@ export default function ChatScreen() {
     >
       <View style={styles.header}>
         <Text style={styles.title}>Chat</Text>
+        <View style={{ flex: 1 }} />
+        <IconButton size={40} onPress={() => router.push('/notifications')}>
+          <Icon name="bell" size={16} color={colors.bone} />
+        </IconButton>
       </View>
 
       <View style={styles.list}>

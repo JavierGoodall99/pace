@@ -78,29 +78,32 @@ export function Button({
   children,
   onPress,
   variant = 'primary',
+  disabled = false,
   style,
 }: {
   children: React.ReactNode;
   onPress?: () => void;
   variant?: 'primary' | 'ghost';
+  disabled?: boolean;
   style?: ViewStyle;
 }) {
   const ghost = variant === 'ghost';
   return (
     <Pressable
-      onPress={onPress}
+      onPress={disabled ? undefined : onPress}
+      disabled={disabled}
       style={({ pressed }) => [
         styles.button,
         {
-          backgroundColor: ghost ? 'transparent' : colors.ember,
+          backgroundColor: disabled ? colors.ash : ghost ? 'transparent' : colors.ember,
           borderWidth: ghost ? 1 : 0,
           borderColor: colors.line,
-          opacity: pressed ? 0.85 : 1,
+          opacity: pressed && !disabled ? 0.85 : 1,
         },
         style,
       ]}
     >
-      <Text style={[styles.buttonText, { color: ghost ? colors.fog : colors.ink }]}>
+      <Text style={[styles.buttonText, { color: disabled ? colors.fog : ghost ? colors.fog : colors.ink }]}>
         {children}
       </Text>
     </Pressable>
@@ -157,6 +160,47 @@ export function Input({
       onChangeText={onChangeText}
       style={[styles.input, style]}
     />
+  );
+}
+
+export function SegmentedControl({
+  options,
+  value,
+  onChange,
+}: {
+  options: string[];
+  value: string | null;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <View style={styles.segmentedRow}>
+      {options.map((opt) => {
+        const active = opt === value;
+        return (
+          <Pressable
+            key={opt}
+            onPress={() => onChange(opt)}
+            style={[
+              styles.segment,
+              { backgroundColor: active ? colors.ember : colors.coal, borderColor: active ? colors.ember : colors.line },
+            ]}
+          >
+            <Text style={[styles.segmentText, { color: active ? colors.ink : colors.fog, fontWeight: active ? '700' : '500' }]}>
+              {opt}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+export function ProgressBar({ pct }: { pct: number }) {
+  const clamped = Math.max(0, Math.min(100, pct));
+  return (
+    <View style={styles.progressTrack}>
+      <View style={[styles.progressFill, { width: `${clamped}%` }]} />
+    </View>
   );
 }
 
@@ -267,5 +311,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 8,
     marginBottom: 16,
+  },
+  segmentedRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  segment: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: radius.full,
+    borderWidth: 1,
+  },
+  segmentText: {
+    ...textStyle,
+    fontSize: 11,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
+  progressTrack: {
+    width: '100%',
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.line,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: colors.ember,
+    borderRadius: 2,
   },
 });

@@ -4,7 +4,7 @@ import { Icon, IconName } from '../../src/components/Icon';
 import { colors, fonts } from '../../src/theme/tokens';
 
 const TABS: { name: string; label: string; icon: IconName }[] = [
-  { name: 'index', label: 'Discover', icon: 'zap' },
+  { name: 'discover', label: 'Discover', icon: 'zap' },
   { name: 'feed', label: 'Activity', icon: 'activity' },
   { name: 'chat', label: 'Chat', icon: 'repeat' },
   { name: 'planner', label: 'Planner', icon: 'map-pin' },

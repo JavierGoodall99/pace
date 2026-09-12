@@ -13,8 +13,10 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { colors } from '../src/theme/tokens';
+import { paperTheme } from '../src/theme/paper';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -37,24 +39,26 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.ink },
-        }}
-      >
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="athlete/[id]" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="thread/[athleteId]" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="match/[athleteId]" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="settings" />
-        <Stack.Screen name="settings-preferences" />
-        <Stack.Screen name="settings-notifications" />
-        <Stack.Screen name="settings-privacy" />
-        <Stack.Screen name="settings-subscription" />
-        <Stack.Screen name="notifications" />
-      </Stack>
+      <PaperProvider theme={paperTheme}>
+        <StatusBar style="light" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.ink },
+          }}
+        >
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="athlete/[id]" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="thread/[athleteId]" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="match/[athleteId]" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="settings" />
+          <Stack.Screen name="settings-preferences" />
+          <Stack.Screen name="settings-notifications" />
+          <Stack.Screen name="settings-privacy" />
+          <Stack.Screen name="settings-subscription" />
+          <Stack.Screen name="notifications" />
+        </Stack>
+      </PaperProvider>
     </SafeAreaProvider>
   );
 }

@@ -1,0 +1,28 @@
+:root{
+--container-max:1440px;
+--gutter-mobile:20px;
+--gutter-desktop:40px;
+--section-py:112px;
+--section-py-lg:144px;
+--hero-py-top:112px;
+--hero-py-top-lg:160px;
+--cta-py:128px;
+--cta-py-lg:176px;
+
+--radius-full:9999px;
+--radius-3xl:24px;
+--radius-2xl:16px;
+--radius-lg:8px;
+
+--touch-target-min:48px;
+--button-height:56px;
+--safe-area-top:56px;
+--safe-area-bottom:34px;
+
+--ease-decel:cubic-bezier(0.16,1,0.3,1); /* @kind other */
+--ease-standard:cubic-bezier(0.4,0,0.2,1); /* @kind other */
+--duration-micro:300ms; /* @kind other */
+--duration-reveal:900ms; /* @kind other */
+--duration-counter:2200ms; /* @kind other */
+--duration-marquee:38s; /* @kind other */
+}

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <link rel="stylesheet" href="_ds/pace-design-system-1f19d6a9-8f45-4454-b084-4ec633f2f3b1/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/pace-design-system-1f19d6a9-8f45-4454-b084-4ec633f2f3b1/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/pace-design-system-1f19d6a9-8f45-4454-b084-4ec633f2f3b1/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/pace-design-system-1f19d6a9-8f45-4454-b084-4ec633f2f3b1/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/pace-design-system-1f19d6a9-8f45-4454-b084-4ec633f2f3b1/tokens/base.css">
+  <link rel="stylesheet" href="_ds/pace-design-system-1f19d6a9-8f45-4454-b084-4ec633f2f3b1/styles.css">
+  <script src="_ds/pace-design-system-1f19d6a9-8f45-4454-b084-4ec633f2f3b1/_ds_bundle.js"></script>
+  <script src="./image-slot.js"></script>
+  <style>
+    body{margin:0;background:#0a0a0d;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:var(--font-sans)}
+    .icon{background:var(--color-fog);-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center}
+    ::-webkit-scrollbar{display:none}
+    *{scrollbar-width:none}
+    *::-webkit-scrollbar{display:none;width:0;height:0}
+  </style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+  <div style="width:390px;height:844px;border-radius:44px;border:10px solid #000;position:relative;overflow:hidden;background:var(--color-ink);box-shadow:0 40px 80px rgba(0,0,0,0.5)">
+    <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:28px;background:#000;border-radius:0 0 16px 16px;z-index:30"></div>
+
+    <!-- MATCH DETAIL OVERLAY -->
+    <sc-if value="{{ showMatchDetail }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--color-ink)">
+        <div style="height:56px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 20px 0 12px;padding-top:22px">
+          <x-import component-from-global-scope="PaceDesignSystem_1f19d6.IconButton" ariaLabel="back" onClick="{{ closeMatchDetail }}" size="{{ 40 }}" hint-size="40px,40px">
+            <div class="icon" style="width:14px;height:14px;-webkit-mask-image:url(assets/icons/chevron-left.svg);mask-image:url(assets/icons/chevron-left.svg);background:var(--color-bone)"></div>
+          </x-import>
+          <span style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.2em;color:var(--color-fog);text-transform:uppercase">{{ selectedAthleteDiscipline }}</span>
+        </div>
+        <div style="flex:1;overflow:auto">
+          <div style="position:relative;width:100%;height:340px">
+            <image-slot id="detail-hero" shape="rect" placeholder="Athlete photo" style="width:100%;height:100%;filter:grayscale(1) contrast(1.05)"></image-slot>
+            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 55%,var(--color-ink));pointer-events:none"></div>
+          </div>
+          <div style="padding:0 20px;margin-top:-36px;position:relative">
+            <div style="display:flex;align-items:baseline;gap:10px">
+              <h1 style="font-family:var(--font-display);font-size:36px;color:var(--color-bone);text-transform:uppercase;line-height:0.9;margin:0">{{ selectedAthleteName }}</h1>
+              <span style="font-family:var(--font-mono);font-size:14px;color:var(--color-fog)">{{ selectedAthleteAge }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+              <div class="icon" style="width:14px;height:14px;-webkit-mask-image:url(assets/icons/shield-check.svg);mask-image:url(assets/icons/shield-check.svg);background:var(--color-ember)"></div>
+              <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.18em;color:var(--color-ember);text-transform:uppercase">Verified Athlete</span>
+              <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;color:var(--color-fog)">· {{ selectedAthleteCity }}</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px">
+              <x-import component-from-global-scope="PaceDesignSystem_1f19d6.Badge" tone="accent" hint-size="auto,32px">{{ selectedAthleteDiscipline }}</x-import>
+              <x-import component-from-global-scope="PaceDesignSystem_1f19d6.Badge" hint-size="auto,32px">{{ selectedAthletePace }}</x-import>
+            </div>
+            <p style="color:var(--color-fog);font-size:13px;line-height:1.6;margin:18px 0 24px">{{ selectedAthleteBio }}</p>
+          </div>
+        </div>
+        <div style="flex-shrink:0;padding:16px 20px 28px;border-top:1px solid var(--color-line);background:rgba(10,10,13,0.9);backdrop-filter:blur(20px);display:flex;gap:10px">
+          <x-import component-from-global-scope="PaceDesignSystem_1f19d6.Button" onClick="{{ openThreadFromDetail }}" style="flex:1" hint-size="auto,52px">Message</x-import>
+          <x-import component-from-global-scope="PaceDesignSystem_1f19d6.Button" variant="ghost" onClick="{{ openPlannerFromDetail }}" style="flex:1" hint-size="auto,52px">Plan a Session</x-import>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- CHAT THREAD OVERLAY -->
+    <sc-if value="{{ showChatThread }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:var(--color-ink)">
+        <div style="height:78px;flex-shrink:0;padding-top:22px;display:flex;align-items:center;gap:12px;padding-left:12px;padding-right:20px;border-bottom:1px solid var(--color-line)">
+          <x-import component-from-global-scope="PaceDesignSystem_1f19d6.IconButton" ariaLabel="back" onClick="{{ closeChatThread }}" size="{{ 40 }}" hint-size="40px,40px">
+            <div class="icon" style="width:14px;height:14px;-webkit-mask-image:url(assets/icons/chevron-left.svg);mask-image:url(assets/icons/chevron-left.svg);background:var(--color-bone)"></div>
+          </x-import>
+          <image-slot id="{{ selectedThreadSlotId }}" shape="circle" placeholder="Photo" style="width:36px;height:36px;filter:grayscale(1)"></image-slot>
+          <span style="font-family:var(--font-mono);font-size:13px;letter-spacing:0.08em;color:var(--color-bone);text-transform:uppercase">{{ selectedThreadName }}</span>
+        </div>
+        <div style="flex:1;overflow:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ selectedThreadMessages }}" as="msg" hint-placeholder-count="4">
+            <div style="display:flex;justify-content:{{ msg.align }}">
+              <div style="max-width:78%;padding:12px 16px;border-radius:18px;background:{{ msg.bg }};color:{{ msg.color }};font-size:13px;line-height:1.4">{{ msg.text }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="flex-shrink:0;padding:12px 20px 28px;border-top:1px solid var(--color-line);display:flex;gap:10px;align-items:center">
+          <div style="flex:1">
+            <x-import component-from-global-scope="PaceDesignSystem_1f19d6.Input" placeholder="MESSAGE" hint-size="100%,48px"></x-import>
+          </div>
+          <x-import component-from-global-scope="PaceDesignSystem_1f19d6.IconButton" tone="accent" ariaLabel="send" size="{{ 48 }}" hint-size="48px,48px">
+            <div class="icon" style="width:16px;height:16px;-webkit-mask-image:url(assets/icons/arrow-right.svg);mask-image:url(assets/icons/arrow-right.svg);background:var(--color-ember)"></div>
+          </x-import>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- MAIN TABBED APP -->
+    <sc-if value="{{ showMain }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column">
+        <div style="flex:1;overflow:auto;padding-top:28px">
+
+          <!-- DISCOVER -->
+          <sc-if value="{{ isDiscover }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:20px 20px 4px">
+              <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.3em;color:var(--color-ember)">FOUNDING COHORT · BATCH 01</span>
+              <h1 style="font-family:var(--font-display);font-size:32px;color:var(--color-bone);text-transform:uppercase;line-height:0.9;margin:8px 0 0">Discover</h1>
+              <p style="color:var(--color-fog);font-size:12px;margin:8px 0 16px">Pick a discipline to find athletes training like you.</p>
+            </div>
+            <div style="display:flex;gap:8px;overflow-x:auto;padding:0 20px 16px">
+              <sc-for list="{{ disciplines }}" as="d" hint-placeholder-count="7">
+                <x-import component-from-global-scope="PaceDesignSystem_1f19d6.Chip" selected="{{ d.selected }}" onClick="{{ d.onClick }}" hint-size="auto,44px">{{ d.label }}</x-import>
+              </sc-for>
+            </div>
+            <div style="padding:0 20px 24px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <sc-for list="{{ filteredAthletes }}" as="a" hint-placeholder-count="4">
+                <div onClick="{{ a.onClick }}" style="cursor:pointer;border-radius:var(--radius-2xl);overflow:hidden;border:1px solid var(--color-line);background:var(--color-ash)">
+                  <div style="position:relative;width:100%;aspect-ratio:0.85">
+                    <image-slot id="{{ a.slotId }}" shape="rect" placeholder="{{ a.name }}" style="width:100%;height:100%;filter:grayscale(1) contrast(1.05)"></image-slot>
+                    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 55%,rgba(10,10,13,0.9));pointer-events:none"></div>
+                    <div style="position:absolute;left:10px;right:10px;bottom:10px;pointer-events:none">
+                      <div style="font-family:var(--font-mono);font-size:12px;color:var(--color-bone);letter-spacing:0.05em">{{ a.name }}, {{ a.age }}</div>
+                      <div style="font-family:var(--font-mono);font-size:10px;color:var(--color-fog);margin-top:2px">{{ a.pace }} · {{ a.city }}</div>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- ACTIVITY FEED -->
+          <sc-if value="{{ isFeed }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:20px 20px 4px">
+              <h1 style="font-family:var(--font-display);font-size:32px;color:var(--color-bone);text-transform:uppercase;line-height:0.9;margin:0">Activity</h1>
+              <p style="color:var(--color-fog);font-size:12px;margin:8px 0 16px">Your training log and your matches', together.</p>
+            </div>
+            <div style="padding:0 20px 24px;display:flex;flex-direction:column;gap:14px">
+              <sc-for list="{{ feedItems }}" as="f" hint-placeholder-count="5">
+                <div style="border:1px solid var(--color-line);border-radius:var(--radius-2xl);background:var(--color-ash);overflow:hidden">
+                  <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 10px">
+                    <image-slot id="{{ f.avatarSlotId }}" shape="circle" placeholder="{{ f.who }}" style="width:32px;height:32px;filter:grayscale(1)"></image-slot>
+                    <div style="flex:1">
+                      <div style="font-family:var(--font-mono);font-size:11px;color:var(--color-bone);letter-spacing:0.05em;text-transform:uppercase">{{ f.who }}</div>
+                      <div style="font-family:var(--font-mono);font-size:9px;color:var(--color-fog);margin-top:2px">{{ f.time }}</div>
+                    </div>
+                    <div class="icon" style="width:14px;height:14px;-webkit-mask-image:url({{ f.icon }});mask-image:url({{ f.icon }});background:var(--color-ember)"></div>
+                    <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.15em;color:var(--color-ember)">{{ f.type }}</span>
+                  </div>
+                  <div style="padding:0 16px 12px;font-size:13px;color:var(--color-bone)">{{ f.stat }}</div>
+                  <sc-if value="{{ f.hasPhoto }}" hint-placeholder-val="{{ false }}">
+                    <image-slot id="{{ f.photoSlotId }}" shape="rect" placeholder="Activity photo" style="width:100%;height:160px;filter:grayscale(1) contrast(1.05)"></image-slot>
+                  </sc-if>
+                  <div style="display:flex;align-items:center;gap:6px;padding:12px 16px">
+                    <div class="icon" style="width:14px;height:14px;-webkit-mask-image:url(assets/icons/heart.svg);mask-image:url(assets/icons/heart.svg)"></div>
+                    <span style="font-family:var(--font-mono);font-size:11px;color:var(--color-fog)">{{ f.kudos }} KUDOS</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- CHAT LIST -->
+          <sc-if value="{{ isChat }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:20px 20px 4px">
+              <h1 style="font-family:var(--font-display);font-size:32px;color:var(--color-bone);text-transform:uppercase;line-height:0.9;margin:0">Chat</h1>
+            </div>
+            <div style="padding:8px 20px 24px;display:flex;flex-direction:column">
+              <sc-for list="{{ chatThreads }}" as="t" hint-placeholder-count="4">
+                <div onClick="{{ t.onClick }}" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--color-line)">
+                  <image-slot id="{{ t.slotId }}" shape="circle" placeholder="{{ t.name }}" style="width:52px;height:52px;filter:grayscale(1)"></image-slot>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-family:var(--font-mono);font-size:12px;color:var(--color-bone);letter-spacing:0.05em;text-transform:uppercase">{{ t.name }}</div>
+                    <div style="font-size:12px;color:var(--color-fog);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.lastMsg }}</div>
+                  </div>
+                  <div style="text-align:right;flex-shrink:0">
+                    <div style="font-family:var(--font-mono);font-size:10px;color:var(--color-fog)">{{ t.time }}</div>
+                    <sc-if value="{{ t.unread }}" hint-placeholder-val="{{ false }}">
+                      <div style="width:8px;height:8px;border-radius:50%;background:var(--color-ember);margin:6px 0 0 auto"></div>
+                    </sc-if>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- DATE PLANNER -->
+          <sc-if value="{{ isPlanner }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:20px 20px 4px">
+              <h1 style="font-family:var(--font-display);font-size:32px;color:var(--color-bone);text-transform:uppercase;line-height:0.9;margin:0">Planner</h1>
+              <p style="color:var(--color-fog);font-size:12px;margin:8px 0 16px">Turn a match into a session. Pick a sport, time and place.</p>
+            </div>
+            <sc-if value="{{ plannerSent }}" hint-placeholder-val="{{ false }}">
+              <div style="margin:0 20px 20px;padding:18px;border-radius:var(--radius-2xl);background:rgba(255,77,46,0.08);border:1px solid rgba(255,77,46,0.3)">
+                <div style="font-family:var(--font-display);font-size:16px;color:var(--color-bone);text-transform:uppercase">Invite Sent</div>
+                <p style="font-size:12px;color:var(--color-fog);margin:6px 0 0">{{ plannerPartnerName }} will get your session invite. You'll be notified when they respond.</p>
+              </div>
+            </sc-if>
+            <div style="padding:0 20px;display:flex;flex-direction:column;gap:18px">
+              <div>
+                <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.2em;color:var(--color-bone)">ACTIVITY</label>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+                  <sc-for list="{{ plannerDisciplines }}" as="pd" hint-placeholder-count="7">
+                    <x-import component-from-global-scope="PaceDesignSystem_1f19d6.Chip" selected="{{ pd.selected }}" onClick="{{ pd.onClick }}" hint-size="auto,44px">{{ pd.label }}</x-import>
+                  </sc-for>
+                </div>
+              </div>
+              <div>
+                <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.2em;color:var(--color-bone)">WITH</label>
+                <div style="display:flex;gap:10px;margin-top:8px;overflow-x:auto">
+                  <sc-for list="{{ plannerPartners }}" as="p" hint-placeholder-count="4">
+                    <div onClick="{{ p.onClick }}" style="cursor:pointer;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px">
+                      <image-slot id="{{ p.slotId }}" shape="circle" placeholder="{{ p.name }}" style="width:52px;height:52px;filter:grayscale(1);{{ p.ringStyle }}"></image-slot>
+                      <span style="font-family:var(--font-mono);font-size:9px;color:{{ p.labelColor }}">{{ p.name }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div>
+                <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.2em;color:var(--color-bone)">WHEN</label>
+                <div style="margin-top:8px"><x-import component-from-global-scope="PaceDesignSystem_1f19d6.Input" placeholder="SAT · 06:00" hint-size="100%,48px"></x-import></div>
+              </div>
+              <div>
+                <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.2em;color:var(--color-bone)">WHERE</label>
+                <div style="margin-top:8px"><x-import component-from-global-scope="PaceDesignSystem_1f19d6.Input" placeholder="SEA POINT PROMENADE" hint-size="100%,48px"></x-import></div>
+              </div>
+              <x-import component-from-global-scope="PaceDesignSystem_1f19d6.Button" onClick="{{ sendInvite }}" style="width:100%;margin-top:4px" hint-size="auto,52px">Send Invite</x-import>
+            </div>
+            <div style="padding:28px 20px 24px">
+              <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.2em;color:var(--color-fog)">UPCOMING SESSIONS</span>
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+                <sc-for list="{{ upcomingSessions }}" as="s" hint-placeholder-count="2">
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-radius:var(--radius-2xl);border:1px solid var(--color-line);background:var(--color-ash)">
+                    <div>
+                      <div style="font-family:var(--font-mono);font-size:12px;color:var(--color-bone);letter-spacing:0.05em">{{ s.activity }} · {{ s.withName }}</div>
+                      <div style="font-size:12px;color:var(--color-fog);margin-top:4px">{{ s.when }} · {{ s.location }}</div>
+                    </div>
+                    <x-import component-from-global-scope="PaceDesignSystem_1f19d6.Badge" tone="{{ s.tone }}" hint-size="auto,28px">{{ s.status }}</x-import>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- PROFILE -->
+          <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+            <div style="position:relative;width:100%;height:160px">
+              <image-slot id="profile-cover" shape="rect" placeholder="Cover photo" style="width:100%;height:100%;filter:grayscale(1) contrast(1.05)"></image-slot>
+              <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,var(--color-ink));pointer-events:none"></div>
+            </div>
+            <div style="padding:0 20px;margin-top:-40px;position:relative">
+              <image-slot id="profile-avatar" shape="circle" placeholder="Your photo" style="width:84px;height:84px;border:3px solid var(--color-ink);filter:grayscale(1)"></image-slot>
+              <h1 style="font-family:var(--font-display);font-size:30px;color:var(--color-bone);text-transform:uppercase;line-height:0.9;margin:14px 0 0">Naledi Khumalo</h1>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+                <div class="icon" style="width:13px;height:13px;-webkit-mask-image:url(assets/icons/shield-check.svg);mask-image:url(assets/icons/shield-check.svg);background:var(--color-ember)"></div>
+                <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.15em;color:var(--color-ember);text-transform:uppercase">Verified · Pretoria</span>
+              </div>
+              <p style="color:var(--color-fog);font-size:13px;line-height:1.5;margin:14px 0">Competing at regionals next year. Coffee after WODs, always.</p>
+              <div style="display:flex;gap:8px;margin-bottom:18px">
+                <x-import component-from-global-scope="PaceDesignSystem_1f19d6.Badge" tone="accent" hint-size="auto,32px">CROSSFIT</x-import>
+                <x-import component-from-global-scope="PaceDesignSystem_1f19d6.Badge" hint-size="auto,32px">5X / WK</x-import>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px">
+                <div style="text-align:center;padding:14px 8px;border-radius:var(--radius-2xl);border:1px solid var(--color-line);background:var(--color-ash)">
+                  <div style="font-family:var(--font-display);font-size:22px;color:var(--color-bone)">42KM</div>
+                  <div style="font-family:var(--font-mono);font-size:9px;color:var(--color-fog);letter-spacing:0.1em;margin-top:4px">WEEKLY VOL.</div>
+                </div>
+                <div style="text-align:center;padding:14px 8px;border-radius:var(--radius-2xl);border:1px solid var(--color-line);background:var(--color-ash)">
+                  <div style="font-family:var(--font-display);font-size:22px;color:var(--color-bone)">5</div>
+                  <div style="font-family:var(--font-mono);font-size:9px;color:var(--color-fog);letter-spacing:0.1em;margin-top:4px">SESSIONS/WK</div>
+                </div>
+                <div style="text-align:center;padding:14px 8px;border-radius:var(--radius-2xl);border:1px solid var(--color-line);background:var(--color-ash)">
+                  <div style="font-family:var(--font-display);font-size:22px;color:var(--color-bone)">94%</div>
+                  <div style="font-family:var(--font-mono);font-size:9px;color:var(--color-fog);letter-spacing:0.1em;margin-top:4px">PROFILE MATCH</div>
+                </div>
+              </div>
+              <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.2em;color:var(--color-fog)">TRAINING PHOTOS</span>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px 0 24px">
+                <image-slot id="profile-grid-1" shape="rounded" radius="14" placeholder="Photo" style="width:100%;aspect-ratio:1;filter:grayscale(1)"></image-slot>
+                <image-slot id="profile-grid-2" shape="rounded" radius="14" placeholder="Photo" style="width:100%;aspect-ratio:1;filter:grayscale(1)"></image-slot>
+                <image-slot id="profile-grid-3" shape="rounded" radius="14" placeholder="Photo" style="width:100%;aspect-ratio:1;filter:grayscale(1)"></image-slot>
+              </div>
+              <div style="height:24px"></div>
+            </div>
+          </sc-if>
+
+        </div>
+
+        <div style="flex-shrink:0;display:flex;border-top:1px solid var(--color-line);background:rgba(10,10,13,0.92);backdrop-filter:blur(20px);padding:10px 4px calc(10px + var(--safe-area-bottom) - 20px)">
+          <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="5">
+            <div onClick="{{ n.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:4px 0">
+              <div class="icon" style="width:20px;height:20px;-webkit-mask-image:url({{ n.icon }});mask-image:url({{ n.icon }});background:{{ n.color }}"></div>
+              <span style="font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.1em;color:{{ n.color }};text-transform:uppercase">{{ n.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.15em;color:#8f8d97;text-transform:uppercase">PACE · Founding Cohort Mobile App</span>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+
+const DISCIPLINES = ["RUNNING","CYCLING","TRAIL","SWIMMING","CROSSFIT","CLIMBING","TRIATHLON"];
+
+const ATHLETES = [
+  { id: 1, slotId: "athlete-1", name: "Lerato", age: 27, discipline: "RUNNING", pace: "4:45/KM", city: "Cape Town", bio: "Sunrise road runner training for Two Oceans. Early starts, no excuses." },
+  { id: 2, slotId: "athlete-2", name: "Sipho", age: 31, discipline: "CYCLING", pace: "32 KM/H AVG", city: "Johannesburg", bio: "Weekend gravel grinder, weekday commuter. Always down for a coffee-stop ride." },
+  { id: 3, slotId: "athlete-3", name: "Amahle", age: 26, discipline: "TRAIL", pace: "6:10/KM", city: "Cape Town", bio: "Table Mountain most Saturdays. Slow and steady, big views over big pace." },
+  { id: 4, slotId: "athlete-4", name: "Jacques", age: 34, discipline: "SWIMMING", pace: "1:35/100M", city: "Durban", bio: "Open water through summer, pool laps the rest of the year." },
+  { id: 5, slotId: "athlete-5", name: "Naledi", age: 29, discipline: "CROSSFIT", pace: "5X / WEEK", city: "Pretoria", bio: "Competing at regionals next year. Coffee after WODs, always." },
+  { id: 6, slotId: "athlete-6", name: "Dean", age: 30, discipline: "CLIMBING", pace: "V6 PROJECT", city: "Cape Town", bio: "Bouldering most nights, sport climbing on weekends." },
+  { id: 7, slotId: "athlete-7", name: "Zanele", age: 28, discipline: "TRIATHLON", pace: "OLYMPIC DIST.", city: "Johannesburg", bio: "Swim-bike-run, in that order, always. Racing three events this season." },
+  { id: 8, slotId: "athlete-8", name: "Kagiso", age: 32, discipline: "RUNNING", pace: "3:55/KM", city: "Pretoria", bio: "Track sessions Tuesdays, long run Sundays. Chasing a sub-3 marathon." },
+];
+
+const CHAT_THREADS = [
+  { id: 1, athleteId: 1, lastMsg: "See you at 6am at the promenade?", time: "2M", unread: true },
+  { id: 2, athleteId: 3, lastMsg: "That trail was brutal, great pace though.", time: "1H", unread: false },
+  { id: 3, athleteId: 5, lastMsg: "Down for a WOD Thursday?", time: "3H", unread: false },
+  { id: 4, athleteId: 7, lastMsg: "Nice PB on the swim leg!", time: "1D", unread: false },
+];
+
+const THREAD_MESSAGES = {
+  1: [
+    { from: "them", text: "Loved your split on the 10K yesterday." },
+    { from: "me", text: "Thanks! Felt strong the last 2K." },
+    { from: "them", text: "See you at 6am at the promenade?" },
+    { from: "me", text: "I'll be there. Bringing coffee after." },
+  ],
+  3: [
+    { from: "them", text: "That trail was brutal, great pace though." },
+    { from: "me", text: "Barely made it up the last climb." },
+  ],
+  5: [
+    { from: "them", text: "Down for a WOD Thursday?" },
+    { from: "me", text: "Always. 6pm at the box?" },
+  ],
+  7: [
+    { from: "them", text: "Nice PB on the swim leg!" },
+    { from: "me", text: "Two years of Tuesday laps finally paying off." },
+  ],
+};
+
+const FEED_ITEMS = [
+  { id: 1, athleteId: 1, who: "Lerato", time: "2H AGO", type: "RUN", icon: "assets/icons/activity.svg", stat: "12.4km · 4:38/km · 54:02", kudos: 14, photoSlotId: null },
+  { id: 2, athleteId: 5, who: "You", time: "5H AGO", type: "CROSSFIT", icon: "assets/icons/zap.svg", stat: "5 rounds · 38 reps · new PB on cleans", kudos: 22, photoSlotId: "feed-post-1" },
+  { id: 3, athleteId: 6, who: "Dean", time: "8H AGO", type: "CLIMB", icon: "assets/icons/map.svg", stat: "V5 flash, 3 attempts", kudos: 9, photoSlotId: null },
+  { id: 4, athleteId: 7, who: "Zanele", time: "1D AGO", type: "TRI BRICK", icon: "assets/icons/repeat.svg", stat: "1.5km swim + 40km ride + 10km run", kudos: 31, photoSlotId: "feed-post-2" },
+  { id: 5, athleteId: 8, who: "Kagiso", time: "2D AGO", type: "RUN", icon: "assets/icons/activity.svg", stat: "21.1km · 3:58/km", kudos: 47, photoSlotId: null },
+];
+
+const SESSIONS = [
+  { id: 1, athleteId: 1, activity: "RUN", when: "Sat · 06:00", location: "Sea Point Promenade", status: "CONFIRMED" },
+  { id: 2, athleteId: 5, activity: "CROSSFIT", when: "Thu · 18:00", location: "CrossFit Box, Pretoria East", status: "PENDING" },
+];
+
+const NAV = [
+  { key: "discover", label: "Discover", icon: "assets/icons/zap.svg" },
+  { key: "feed", label: "Activity", icon: "assets/icons/activity.svg" },
+  { key: "chat", label: "Chat", icon: "assets/icons/repeat.svg" },
+  { key: "planner", label: "Planner", icon: "assets/icons/map-pin.svg" },
+  { key: "profile", label: "Profile", icon: "assets/icons/users.svg" },
+];
+
+function athleteById(id) { return ATHLETES.find((a) => a.id === id); }
+
+class Component extends DCLogic {
+  state = {
+    activeTab: "discover",
+    selectedDiscipline: "RUNNING",
+    selectedAthleteId: null,
+    selectedThreadId: null,
+    plannerDiscipline: "CROSSFIT",
+    plannerPartnerId: 5,
+    plannerSent: false,
+    detailReturnTab: "discover",
+  };
+
+  selectDiscipline(d) { this.setState({ selectedDiscipline: d }); }
+  openAthlete(id) { this.setState({ selectedAthleteId: id, detailReturnTab: this.state.activeTab }); }
+  closeMatchDetail() { this.setState({ selectedAthleteId: null }); }
+  openThread(id) { this.setState({ selectedThreadId: id }); }
+  closeChatThread() { this.setState({ selectedThreadId: null }); }
+  openThreadFromDetail() {
+    const athleteId = this.state.selectedAthleteId;
+    const thread = CHAT_THREADS.find((t) => t.athleteId === athleteId);
+    this.setState({ selectedAthleteId: null, selectedThreadId: thread ? thread.id : null, activeTab: "chat" });
+  }
+  openPlannerFromDetail() {
+    this.setState({ selectedAthleteId: null, activeTab: "planner", plannerPartnerId: this.state.selectedAthleteId, plannerSent: false });
+  }
+  setTab(tab) { this.setState({ activeTab: tab, plannerSent: false }); }
+  setPlannerDiscipline(d) { this.setState({ plannerDiscipline: d }); }
+  setPlannerPartner(id) { this.setState({ plannerPartnerId: id, plannerSent: false }); }
+  sendInvite() { this.setState({ plannerSent: true }); }
+
+  renderVals() {
+    const s = this.state;
+    const showOverlay = s.selectedAthleteId != null || s.selectedThreadId != null;
+    const selectedAthlete = s.selectedAthleteId != null ? athleteById(s.selectedAthleteId) : null;
+    const selectedThread = s.selectedThreadId != null ? CHAT_THREADS.find((t) => t.id === s.selectedThreadId) : null;
+    const threadAthlete = selectedThread ? athleteById(selectedThread.athleteId) : null;
+    const threadMessages = selectedThread ? THREAD_MESSAGES[selectedThread.athleteId].map((m) => ({
+      text: m.text,
+      align: m.from === "me" ? "flex-end" : "flex-start",
+      bg: m.from === "me" ? "var(--color-ember)" : "var(--color-ash)",
+      color: m.from === "me" ? "var(--color-ink)" : "var(--color-bone)",
+    })) : [];
+
+    const plannerMatchIds = [1, 3, 5, 7];
+    const plannerPartner = athleteById(s.plannerPartnerId);
+
+    return {
+      showMatchDetail: s.selectedAthleteId != null,
+      showChatThread: s.selectedThreadId != null,
+      showMain: !showOverlay,
+      isDiscover: s.activeTab === "discover",
+      isFeed: s.activeTab === "feed",
+      isChat: s.activeTab === "chat",
+      isPlanner: s.activeTab === "planner",
+      isProfile: s.activeTab === "profile",
+
+      disciplines: DISCIPLINES.map((d) => ({ label: d, selected: d === s.selectedDiscipline, onClick: () => this.selectDiscipline(d) })),
+      filteredAthletes: ATHLETES.filter((a) => a.discipline === s.selectedDiscipline).map((a) => ({ ...a, onClick: () => this.openAthlete(a.id) })),
+
+      selectedAthleteName: selectedAthlete ? selectedAthlete.name : "",
+      selectedAthleteAge: selectedAthlete ? selectedAthlete.age : "",
+      selectedAthleteCity: selectedAthlete ? selectedAthlete.city : "",
+      selectedAthleteDiscipline: selectedAthlete ? selectedAthlete.discipline : "",
+      selectedAthletePace: selectedAthlete ? selectedAthlete.pace : "",
+      selectedAthleteBio: selectedAthlete ? selectedAthlete.bio : "",
+      closeMatchDetail: () => this.closeMatchDetail(),
+      openThreadFromDetail: () => this.openThreadFromDetail(),
+      openPlannerFromDetail: () => this.openPlannerFromDetail(),
+
+      chatThreads: CHAT_THREADS.map((t) => {
+        const a = athleteById(t.athleteId);
+        return { ...t, name: a.name, slotId: a.slotId, onClick: () => this.openThread(t.id) };
+      }),
+      selectedThreadName: threadAthlete ? threadAthlete.name : "",
+      selectedThreadSlotId: threadAthlete ? threadAthlete.slotId : "thread-avatar",
+      selectedThreadMessages: threadMessages,
+      closeChatThread: () => this.closeChatThread(),
+
+      feedItems: FEED_ITEMS.map((f) => {
+        const a = f.athleteId === "me" ? null : athleteById(f.athleteId);
+        return { ...f, avatarSlotId: a ? a.slotId : "profile-avatar", hasPhoto: !!f.photoSlotId };
+      }),
+
+      plannerDisciplines: DISCIPLINES.map((d) => ({ label: d, selected: d === s.plannerDiscipline, onClick: () => this.setPlannerDiscipline(d) })),
+      plannerPartners: plannerMatchIds.map((id) => {
+        const a = athleteById(id);
+        const active = id === s.plannerPartnerId;
+        return {
+          name: a.name, slotId: a.slotId,
+          ringStyle: active ? "box-shadow:0 0 0 2px var(--color-ember)" : "box-shadow:0 0 0 2px var(--color-line)",
+          labelColor: active ? "var(--color-ember)" : "var(--color-fog)",
+          onClick: () => this.setPlannerPartner(id),
+        };
+      }),
+      plannerPartnerName: plannerPartner ? plannerPartner.name : "",
+      plannerSent: s.plannerSent,
+      sendInvite: () => this.sendInvite(),
+
+      upcomingSessions: SESSIONS.map((sess) => {
+        const a = athleteById(sess.athleteId);
+        return { ...sess, withName: a.name, tone: sess.status === "CONFIRMED" ? "accent" : "neutral" };
+      }),
+
+      navItems: NAV.map((n) => ({ ...n, color: n.key === s.activeTab ? "var(--color-ember)" : "var(--color-fog)", onClick: () => this.setTab(n.key) })),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

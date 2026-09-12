@@ -1,13 +1,18 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
 import { Icon } from './Icon';
-import { colors, fonts } from '../theme/tokens';
+import { colors, fonts, radius } from '../theme/tokens';
 
-// The stats cluster from the app's card mockup: a column of colored
-// activity tiles on the left, a headline stat with a heartbeat line
-// behind it in the middle, and a round heart button bottom-right.
-// Shared by the Discover cards and the Activity feed cards.
+// The stats cluster from the app's card mockup: a row of activity
+// tiles on the left and a round heart button on the right. When a
+// stat is provided (kudos on feed cards) it sits between the tiles
+// and the heart. Shared by the Discover cards and the Activity feed
+// cards.
+//
+// Tiles follow the app's Badge/Chip neutral-vs-accent language rather
+// than per-discipline hues, so the panel reads as one design system
+// with the rest of the app: the athlete's primary discipline (first
+// tag) gets the ember accent treatment, the rest stay neutral.
 
 const DISCIPLINE_ABBR: Record<string, string> = {
   RUNNING: 'RUN',
@@ -19,20 +24,10 @@ const DISCIPLINE_ABBR: Record<string, string> = {
   TRIATHLON: 'TRI',
 };
 
-const DISCIPLINE_COLOR: Record<string, string> = {
-  RUNNING: '#f6c445',
-  CYCLING: '#4fa3ff',
-  TRAIL: '#6fbf73',
-  SWIMMING: '#3fd0c9',
-  CROSSFIT: '#ff7a45',
-  CLIMBING: '#b78bff',
-  TRIATHLON: '#ff5d73',
-};
-
 interface ActivityPanelProps {
   tags: string[];
-  statLabel: string;
-  statValue: string | number;
+  statLabel?: string;
+  statValue?: string | number;
   liked?: boolean;
   onLike: () => void;
   likeLabel?: string;
@@ -50,28 +45,36 @@ export function ActivityPanel({
     <View style={styles.row}>
       {tags.length > 0 ? (
         <View style={styles.tags}>
-          {tags.slice(0, 3).map((t) => (
-            <View key={t} style={[styles.tile, { backgroundColor: DISCIPLINE_COLOR[t] ?? colors.ember }]}>
-              <Text style={styles.tileText}>{DISCIPLINE_ABBR[t] ?? t.slice(0, 3)}</Text>
-            </View>
-          ))}
+          {tags.slice(0, 3).map((t, i) => {
+            const accent = i === 0;
+            return (
+              <View
+                key={t}
+                style={[
+                  styles.tile,
+                  {
+                    backgroundColor: accent ? colors.emberSoft : colors.coal,
+                    borderColor: accent ? colors.emberBorder : colors.line,
+                  },
+                ]}
+              >
+                <Text style={[styles.tileText, { color: accent ? colors.ember : colors.bone }]}>
+                  {DISCIPLINE_ABBR[t] ?? t.slice(0, 3)}
+                </Text>
+              </View>
+            );
+          })}
         </View>
       ) : null}
 
-      <View style={styles.statBlock}>
-        <Svg width={116} height={30} viewBox="0 0 116 30" style={styles.beat}>
-          <Path
-            d="M2 15h22l4-8 7 16 5-10 4 10 5-8h67"
-            fill="none"
-            stroke={colors.mint}
-            strokeWidth={1.6}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
-        <Text style={styles.statLabel}>{statLabel}</Text>
-        <Text style={styles.statValue}>{statValue}</Text>
-      </View>
+      {statValue != null ? (
+        <View style={styles.statBlock}>
+          <Text style={styles.statLabel}>{statLabel}</Text>
+          <Text style={styles.statValue}>{statValue}</Text>
+        </View>
+      ) : null}
+
+      <View style={styles.spacer} />
 
       <Pressable
         accessibilityRole="button"
@@ -93,27 +96,23 @@ export function ActivityPanel({
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
+    gap: 10,
   },
-  tags: { gap: 4 },
+  tags: { flexDirection: 'row', gap: 6 },
   tile: {
-    width: 30,
-    height: 30,
-    borderRadius: 7,
+    height: 36,
+    paddingHorizontal: 16,
+    borderRadius: radius.full,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tileText: { fontFamily: fonts.monoBold, fontSize: 8.5, letterSpacing: 0.5, color: colors.ink },
+  tileText: { fontFamily: fonts.monoBold, fontSize: 12, letterSpacing: 1 },
+  spacer: { flex: 1 },
   statBlock: {
-    flex: 1,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
-    paddingBottom: 2,
-  },
-  beat: {
-    position: 'absolute',
-    top: 0,
-    opacity: 0.45,
   },
   statLabel: { fontFamily: fonts.mono, fontSize: 8, letterSpacing: 1.5, color: colors.fog },
   statValue: {

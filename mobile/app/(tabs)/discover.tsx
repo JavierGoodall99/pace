@@ -222,14 +222,10 @@ function SwipeCard({
           <Text style={styles.panelName}>
             {athlete.name}, {athlete.age}
           </Text>
-          <Text style={styles.panelMeta}>
-            {athlete.pace} · {athlete.city}
-          </Text>
+          <Text style={styles.panelMeta}>{athlete.city}</Text>
         </View>
         <ActivityPanel
           tags={tagsForDiscipline(athlete.discipline)}
-          statLabel="ACTIVITIES/WEEK"
-          statValue={athlete.weekly}
           onLike={onLike}
           likeLabel={`Like ${athlete.name}`}
         />

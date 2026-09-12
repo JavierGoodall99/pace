@@ -1,0 +1,29 @@
+:root{
+--font-display:"Anton","Arial Narrow",sans-serif;
+--font-sans:"Archivo",ui-sans-serif,system-ui,sans-serif;
+--font-mono:"JetBrains Mono",ui-monospace,"SF Mono",monospace;
+
+--text-display-monumental:clamp(4.2rem,13vw,11rem);
+--text-section-header:clamp(2.6rem,6.5vw,5.5rem);
+--text-card-header:clamp(1.75rem,3vw,2.5rem);
+--text-numeric-stat:clamp(3rem,6vw,4.5rem);
+--text-manifesto-lead:clamp(1.7rem,3.5vw,3.2rem);
+--text-body:1rem;
+--text-body-sm:0.875rem;
+--text-button:0.75rem;
+--text-eyebrow:0.6875rem;
+--text-micro-tag:0.5625rem;
+
+--leading-display:0.85;
+--leading-section:0.90;
+--leading-card:1.00;
+--leading-manifesto:1.15;
+--leading-body:1.60;
+--leading-tight:1.00;
+
+--tracking-display:0.01em;
+--tracking-manifesto:-0.02em;
+--tracking-button:0.20em;
+--tracking-eyebrow:0.35em;
+--tracking-micro:0.24em;
+}

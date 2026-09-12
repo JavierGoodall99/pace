@@ -1,0 +1,27 @@
+<!-- @dsCard group="Mobile" viewport="420x860" name="Onboarding Flow" subtitle="8-step onboarding recreated from mobiledesign.md, in a phone frame" -->
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;background:#1a1a1f;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.phone{width:390px;height:844px;border-radius:44px;border:10px solid #000;position:relative;overflow:hidden;background:#0a0a0d;box-shadow:0 40px 80px rgba(0,0,0,0.5)}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:28px;background:#000;border-radius:0 0 16px 16px;z-index:20}
+</style>
+</head><body>
+<div class="phone"><div class="notch"></div><div id="root" style="position:absolute;inset:0"></div></div>
+<script type="text/babel" data-presets="react" src="Screens.jsx"></script>
+<script type="text/babel" data-presets="react">
+function App(){
+  const order = ["Welcome","Basics","Disciplines","Cadence","PaceCal","Photos","Verify","LaunchHub"];
+  const [i,setI] = React.useState(0);
+  const S = window.PaceMobileScreens[order[i]];
+  const next = () => setI((v)=>Math.min(v+1, order.length-1));
+  const back = () => setI((v)=>Math.max(v-1,0));
+  const restart = () => setI(0);
+  return <S onNext={next} onBack={back} onRestart={restart}/>;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body></html>

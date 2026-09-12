@@ -1,5 +1,5 @@
-import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
@@ -21,6 +21,15 @@ export default function PlannerScreen() {
   const [discipline, setDiscipline] = useState<Discipline>('CROSSFIT');
   const [partnerId, setPartnerId] = useState<number>(5);
   const [sent, setSent] = useState(false);
+
+  // The sessions list is module state (mock), so re-read it each time the
+  // tab gains focus to pick up invites sent from a chat thread.
+  const [, setTick] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      setTick((t) => t + 1);
+    }, [])
+  );
 
   useEffect(() => {
     if (params.partnerId) {

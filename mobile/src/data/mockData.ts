@@ -77,9 +77,18 @@ export const CHAT_THREADS: ChatThread[] = [
   { id: 4, athleteId: 7, lastMsg: 'Nice PB on the swim leg!', time: '1D', unread: false },
 ];
 
+// An activity plan attached to a message, composed inline in a chat
+// thread and mirrored into the Planner's sessions as a PENDING invite.
+export interface PlanCard {
+  activity: Discipline;
+  when: string;
+  location: string;
+}
+
 export interface ThreadMessage {
   from: 'them' | 'me';
   text: string;
+  plan?: PlanCard;
 }
 
 export const THREAD_MESSAGES: Record<number, ThreadMessage[]> = {
@@ -136,6 +145,18 @@ export const SESSIONS: Session[] = [
   { id: 1, athleteId: 1, activity: 'RUN', when: 'Sat · 06:00', location: 'Sea Point Promenade', status: 'CONFIRMED' },
   { id: 2, athleteId: 5, activity: 'CROSSFIT', when: 'Thu · 18:00', location: 'CrossFit Box, Pretoria East', status: 'PENDING' },
 ];
+
+// Sessions added from a chat-thread plan hit the Planner's upcoming list
+// as unconfirmed invites, so a plan lives in one place once it's sent.
+export function addSession(
+  athleteId: number,
+  activity: Discipline,
+  when: string,
+  location: string,
+) {
+  const id = SESSIONS.reduce((max, s) => Math.max(max, s.id), 0) + 1;
+  SESSIONS.push({ id, athleteId, activity, when, location, status: 'PENDING' });
+}
 
 export const PLANNER_PARTNER_IDS = [1, 3, 5, 7];
 

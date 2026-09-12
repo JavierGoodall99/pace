@@ -23,6 +23,7 @@ import {
   MATCH_IDS,
   tagsForDiscipline,
 } from '../../src/data/mockData';
+import { ATHLETE_ACTION_PHOTOS } from '../../src/data/photos';
 import { colors, fonts } from '../../src/theme/tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -202,7 +203,12 @@ function SwipeCard({
       ]}
       {...panResponder.panHandlers}
     >
-      <PhotoSlot label={athlete.name} shape="rect" style={styles.cardPhoto} />
+      <PhotoSlot
+        label={athlete.name}
+        shape="rect"
+        source={ATHLETE_ACTION_PHOTOS[athlete.slotId]}
+        style={styles.cardPhoto}
+      />
 
       <Animated.View style={[styles.stamp, styles.likeStamp, { opacity: likeOpacity }]}>
         <Text style={[styles.stampText, { color: colors.mint, borderColor: colors.mint }]}>LIKE</Text>
@@ -236,7 +242,12 @@ function NextCard({ athlete, depth }: { athlete: Athlete; depth: 1 | 2 }) {
   const style = depth === 1 ? styles.nextCard : styles.nextCard2;
   return (
     <View style={[styles.card, style]}>
-      <PhotoSlot label={athlete.name} shape="rect" style={styles.cardPhoto} />
+      <PhotoSlot
+        label={athlete.name}
+        shape="rect"
+        source={ATHLETE_ACTION_PHOTOS[athlete.slotId]}
+        style={styles.cardPhoto}
+      />
     </View>
   );
 }

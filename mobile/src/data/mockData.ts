@@ -109,17 +109,18 @@ export interface FeedItem {
   who: string;
   time: string;
   type: string;
+  icon: 'activity' | 'zap' | 'map' | 'repeat';
   stat: string;
   kudos: number;
   hasPhoto: boolean;
 }
 
 export const FEED_ITEMS: FeedItem[] = [
-  { id: 1, athleteId: 1, who: 'Lerato', time: '2H AGO', type: 'RUN', stat: '12.4km · 4:38/km · 54:02', kudos: 14, hasPhoto: false },
-  { id: 2, athleteId: 5, who: 'You', time: '5H AGO', type: 'CROSSFIT', stat: '5 rounds · 38 reps · new PB on cleans', kudos: 22, hasPhoto: true },
-  { id: 3, athleteId: 6, who: 'Dean', time: '8H AGO', type: 'CLIMB', stat: 'V5 flash, 3 attempts', kudos: 9, hasPhoto: false },
-  { id: 4, athleteId: 7, who: 'Zanele', time: '1D AGO', type: 'TRI BRICK', stat: '1.5km swim + 40km ride + 10km run', kudos: 31, hasPhoto: true },
-  { id: 5, athleteId: 8, who: 'Kagiso', time: '2D AGO', type: 'RUN', stat: '21.1km · 3:58/km', kudos: 47, hasPhoto: false },
+  { id: 1, athleteId: 1, who: 'Lerato', time: '2H AGO', type: 'RUN', icon: 'activity', stat: '12.4km · 4:38/km · 54:02', kudos: 14, hasPhoto: false },
+  { id: 2, athleteId: 5, who: 'You', time: '5H AGO', type: 'CROSSFIT', icon: 'zap', stat: '5 rounds · 38 reps · new PB on cleans', kudos: 22, hasPhoto: true },
+  { id: 3, athleteId: 6, who: 'Dean', time: '8H AGO', type: 'CLIMB', icon: 'map', stat: 'V5 flash, 3 attempts', kudos: 9, hasPhoto: false },
+  { id: 4, athleteId: 7, who: 'Zanele', time: '1D AGO', type: 'TRI BRICK', icon: 'repeat', stat: '1.5km swim + 40km ride + 10km run', kudos: 31, hasPhoto: true },
+  { id: 5, athleteId: 8, who: 'Kagiso', time: '2D AGO', type: 'RUN', icon: 'activity', stat: '21.1km · 3:58/km', kudos: 47, hasPhoto: false },
 ];
 
 export interface Session {

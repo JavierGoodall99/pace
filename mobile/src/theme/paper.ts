@@ -1,8 +1,28 @@
 // react-native-paper theme, mapped onto the app's existing dark design
 // tokens in `./tokens` so Paper components match the rest of the UI.
 
-import { MD3DarkTheme, useTheme } from 'react-native-paper';
+import { configureFonts, MD3DarkTheme, useTheme } from 'react-native-paper';
 import { colors, fonts } from './tokens';
+
+// Archivo as the base for every MD3 text variant, with the display/headline
+// variants swapped to Anton (the app's display face) since those roles are
+// the ones a "display" font is meant for.
+const baseFonts = configureFonts({ config: { fontFamily: fonts.sans } });
+const displayVariants = [
+  'displayLarge',
+  'displayMedium',
+  'displaySmall',
+  'headlineLarge',
+  'headlineMedium',
+  'headlineSmall',
+] as const;
+const paperFonts = displayVariants.reduce(
+  (acc, variant) => ({
+    ...acc,
+    [variant]: { ...acc[variant], fontFamily: fonts.display },
+  }),
+  baseFonts,
+);
 
 export const paperTheme = {
   ...MD3DarkTheme,
@@ -32,13 +52,7 @@ export const paperTheme = {
       level5: colors.ash,
     },
   },
-  fonts: {
-    ...MD3DarkTheme.fonts,
-    default: {
-      ...MD3DarkTheme.fonts.default,
-      fontFamily: fonts.sans,
-    },
-  },
+  fonts: paperFonts,
 };
 
 // Advanced theme override (https://callstack.github.io/react-native-paper/docs/guides/theming#advanced-theme-overrides):

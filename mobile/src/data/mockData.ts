@@ -79,10 +79,14 @@ export const CHAT_THREADS: ChatThread[] = [
 
 // An activity plan attached to a message, composed inline in a chat
 // thread and mirrored into the Planner's sessions as a PENDING invite.
+export type PlanStatus = 'INVITE' | 'CONFIRMED' | 'DECLINED';
+
 export interface PlanCard {
+  id: number;
   activity: Discipline;
   when: string;
   location: string;
+  status: PlanStatus;
 }
 
 export interface ThreadMessage {
@@ -97,6 +101,11 @@ export const THREAD_MESSAGES: Record<number, ThreadMessage[]> = {
     { from: 'me', text: 'Thanks! Felt strong the last 2K.' },
     { from: 'them', text: 'See you at 6am at the promenade?' },
     { from: 'me', text: "I'll be there. Bringing coffee after." },
+    {
+      from: 'them',
+      text: 'Forecast is clear Sunday — trail with me?',
+      plan: { id: 3, activity: 'TRAIL', when: 'Sun · 07:00', location: 'Table Mountain, Cape Town', status: 'INVITE' },
+    },
   ],
   3: [
     { from: 'them', text: 'That trail was brutal, great pace though.' },
@@ -138,12 +147,13 @@ export interface Session {
   activity: string;
   when: string;
   location: string;
-  status: 'CONFIRMED' | 'PENDING';
+  status: 'CONFIRMED' | 'PENDING' | 'DECLINED';
 }
 
 export const SESSIONS: Session[] = [
   { id: 1, athleteId: 1, activity: 'RUN', when: 'Sat · 06:00', location: 'Sea Point Promenade', status: 'CONFIRMED' },
   { id: 2, athleteId: 5, activity: 'CROSSFIT', when: 'Thu · 18:00', location: 'CrossFit Box, Pretoria East', status: 'PENDING' },
+  { id: 3, athleteId: 1, activity: 'TRAIL', when: 'Sun · 07:00', location: 'Table Mountain, Cape Town', status: 'PENDING' },
 ];
 
 // Sessions added from a chat-thread plan hit the Planner's upcoming list
@@ -153,9 +163,18 @@ export function addSession(
   activity: Discipline,
   when: string,
   location: string,
-) {
+): Session {
   const id = SESSIONS.reduce((max, s) => Math.max(max, s.id), 0) + 1;
-  SESSIONS.push({ id, athleteId, activity, when, location, status: 'PENDING' });
+  const session: Session = { id, athleteId, activity, when, location, status: 'PENDING' };
+  SESSIONS.push(session);
+  return session;
+}
+
+// Mirrors an accept/decline from a thread's invite card back to the
+// Planner's session list.
+export function updateSessionStatus(id: number, status: Session['status']) {
+  const session = SESSIONS.find((s) => s.id === id);
+  if (session) session.status = status;
 }
 
 export const PLANNER_PARTNER_IDS = [1, 3, 5, 7];

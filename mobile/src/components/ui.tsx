@@ -146,11 +146,13 @@ export function Input({
   placeholder,
   value,
   onChangeText,
+  onFocus,
   style,
 }: {
   placeholder?: string;
   value?: string;
   onChangeText?: (v: string) => void;
+  onFocus?: () => void;
   style?: ViewStyle;
 }) {
   return (
@@ -159,6 +161,7 @@ export function Input({
       placeholderTextColor={colors.fog}
       value={value}
       onChangeText={onChangeText}
+      onFocus={onFocus}
       style={[styles.input, style]}
     />
   );

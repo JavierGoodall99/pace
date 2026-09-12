@@ -1,7 +1,7 @@
 // react-native-paper theme, mapped onto the app's existing dark design
 // tokens in `./tokens` so Paper components match the rest of the UI.
 
-import { MD3DarkTheme } from 'react-native-paper';
+import { MD3DarkTheme, useTheme } from 'react-native-paper';
 import { colors, fonts } from './tokens';
 
 export const paperTheme = {
@@ -40,3 +40,12 @@ export const paperTheme = {
     },
   },
 };
+
+// Advanced theme override (https://callstack.github.io/react-native-paper/docs/guides/theming#advanced-theme-overrides):
+// paperTheme's shape differs from Paper's built-in theme (custom colors
+// above), so `useTheme()` alone would type those fields as `any`/missing.
+// This hook types every screen/component's `useAppTheme()` call as
+// `AppTheme` instead, in one place.
+export type AppTheme = typeof paperTheme;
+
+export const useAppTheme = () => useTheme<AppTheme>();

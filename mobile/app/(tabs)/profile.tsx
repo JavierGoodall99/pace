@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
@@ -13,6 +14,7 @@ const STATS = [
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 24 }}>
@@ -48,6 +50,12 @@ export default function ProfileScreen() {
           <PhotoSlot label="Photo" shape="rounded" style={styles.gridPhoto} />
           <PhotoSlot label="Photo" shape="rounded" style={styles.gridPhoto} />
         </View>
+
+        {__DEV__ ? (
+          <Pressable onPress={() => router.push('/onboarding')} style={styles.devButton}>
+            <Text style={styles.devButtonText}>DEV · VIEW ONBOARDING</Text>
+          </Pressable>
+        ) : null}
       </View>
     </ScrollView>
   );
@@ -85,4 +93,14 @@ const styles = StyleSheet.create({
   photosLabel: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.fog },
   photoGrid: { flexDirection: 'row', gap: 8, marginTop: 10 },
   gridPhoto: { flex: 1, aspectRatio: 1 },
+  devButton: {
+    marginTop: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+  },
+  devButtonText: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1.5, color: colors.fog },
 });

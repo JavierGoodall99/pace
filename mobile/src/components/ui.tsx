@@ -1,19 +1,13 @@
 import React from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  TextStyle,
-  View,
-  ViewStyle,
-} from 'react-native';
-import { colors, fonts, radius } from '../theme/tokens';
+import { ViewStyle } from 'react-native';
+import { Input as TInput, Switch as TSwitch, Text, XStack, YStack } from 'tamagui';
 
 // Small design-system components ported from
 // `../_ds/pace-design-system-.../_ds_bundle.js` (Badge, Chip, Button,
-// IconButton, Input).
+// IconButton, Input), rebuilt on Tamagui primitives so the whole app
+// shares one styling system. Note: this Tamagui config sets
+// `onlyAllowShorthands`, so props like `bg`, `px`, `rounded` are used
+// instead of the RN longhands.
 
 export function Badge({
   children,
@@ -26,20 +20,27 @@ export function Badge({
 }) {
   const accent = tone === 'accent';
   return (
-    <View
-      style={[
-        styles.badge,
-        {
-          backgroundColor: accent ? colors.emberSoft : colors.coal,
-          borderColor: accent ? colors.emberBorder : colors.line,
-        },
-        style,
-      ]}
+    <XStack
+      items="center"
+      borderWidth={1}
+      rounded="$full"
+      px={14}
+      py={6}
+      bg={accent ? '$emberSoft' : '$coal'}
+      borderColor={accent ? '$emberBorder' : '$line'}
+      style={style}
     >
-      <Text style={[styles.badgeText, { color: accent ? colors.ember : colors.fog }]}>
+      <Text
+        fontFamily="$mono"
+        fontSize={10}
+        letterSpacing={2}
+        textTransform="uppercase"
+        fontWeight="700"
+        color={accent ? '$ember' : '$fog'}
+      >
         {children}
       </Text>
-    </View>
+    </XStack>
   );
 }
 
@@ -52,26 +53,30 @@ export function Chip({
   selected?: boolean;
   onPress?: () => void;
 }) {
+  const active = !!selected;
   return (
-    <Pressable
+    <XStack
       onPress={onPress}
-      style={[
-        styles.chip,
-        {
-          backgroundColor: selected ? colors.ember : colors.coal,
-          borderColor: selected ? colors.ember : colors.line,
-        },
-      ]}
+      height={44}
+      px={18}
+      rounded="$full"
+      borderWidth={1}
+      items="center"
+      justify="center"
+      bg={active ? '$ember' : '$coal'}
+      borderColor={active ? '$ember' : '$line'}
     >
       <Text
-        style={[
-          styles.chipText,
-          { color: selected ? colors.ink : colors.fog, fontWeight: selected ? '700' : '500' },
-        ]}
+        fontFamily="$mono"
+        fontSize={11}
+        letterSpacing={1.5}
+        textTransform="uppercase"
+        fontWeight={active ? '700' : '500'}
+        color={active ? '$ink' : '$fog'}
       >
         {label}
       </Text>
-    </Pressable>
+    </XStack>
   );
 }
 
@@ -90,24 +95,31 @@ export function Button({
 }) {
   const ghost = variant === 'ghost';
   return (
-    <Pressable
-      onPress={disabled ? undefined : onPress}
+    <XStack
+      onPress={onPress}
       disabled={disabled}
-      style={({ pressed }) => [
-        styles.button,
-        {
-          backgroundColor: disabled ? colors.ash : ghost ? 'transparent' : colors.ember,
-          borderWidth: ghost ? 1 : 0,
-          borderColor: colors.line,
-          opacity: pressed && !disabled ? 0.85 : 1,
-        },
-        style,
-      ]}
+      height={52}
+      rounded="$full"
+      items="center"
+      justify="center"
+      px={24}
+      pressStyle={disabled ? undefined : { opacity: 0.85 }}
+      bg={disabled ? '$ash' : ghost ? 'transparent' : '$ember'}
+      borderWidth={ghost ? 1 : 0}
+      borderColor="$line"
+      style={style}
     >
-      <Text style={[styles.buttonText, { color: disabled ? colors.fog : ghost ? colors.fog : colors.ink }]}>
+      <Text
+        fontFamily="$mono"
+        fontSize={12}
+        letterSpacing={2}
+        textTransform="uppercase"
+        fontWeight="700"
+        color={disabled ? '$fog' : ghost ? '$fog' : '$ink'}
+      >
         {children}
       </Text>
-    </Pressable>
+    </XStack>
   );
 }
 
@@ -124,21 +136,19 @@ export function IconButton({
 }) {
   const accent = tone === 'accent';
   return (
-    <Pressable
+    <XStack
       onPress={onPress}
-      style={[
-        styles.iconButton,
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: accent ? colors.emberSoft : colors.ash,
-          borderColor: colors.line,
-        },
-      ]}
+      width={size}
+      height={size}
+      rounded={size / 2}
+      items="center"
+      justify="center"
+      borderWidth={1}
+      borderColor="$line"
+      bg={accent ? '$emberSoft' : '$ash'}
     >
       {children}
-    </Pressable>
+    </XStack>
   );
 }
 
@@ -156,13 +166,25 @@ export function Input({
   style?: ViewStyle;
 }) {
   return (
-    <TextInput
+    <TInput
+      unstyled
       placeholder={placeholder}
-      placeholderTextColor={colors.fog}
+      placeholderTextColor="$fog"
       value={value}
       onChangeText={onChangeText}
       onFocus={onFocus}
-      style={[styles.input, style]}
+      width="100%"
+      height={48}
+      bg="$coal"
+      color="$bone"
+      borderWidth={1}
+      borderColor="$line"
+      rounded="$full"
+      px={24}
+      fontFamily="$mono"
+      fontSize={14}
+      letterSpacing={1}
+      style={style}
     />
   );
 }
@@ -177,34 +199,43 @@ export function SegmentedControl({
   onChange: (v: string) => void;
 }) {
   return (
-    <View style={styles.segmentedRow}>
+    <XStack flexWrap="wrap" gap={8}>
       {options.map((opt) => {
         const active = opt === value;
         return (
-          <Pressable
+          <XStack
             key={opt}
             onPress={() => onChange(opt)}
-            style={[
-              styles.segment,
-              { backgroundColor: active ? colors.ember : colors.coal, borderColor: active ? colors.ember : colors.line },
-            ]}
+            py={10}
+            px={18}
+            rounded="$full"
+            borderWidth={1}
+            bg={active ? '$ember' : '$coal'}
+            borderColor={active ? '$ember' : '$line'}
           >
-            <Text style={[styles.segmentText, { color: active ? colors.ink : colors.fog, fontWeight: active ? '700' : '500' }]}>
+            <Text
+              fontFamily="$mono"
+              fontSize={11}
+              letterSpacing={1.5}
+              textTransform="uppercase"
+              fontWeight={active ? '700' : '500'}
+              color={active ? '$ink' : '$fog'}
+            >
               {opt}
             </Text>
-          </Pressable>
+          </XStack>
         );
       })}
-    </View>
+    </XStack>
   );
 }
 
 export function ProgressBar({ pct }: { pct: number }) {
   const clamped = Math.max(0, Math.min(100, pct));
   return (
-    <View style={styles.progressTrack}>
-      <View style={[styles.progressFill, { width: `${clamped}%` }]} />
-    </View>
+    <YStack width="100%" height={3} rounded={2} bg="$line" overflow="hidden">
+      <XStack height="100%" bg="$ember" rounded={2} width={`${clamped}%`} />
+    </YStack>
   );
 }
 
@@ -220,18 +251,39 @@ export function ToggleRow({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <View style={styles.toggleRow}>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.toggleLabel}>{label}</Text>
-        {hint ? <Text style={styles.toggleHint}>{hint}</Text> : null}
-      </View>
-      <Switch
-        value={value}
-        onValueChange={onChange}
-        trackColor={{ false: colors.coal, true: colors.ember }}
-        thumbColor={value ? colors.bone : colors.fog}
-      />
-    </View>
+    <XStack
+      items="center"
+      gap={12}
+      py={14}
+      borderBottomWidth={1}
+      borderBottomColor="$line"
+    >
+      <YStack flex={1}>
+        <Text
+          fontFamily="$mono"
+          fontSize={11}
+          letterSpacing={1}
+          color="$bone"
+          textTransform="uppercase"
+        >
+          {label}
+        </Text>
+        {hint ? (
+          <Text fontSize={12} color="$fog" mt={4} lineHeight={17}>
+            {hint}
+          </Text>
+        ) : null}
+      </YStack>
+      <TSwitch
+        checked={value}
+        onCheckedChange={onChange}
+        backgroundColor={value ? '$ember' : '$coal'}
+        borderColor={value ? '$ember' : '$line'}
+        borderWidth={1}
+      >
+        <TSwitch.Thumb backgroundColor="$bone" />
+      </TSwitch>
+    </XStack>
   );
 }
 
@@ -245,148 +297,27 @@ export function ScreenHeading({
   subtitle?: string;
 }) {
   return (
-    <View style={styles.heading}>
-      {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-    </View>
+    <YStack px={20} pb={4}>
+      {eyebrow ? (
+        <Text fontFamily="$mono" fontSize={10} letterSpacing={4} color="$ember">
+          {eyebrow}
+        </Text>
+      ) : null}
+      <Text
+        fontFamily="$display"
+        fontSize={32}
+        color="$bone"
+        textTransform="uppercase"
+        lineHeight={32}
+        mt={8}
+      >
+        {title}
+      </Text>
+      {subtitle ? (
+        <Text fontSize={12} color="$fog" mt={8} mb={16}>
+          {subtitle}
+        </Text>
+      ) : null}
+    </YStack>
   );
 }
-
-const textStyle: TextStyle = {
-  fontFamily: fonts.mono,
-};
-
-const styles = StyleSheet.create({
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: radius.full,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-  badgeText: {
-    ...textStyle,
-    fontSize: 10,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    fontWeight: '700',
-  },
-  chip: {
-    height: 44,
-    paddingHorizontal: 18,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chipText: {
-    ...textStyle,
-    fontSize: 11,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-  },
-  button: {
-    height: 52,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-  buttonText: {
-    ...textStyle,
-    fontSize: 12,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    fontWeight: '700',
-  },
-  iconButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  input: {
-    width: '100%',
-    height: 48,
-    backgroundColor: colors.coal,
-    color: colors.bone,
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: radius.full,
-    paddingHorizontal: 24,
-    fontFamily: fonts.mono,
-    fontSize: 14,
-    letterSpacing: 1,
-  },
-  heading: {
-    paddingHorizontal: 20,
-    paddingBottom: 4,
-  },
-  eyebrow: {
-    ...textStyle,
-    fontSize: 10,
-    letterSpacing: 4,
-    color: colors.ember,
-  },
-  title: {
-    fontFamily: fonts.display,
-    fontSize: 32,
-    color: colors.bone,
-    textTransform: 'uppercase',
-    lineHeight: 32,
-    marginTop: 8,
-  },
-  subtitle: {
-    color: colors.fog,
-    fontSize: 12,
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  segmentedRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  segment: {
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: radius.full,
-    borderWidth: 1,
-  },
-  segmentText: {
-    ...textStyle,
-    fontSize: 11,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-  },
-  progressTrack: {
-    width: '100%',
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: colors.line,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: colors.ember,
-    borderRadius: 2,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.line,
-  },
-  toggleLabel: {
-    ...textStyle,
-    fontSize: 11,
-    letterSpacing: 1,
-    color: colors.bone,
-    textTransform: 'uppercase',
-  },
-  toggleHint: {
-    fontSize: 12,
-    color: colors.fog,
-    marginTop: 4,
-    lineHeight: 17,
-  },
-});

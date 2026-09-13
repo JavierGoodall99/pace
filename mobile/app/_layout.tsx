@@ -13,10 +13,10 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { TamaguiProvider } from 'tamagui';
 import { colors } from '../src/theme/tokens';
-import { paperTheme } from '../src/theme/paper';
+import tamaguiConfig from '../tamagui.config';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -39,7 +39,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <PaperProvider theme={paperTheme}>
+      <TamaguiProvider config={tamaguiConfig} defaultTheme="dark">
         <StatusBar style="light" />
         <Stack
           screenOptions={{
@@ -58,7 +58,7 @@ export default function RootLayout() {
           <Stack.Screen name="settings-subscription" />
           <Stack.Screen name="notifications" />
         </Stack>
-      </PaperProvider>
+      </TamaguiProvider>
     </SafeAreaProvider>
   );
 }

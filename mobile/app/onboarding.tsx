@@ -359,7 +359,7 @@ export default function OnboardingScreen() {
       <YStack
         px={20}
         pt={16}
-        borderTopWidth={1}
+        borderTopWidth={step === 0 ? 0 : 1}
         borderTopColor="$line"
         bg="$ink"
         style={{ paddingBottom: insets.bottom + 20 }}
@@ -406,6 +406,7 @@ const HERO_ASPECT_RATIO = 1536 / 1024;
 
 function WelcomeStep() {
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   // Full-width, aspect-correct height: `cover` then has nothing to crop.
   // Clamped so very wide/short screens don't let the hero swallow the
   // whole viewport and squeeze the copy + CTA below it.
@@ -430,7 +431,7 @@ function WelcomeStep() {
   return (
     <YStack flex={1}>
       <Animated.View style={{ opacity: heroOpacity }}>
-        <YStack>
+        <YStack mt={insets.top + 12}>
           <Image source={HERO_RUNNERS} style={{ width: '100%', height: heroHeight }} resizeMode="cover" />
           <YStack position="absolute" t={0} l={0} r={0} height={heroHeight} pointerEvents="none">
             <Svg width="100%" height="100%">
@@ -449,22 +450,22 @@ function WelcomeStep() {
       <Animated.View style={{ flex: 1, opacity: bodyOpacity, transform: [{ translateY: bodyTranslate }] }}>
         <YStack flex={1} px={20} pt={28} justify="center">
           <YStack accessibilityRole="header" accessibilityLabel="Match. Train. Date.">
-            <Svg width="100%" height={120}>
-              <SvgText x={0} y={32} fontFamily={fonts.display} fontSize={40} fill={colors.bone}>
+            <Svg width="100%" height={172}>
+              <SvgText x={0} y={42} fontFamily={fonts.display} fontSize={50} fill={colors.bone}>
                 MATCH.
               </SvgText>
               <SvgText
                 x={0}
-                y={72}
+                y={97}
                 fontFamily={fonts.display}
-                fontSize={40}
+                fontSize={50}
                 fill="transparent"
                 stroke={colors.bone}
                 strokeWidth={1.5}
               >
                 TRAIN.
               </SvgText>
-              <SvgText x={0} y={112} fontFamily={fonts.display} fontSize={40} fill={colors.ember}>
+              <SvgText x={0} y={152} fontFamily={fonts.display} fontSize={50} fill={colors.ember}>
                 DATE.
               </SvgText>
             </Svg>

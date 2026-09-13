@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,13 +18,16 @@ import {
 } from '../src/components/ui';
 import { DISCIPLINES, Discipline } from '../src/data/mockData';
 import { HERO_RUNNERS } from '../src/data/photos';
+import { completeOnboarding, updateMe, useMe } from '../src/data/session';
 import { colors, fonts } from '../src/theme/tokens';
 
 // Ported from `../Pace Onboarding.dc.html` — an 8-step flow (0-7):
 // Welcome, Basics, Disciplines, Cadence, Photos, Activity Sync, Verify,
 // Launch. Header/progress bar only show for steps 1-6. Also ports the
 // "+N% profile strength" toast on each step advance, and the
-// confetti + badge-pop celebration on Launch.
+// confetti + badge-pop celebration on Launch. Steps write straight into
+// the session profile (`updateMe`), the same store Profile reads from.
+const MAX_PHOTOS = 3;
 
 const CADENCE_OPTIONS = ['2-3X/WK', '4-5X/WK', '6+X/WK'];
 const TIME_OPTIONS = ['EARLY MORNING', 'EVENING', 'WEEKENDS'];
@@ -67,30 +71,21 @@ const CTA_STYLE = {
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const me = useMe();
 
   const [step, setStep] = useState(0);
-  const [name, setName] = useState('');
-  const [age, setAge] = useState('');
-  const [city, setCity] = useState('');
-  const [disciplines, setDisciplines] = useState<Discipline[]>([]);
-  const [cadence, setCadence] = useState<string | null>(null);
-  const [times, setTimes] = useState<string[]>([]);
-  const [photosAdded, setPhotosAdded] = useState(false);
-  const [stravaConnected, setStravaConnected] = useState(false);
-  const [garminConnected, setGarminConnected] = useState(false);
-  const [verified, setVerified] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   const toastAnim = useRef(new Animated.Value(0)).current;
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const stepsDone = {
-    basics: name.trim().length > 0,
-    disciplines: disciplines.length > 0,
-    cadence: !!cadence,
-    photos: photosAdded,
-    sync: stravaConnected || garminConnected,
-    verify: verified,
+    basics: me.name.trim().length > 0,
+    disciplines: me.disciplines.length > 0,
+    cadence: !!me.cadence,
+    photos: me.photos.length > 0,
+    sync: me.stravaConnected || me.garminConnected,
+    verify: me.verified,
   };
 
   const profileStrength = useMemo(() => {
@@ -117,10 +112,28 @@ export default function OnboardingScreen() {
   const nextLabel = step === 5 ? (stepsDone.sync ? 'Continue' : 'Skip For Now') : NEXT_LABEL[step] ?? 'Continue';
 
   function toggleDiscipline(d: Discipline) {
-    setDisciplines((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
+    updateMe({
+      disciplines: me.disciplines.includes(d)
+        ? me.disciplines.filter((x) => x !== d)
+        : [...me.disciplines, d],
+    });
   }
   function toggleTime(t: string) {
-    setTimes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
+    updateMe({
+      times: me.times.includes(t) ? me.times.filter((x) => x !== t) : [...me.times, t],
+    });
+  }
+
+  async function pickPhotos() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      selectionLimit: Math.max(1, MAX_PHOTOS - me.photos.length),
+      quality: 0.8,
+    });
+    if (result.canceled) return;
+    const merged = [...me.photos, ...result.assets.map((a) => a.uri)].slice(0, MAX_PHOTOS);
+    await updateMe({ photos: merged });
   }
   function showToast(msg: string) {
     setToastMsg(msg);
@@ -208,9 +221,9 @@ export default function OnboardingScreen() {
               Just enough for a warm introduction.
             </Text>
             <YStack gap={14}>
-              <Input placeholder="FIRST NAME" value={name} onChangeText={setName} />
-              <Input placeholder="AGE" value={age} onChangeText={setAge} />
-              <Input placeholder="CITY" value={city} onChangeText={setCity} />
+              <Input placeholder="FIRST NAME" value={me.name} onChangeText={(v) => updateMe({ name: v })} />
+              <Input placeholder="AGE" value={me.age} onChangeText={(v) => updateMe({ age: v })} />
+              <Input placeholder="CITY" value={me.city} onChangeText={(v) => updateMe({ city: v })} />
             </YStack>
           </YStack>
         )}
@@ -225,7 +238,7 @@ export default function OnboardingScreen() {
             </Text>
             <XStack flexWrap="wrap" gap={10}>
               {DISCIPLINES.map((d) => (
-                <Chip key={d} label={d} selected={disciplines.includes(d)} onPress={() => toggleDiscipline(d)} />
+                <Chip key={d} label={d} selected={me.disciplines.includes(d)} onPress={() => toggleDiscipline(d)} />
               ))}
             </XStack>
           </YStack>
@@ -243,14 +256,14 @@ export default function OnboardingScreen() {
               WEEKLY VOLUME
             </Text>
             <YStack mt={10}>
-              <SegmentedControl options={CADENCE_OPTIONS} value={cadence} onChange={setCadence} />
+              <SegmentedControl options={CADENCE_OPTIONS} value={me.cadence} onChange={(v) => updateMe({ cadence: v })} />
             </YStack>
             <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone" mt={22}>
               TIME OF DAY
             </Text>
             <XStack flexWrap="wrap" gap={10} mt={10}>
               {TIME_OPTIONS.map((t) => (
-                <Chip key={t} label={t} selected={times.includes(t)} onPress={() => toggleTime(t)} />
+                <Chip key={t} label={t} selected={me.times.includes(t)} onPress={() => toggleTime(t)} />
               ))}
             </XStack>
           </YStack>
@@ -262,17 +275,45 @@ export default function OnboardingScreen() {
               Put a face to it.
             </Text>
             <Text color="$fog" fontSize={12} mt={8} mb={20}>
-              One good photo beats a paragraph of bio.
+              One good photo beats a paragraph of bio. Pick up to three from your library.
             </Text>
             <XStack gap={10} height={260}>
-              <YStack flex={1.4} rounded={18} bg="$ash" borderWidth={1} borderColor="$line" />
-              <YStack flex={1} rounded={18} bg="$ash" borderWidth={1} borderColor="$line" />
-              <YStack flex={1} rounded={18} bg="$ash" borderWidth={1} borderColor="$line" />
+              {[0, 1, 2].map((i) => {
+                const uri = me.photos[i];
+                const main = i === 0;
+                return (
+                  <YStack
+                    key={i}
+                    onPress={pickPhotos}
+                    flex={main ? 1.4 : 1}
+                    rounded={18}
+                    bg="$ash"
+                    borderWidth={1}
+                    borderColor="$line"
+                    overflow="hidden"
+                    items="center"
+                    justify="center"
+                  >
+                    {uri ? (
+                      <Image source={{ uri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                    ) : (
+                      <YStack items="center" gap={6} opacity={0.6}>
+                        <Icon name="upload" size={20} color={colors.fog} />
+                        <Text fontFamily="$mono" fontSize={9} letterSpacing={1.5} color="$fog">
+                          ADD
+                        </Text>
+                      </YStack>
+                    )}
+                  </YStack>
+                );
+              })}
             </XStack>
-            <XStack onPress={() => setPhotosAdded(true)} items="center" gap={8} mt={16} opacity={photosAdded ? 1 : 0.5}>
-              <Icon name="check" size={13} color={photosAdded ? colors.ember : colors.fog} />
-              <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color={photosAdded ? '$ember' : '$fog'}>
-                {photosAdded ? 'PHOTOS ADDED' : 'MARK PHOTOS AS ADDED'}
+            <XStack onPress={pickPhotos} items="center" gap={8} mt={16}>
+              <Icon name="check" size={13} color={me.photos.length > 0 ? colors.ember : colors.fog} />
+              <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color={me.photos.length > 0 ? '$ember' : '$fog'}>
+                {me.photos.length > 0
+                  ? `${me.photos.length} PHOTO${me.photos.length === 1 ? '' : 'S'} ADDED · TAP A TILE TO CHANGE`
+                  : 'TAP A TILE TO ADD PHOTOS'}
               </Text>
             </XStack>
           </YStack>
@@ -290,14 +331,14 @@ export default function OnboardingScreen() {
               <SyncRow
                 icon="activity"
                 label="STRAVA"
-                connected={stravaConnected}
-                onPress={() => setStravaConnected((v) => !v)}
+                connected={me.stravaConnected}
+                onPress={() => router.push('/connect/strava')}
               />
               <SyncRow
                 icon="repeat"
                 label="GARMIN"
-                connected={garminConnected}
-                onPress={() => setGarminConnected((v) => !v)}
+                connected={me.garminConnected}
+                onPress={() => router.push('/connect/garmin')}
               />
             </YStack>
             <YStack
@@ -328,11 +369,22 @@ export default function OnboardingScreen() {
               needed.
             </Text>
             <YStack items="center" gap={18} py={10}>
-              <YStack width={140} height={140} rounded={70} borderWidth={3} bg="$ash" borderColor={verified ? '$ember' : '$line'} />
-              <Button onPress={() => setVerified(true)} style={{ width: '100%' }}>
-                {verified ? 'Verified' : 'Verify Me'}
+              <YStack
+                width={140}
+                height={140}
+                rounded={70}
+                borderWidth={3}
+                bg="$ash"
+                borderColor={me.verified ? '$ember' : '$line'}
+                items="center"
+                justify="center"
+              >
+                <Icon name="shield-check" size={44} color={me.verified ? colors.ember : colors.fog} />
+              </YStack>
+              <Button onPress={() => router.push('/verify')} style={{ width: '100%' }} disabled={me.verified}>
+                {me.verified ? 'Verified' : 'Verify Me'}
               </Button>
-              {verified ? (
+              {me.verified ? (
                 <XStack items="center" gap={8}>
                   <Icon name="shield-check" size={13} color={colors.ember} />
                   <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$ember">
@@ -348,10 +400,10 @@ export default function OnboardingScreen() {
           <LaunchStep
             profileStrength={profileStrength}
             badgeTierLabel={badgeTierLabel}
-            name={name}
-            age={age}
-            city={city}
-            disciplines={disciplines}
+            name={me.name}
+            age={me.age}
+            city={me.city}
+            disciplines={me.disciplines}
           />
         )}
       </ScrollView>
@@ -365,7 +417,13 @@ export default function OnboardingScreen() {
         style={{ paddingBottom: insets.bottom + 20 }}
       >
         {step === 7 && (
-          <Button style={{ width: '100%' }} onPress={() => router.replace('/(tabs)/discover')}>
+          <Button
+            style={{ width: '100%' }}
+            onPress={async () => {
+              await completeOnboarding();
+              router.replace('/(tabs)/discover');
+            }}
+          >
             Enter Pace
           </Button>
         )}

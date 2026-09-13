@@ -157,12 +157,24 @@ export function Input({
   value,
   onChangeText,
   onFocus,
+  secureTextEntry,
+  keyboardType,
+  autoCapitalize,
+  autoComplete,
+  onSubmitEditing,
+  returnKeyType,
   style,
 }: {
   placeholder?: string;
   value?: string;
   onChangeText?: (v: string) => void;
   onFocus?: () => void;
+  secureTextEntry?: boolean;
+  keyboardType?: 'email-address' | 'default' | 'numeric';
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  autoComplete?: 'email' | 'name' | 'password' | 'new-password' | 'off';
+  onSubmitEditing?: () => void;
+  returnKeyType?: 'done' | 'next' | 'go' | 'send';
   style?: ViewStyle;
 }) {
   return (
@@ -173,6 +185,12 @@ export function Input({
       value={value}
       onChangeText={onChangeText}
       onFocus={onFocus}
+      secureTextEntry={secureTextEntry}
+      keyboardType={keyboardType}
+      autoCapitalize={autoCapitalize}
+      autoComplete={autoComplete}
+      onSubmitEditing={onSubmitEditing}
+      returnKeyType={returnKeyType}
       width="100%"
       height={48}
       bg="$coal"

@@ -17,6 +17,7 @@ import {
   tagsForDiscipline,
 } from '../../src/data/mockData';
 import { ATHLETE_ACTION_PHOTOS } from '../../src/data/photos';
+import { cityWithinRadius, useFilters } from '../../src/data/filters';
 import { colors } from '../../src/theme/tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -51,6 +52,7 @@ type SwipeDirection = 'like' | 'pass';
 export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const disc = useFilters();
 
   const [filters, setFilters] = useState<Discipline[]>([]);
   const [swiped, setSwiped] = useState<Record<number, SwipeDirection>>({});
@@ -63,10 +65,23 @@ export default function DiscoverScreen() {
   const queue = useMemo(
     () =>
       ATHLETES.filter(
-        (a) => (filters.length === 0 || filters.includes(a.discipline)) && !(a.id in swiped)
+        (a) =>
+          (filters.length === 0 || filters.includes(a.discipline)) &&
+          !(a.id in swiped) &&
+          a.age >= disc.ageMin &&
+          a.age <= disc.ageMax &&
+          (!disc.verifiedOnly || a.verified) &&
+          cityWithinRadius(a.city, disc.radiusKm)
       ),
-    [filters, swiped]
+    [filters, swiped, disc]
   );
+
+  const filtersActive =
+    disc.ageMin > 18 ||
+    disc.ageMax < 60 ||
+    disc.radiusKm != null ||
+    disc.verifiedOnly ||
+    disc.times.length > 0;
 
   function toggleFilter(d: Discipline) {
     setFilters((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
@@ -119,6 +134,12 @@ export default function DiscoverScreen() {
             <Icon name="zap" size={13} color={streak > 0 ? colors.ember : colors.fog} />
             <Text fontFamily="$mono" fontSize={13} color={streak > 0 ? '$ember' : '$fog'}>
               {streak}
+            </Text>
+          </XStack>
+          <XStack onPress={() => router.push('/discover-filters')} items="center" gap={5} py={2} px={2}>
+            <Icon name="settings" size={12} color={filtersActive ? colors.ember : colors.fog} />
+            <Text fontFamily="$mono" fontSize={9} letterSpacing={1} color={filtersActive ? '$ember' : '$fog'}>
+              FILTERS
             </Text>
           </XStack>
           <Text fontFamily="$mono" fontSize={9} letterSpacing={1} color="$fog">

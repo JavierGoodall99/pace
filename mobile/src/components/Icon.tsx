@@ -23,7 +23,8 @@ export type IconName =
   | 'trash'
   | 'chevron-right'
   | 'user'
-  | 'mail';
+  | 'mail'
+  | 'upload';
 
 interface IconProps {
   name: IconName;
@@ -190,6 +191,14 @@ export function Icon({ name, size = 20, color = '#8f8d97' }: IconProps) {
         <Svg {...common}>
           <Rect width="20" height="16" x="2" y="4" rx="2" />
           <Path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+        </Svg>
+      );
+    case 'upload':
+      return (
+        <Svg {...common}>
+          <Path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <Path d="m17 8-5-5-5 5" />
+          <Path d="M12 3v12" />
         </Svg>
       );
     default:

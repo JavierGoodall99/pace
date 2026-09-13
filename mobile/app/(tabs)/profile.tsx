@@ -5,6 +5,8 @@ import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { Badge } from '../../src/components/ui';
 import { ME_AVATAR, ME_COVER, TRAINING_PHOTOS } from '../../src/data/photos';
+import { useMe } from '../../src/data/session';
+import { useSocial } from '../../src/data/social';
 import { colors } from '../../src/theme/tokens';
 
 const STATS = [
@@ -16,6 +18,12 @@ const STATS = [
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const me = useMe();
+  const { matches, likes } = useSocial();
+
+  const avatar = me.photos[0] ? { uri: me.photos[0] } : ME_AVATAR;
+  const primary = me.disciplines[0] ?? 'ATHLETE';
+  const photoTiles: (string | null)[] = [me.photos[0] ?? null, me.photos[1] ?? null, me.photos[2] ?? null];
 
   return (
     <ScrollView flex={1} bg="$ink" contentContainerStyle={{ pb: 24 }}>
@@ -48,26 +56,34 @@ export default function ProfileScreen() {
 
       <YStack px={20} mt={-40}>
         <PhotoSlot
-          label="Naledi"
+          label={me.name}
           shape="circle"
-          source={ME_AVATAR}
+          source={avatar}
           style={{ width: 84, height: 84, borderWidth: 3, borderColor: colors.ink }}
         />
         <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30} mt={14}>
-          Naledi Khumalo
+          {me.name || 'You'}
         </Text>
         <XStack items="center" gap={8} mt={8}>
-          <Icon name="shield-check" size={13} color={colors.ember} />
-          <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$ember" textTransform="uppercase">
-            Verified · Pretoria
-          </Text>
+          {me.verified ? (
+            <>
+              <Icon name="shield-check" size={13} color={colors.ember} />
+              <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$ember" textTransform="uppercase">
+                Verified · {me.city || 'City TBD'}
+              </Text>
+            </>
+          ) : (
+            <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$fog" textTransform="uppercase">
+              {me.city || 'Location'} · Unverified
+            </Text>
+          )}
         </XStack>
         <Text color="$fog" fontSize={13} lineHeight={20} my={14}>
-          Competing at regionals next year. Coffee after WODs, always.
+          {me.bio || 'No bio yet — add one in Edit Profile.'}
         </Text>
         <XStack gap={8} mb={18}>
-          <Badge tone="accent">CROSSFIT</Badge>
-          <Badge>5X / WK</Badge>
+          <Badge tone="accent">{primary}</Badge>
+          {me.cadence ? <Badge>{me.cadence}</Badge> : null}
         </XStack>
 
         <XStack gap={10} mb={20}>
@@ -83,13 +99,78 @@ export default function ProfileScreen() {
           ))}
         </XStack>
 
+        <XStack gap={10} mb={24}>
+          <YStack
+            flex={1}
+            onPress={() => router.push('/matches')}
+            pressStyle={{ opacity: 0.7 }}
+            items="center"
+            gap={6}
+            py={14}
+            rounded={16}
+            borderWidth={1}
+            borderColor="$line"
+            bg="$ash"
+          >
+            <Text fontFamily="$display" fontSize={26} color="$bone">
+              {matches.length}
+            </Text>
+            <Text fontFamily="$mono" fontSize={9} color="$fog" letterSpacing={1.5}>
+              MATCHES
+            </Text>
+          </YStack>
+          <YStack
+            flex={1}
+            onPress={() => router.push('/likes')}
+            pressStyle={{ opacity: 0.7 }}
+            items="center"
+            gap={6}
+            py={14}
+            rounded={16}
+            borderWidth={1}
+            borderColor={likes.length > 0 ? '$emberBorder' : '$line'}
+            bg={likes.length > 0 ? '$emberSoft' : '$ash'}
+          >
+            <Text fontFamily="$display" fontSize={26} color={likes.length > 0 ? '$ember' : '$bone'}>
+              {likes.length}
+            </Text>
+            <Text fontFamily="$mono" fontSize={9} color={likes.length > 0 ? '$ember' : '$fog'} letterSpacing={1.5}>
+              LIKES
+            </Text>
+          </YStack>
+          <YStack
+            flex={1}
+            onPress={() => router.push('/edit-profile')}
+            pressStyle={{ opacity: 0.7 }}
+            items="center"
+            justify="center"
+            gap={6}
+            py={14}
+            rounded={16}
+            borderWidth={1}
+            borderColor="$line"
+            bg="$ash"
+          >
+            <Icon name="user" size={20} color={colors.fog} />
+            <Text fontFamily="$mono" fontSize={9} color="$fog" letterSpacing={1.5}>
+              EDIT
+            </Text>
+          </YStack>
+        </XStack>
+
         <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
           TRAINING PHOTOS
         </Text>
         <XStack gap={8} mt={10}>
-          <PhotoSlot label="Photo" shape="rounded" source={TRAINING_PHOTOS[0]} style={{ flex: 1, aspectRatio: 1 }} />
-          <PhotoSlot label="Photo" shape="rounded" source={TRAINING_PHOTOS[1]} style={{ flex: 1, aspectRatio: 1 }} />
-          <PhotoSlot label="Photo" shape="rounded" source={TRAINING_PHOTOS[2]} style={{ flex: 1, aspectRatio: 1 }} />
+          {photoTiles.map((uri, i) => (
+            <PhotoSlot
+              key={i}
+              label="Photo"
+              shape="rounded"
+              source={uri ? { uri } : TRAINING_PHOTOS[i]}
+              style={{ flex: 1, aspectRatio: 1 }}
+            />
+          ))}
         </XStack>
 
         {__DEV__ ? (

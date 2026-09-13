@@ -29,17 +29,18 @@ export interface Athlete {
   city: string;
   bio: string;
   weekly: number;
+  verified: boolean;
 }
 
 export const ATHLETES: Athlete[] = [
-  { id: 1, slotId: 'athlete-1', name: 'Lerato', age: 27, discipline: 'RUNNING', pace: '4:45/KM', city: 'Cape Town', bio: 'Sunrise road runner training for Two Oceans. Early starts, no excuses.', weekly: 5 },
-  { id: 2, slotId: 'athlete-2', name: 'Sipho', age: 31, discipline: 'CYCLING', pace: '32 KM/H AVG', city: 'Johannesburg', bio: 'Weekend gravel grinder, weekday commuter. Always down for a coffee-stop ride.', weekly: 4 },
-  { id: 3, slotId: 'athlete-3', name: 'Amahle', age: 26, discipline: 'TRAIL', pace: '6:10/KM', city: 'Cape Town', bio: 'Table Mountain most Saturdays. Slow and steady, big views over big pace.', weekly: 3 },
-  { id: 4, slotId: 'athlete-4', name: 'Jacques', age: 34, discipline: 'SWIMMING', pace: '1:35/100M', city: 'Durban', bio: 'Open water through summer, pool laps the rest of the year.', weekly: 5 },
-  { id: 5, slotId: 'athlete-5', name: 'Naledi', age: 29, discipline: 'CROSSFIT', pace: '5X / WEEK', city: 'Pretoria', bio: 'Competing at regionals next year. Coffee after WODs, always.', weekly: 5 },
-  { id: 6, slotId: 'athlete-6', name: 'Dean', age: 30, discipline: 'CLIMBING', pace: 'V6 PROJECT', city: 'Cape Town', bio: 'Bouldering most nights, sport climbing on weekends.', weekly: 4 },
-  { id: 7, slotId: 'athlete-7', name: 'Zanele', age: 28, discipline: 'TRIATHLON', pace: 'OLYMPIC DIST.', city: 'Johannesburg', bio: 'Swim-bike-run, in that order, always. Racing three events this season.', weekly: 3 },
-  { id: 8, slotId: 'athlete-8', name: 'Kagiso', age: 32, discipline: 'RUNNING', pace: '3:55/KM', city: 'Pretoria', bio: 'Track sessions Tuesdays, long run Sundays. Chasing a sub-3 marathon.', weekly: 6 },
+  { id: 1, slotId: 'athlete-1', name: 'Lerato', age: 27, discipline: 'RUNNING', pace: '4:45/KM', city: 'Cape Town', bio: 'Sunrise road runner training for Two Oceans. Early starts, no excuses.', weekly: 5, verified: true },
+  { id: 2, slotId: 'athlete-2', name: 'Sipho', age: 31, discipline: 'CYCLING', pace: '32 KM/H AVG', city: 'Johannesburg', bio: 'Weekend gravel grinder, weekday commuter. Always down for a coffee-stop ride.', weekly: 4, verified: false },
+  { id: 3, slotId: 'athlete-3', name: 'Amahle', age: 26, discipline: 'TRAIL', pace: '6:10/KM', city: 'Cape Town', bio: 'Table Mountain most Saturdays. Slow and steady, big views over big pace.', weekly: 3, verified: true },
+  { id: 4, slotId: 'athlete-4', name: 'Jacques', age: 34, discipline: 'SWIMMING', pace: '1:35/100M', city: 'Durban', bio: 'Open water through summer, pool laps the rest of the year.', weekly: 5, verified: true },
+  { id: 5, slotId: 'athlete-5', name: 'Naledi', age: 29, discipline: 'CROSSFIT', pace: '5X / WEEK', city: 'Pretoria', bio: 'Competing at regionals next year. Coffee after WODs, always.', weekly: 5, verified: true },
+  { id: 6, slotId: 'athlete-6', name: 'Dean', age: 30, discipline: 'CLIMBING', pace: 'V6 PROJECT', city: 'Cape Town', bio: 'Bouldering most nights, sport climbing on weekends.', weekly: 4, verified: false },
+  { id: 7, slotId: 'athlete-7', name: 'Zanele', age: 28, discipline: 'TRIATHLON', pace: 'OLYMPIC DIST.', city: 'Johannesburg', bio: 'Swim-bike-run, in that order, always. Racing three events this season.', weekly: 3, verified: true },
+  { id: 8, slotId: 'athlete-8', name: 'Kagiso', age: 32, discipline: 'RUNNING', pace: '3:55/KM', city: 'Pretoria', bio: 'Track sessions Tuesdays, long run Sundays. Chasing a sub-3 marathon.', weekly: 6, verified: true },
 ];
 
 // Companion activities that round out a one-line profile to the

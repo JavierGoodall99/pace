@@ -6,6 +6,7 @@ import { Icon, IconName } from '../src/components/Icon';
 import { PhotoSlot } from '../src/components/PhotoSlot';
 import { Badge, IconButton } from '../src/components/ui';
 import { ME_AVATAR } from '../src/data/photos';
+import { signOut, useMe } from '../src/data/session';
 import { colors } from '../src/theme/tokens';
 
 interface SettingsRow {
@@ -30,11 +31,21 @@ const PREFERENCE_ROWS: SettingsRow[] = [
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const me = useMe();
+
+  const avatar = me.photos[0] ? { uri: me.photos[0] } : ME_AVATAR;
 
   function confirmSignOut() {
     Alert.alert('Sign out', 'Are you sure? You can sign back in anytime.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out', style: 'destructive' },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: async () => {
+          await signOut();
+          router.replace('/sign-in');
+        },
+      },
     ]);
   }
 
@@ -65,16 +76,16 @@ export default function SettingsScreen() {
       </XStack>
 
       <XStack items="center" gap={14} mx={20} p={16} rounded={20} borderWidth={1} borderColor="$line" bg="$ash">
-        <PhotoSlot label="Naledi" shape="circle" source={ME_AVATAR} style={{ width: 60, height: 60 }} />
+        <PhotoSlot label={me.name} shape="circle" source={avatar} style={{ width: 60, height: 60 }} />
         <YStack flex={1} minW={0}>
           <Text fontFamily="$mono" fontSize={13} letterSpacing={0.5} color="$bone" textTransform="uppercase">
-            Naledi Khumalo
+            {me.name || 'You'}
           </Text>
           <Text fontFamily="$mono" fontSize={10} letterSpacing={1} color="$fog" mt={4}>
-            naledi@pace.fit
+            {me.email}
           </Text>
         </YStack>
-        <Badge tone="accent">GOLD · VERIFIED</Badge>
+        <Badge tone="accent">{me.verified ? 'GOLD · VERIFIED' : 'UNVERIFIED'}</Badge>
       </XStack>
 
       <Text fontFamily="$mono" fontSize={10} letterSpacing={3} color="$ember" mx={20} mt={26} mb={10}>

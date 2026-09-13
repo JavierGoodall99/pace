@@ -96,13 +96,21 @@ export default function AthleteDetailScreen() {
             </Text>
           </XStack>
           <XStack items="center" gap={8} mt={10}>
-            <Icon name="shield-check" size={14} color={colors.ember} />
-            <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$ember" textTransform="uppercase">
-              Verified Athlete
-            </Text>
-            <Text fontFamily="$mono" fontSize={10} color="$fog">
-              · {athlete.city}
-            </Text>
+            {athlete.verified ? (
+              <>
+                <Icon name="shield-check" size={14} color={colors.ember} />
+                <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$ember" textTransform="uppercase">
+                  Verified Athlete
+                </Text>
+                <Text fontFamily="$mono" fontSize={10} color="$fog">
+                  · {athlete.city}
+                </Text>
+              </>
+            ) : (
+              <Text fontFamily="$mono" fontSize={10} color="$fog">
+                {athlete.city} · Unverified
+              </Text>
+            )}
           </XStack>
           <XStack gap={8} mt={16}>
             <Badge tone="accent">{athlete.discipline}</Badge>

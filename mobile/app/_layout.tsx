@@ -48,9 +48,18 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(auth)/sign-in" />
+          <Stack.Screen name="(auth)/sign-up" />
+          <Stack.Screen name="(auth)/forgot-password" />
           <Stack.Screen name="athlete/[id]" options={{ presentation: 'modal' }} />
           <Stack.Screen name="thread/[athleteId]" options={{ presentation: 'modal' }} />
           <Stack.Screen name="match/[athleteId]" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="edit-profile" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="matches" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="likes" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="connect/[provider]" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="verify" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="discover-filters" options={{ presentation: 'modal' }} />
           <Stack.Screen name="settings" />
           <Stack.Screen name="settings-preferences" />
           <Stack.Screen name="settings-notifications" />

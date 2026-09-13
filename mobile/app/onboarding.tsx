@@ -1,8 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing } from 'react-native';
+import { Animated, Easing, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import Svg, { Defs, LinearGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import { Image, ScrollView, Text, XStack, YStack } from 'tamagui';
 import { buildConfettiPieces, Confetti } from '../src/components/Confetti';
 import { Icon } from '../src/components/Icon';
 import {
@@ -15,6 +16,7 @@ import {
   SegmentedControl,
 } from '../src/components/ui';
 import { DISCIPLINES, Discipline } from '../src/data/mockData';
+import { HERO_RUNNERS } from '../src/data/photos';
 import { colors, fonts } from '../src/theme/tokens';
 
 // Ported from `../Pace Onboarding.dc.html` — an 8-step flow (0-7):
@@ -48,18 +50,19 @@ const NEXT_LABEL: Record<number, string> = {
   6: 'Continue',
 };
 
-// `Animated.Text` needs a component it can drive with animated styles —
-// the shared Tamagui Text is the app's text primitive, so wrap that.
-const AnimatedText = Animated.createAnimatedComponent(Text);
-
 const BODY_STYLE = { px: 20, pt: 4, pb: 24, flexGrow: 1 };
-const HERO_LINE = {
-  fontFamily: fonts.display,
-  fontSize: 46,
-  color: colors.bone,
-  textTransform: 'uppercase' as const,
-  lineHeight: 46,
-};
+const WELCOME_BODY_STYLE = { pb: 0, flexGrow: 1 };
+
+// Warm glow behind the primary CTA — same recipe as the onboarding toast.
+const CTA_STYLE = {
+  width: '100%',
+  height: 56,
+  shadowColor: colors.ember,
+  shadowOpacity: 0.4,
+  shadowRadius: 20,
+  shadowOffset: { width: 0, height: 6 },
+  elevation: 8,
+} as const;
 
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
@@ -189,11 +192,11 @@ export default function OnboardingScreen() {
           </XStack>
           <ProgressBar pct={(step / 6) * 100} />
         </YStack>
-      ) : (
+      ) : step === 0 ? null : (
         <YStack height={insets.top + 12} />
       )}
 
-      <ScrollView flex={1} contentContainerStyle={BODY_STYLE}>
+      <ScrollView flex={1} contentContainerStyle={step === 0 ? WELCOME_BODY_STYLE : BODY_STYLE}>
         {step === 0 && <WelcomeStep />}
 
         {step === 1 && (
@@ -367,9 +370,24 @@ export default function OnboardingScreen() {
           </Button>
         )}
         {step === 0 && (
-          <Button style={{ width: '100%' }} onPress={goNext}>
-            Get Started
-          </Button>
+          <YStack gap={12}>
+            <Button style={CTA_STYLE} onPress={goNext}>
+              Get Early Access
+            </Button>
+            <Text
+              fontFamily="$mono"
+              fontSize={12}
+              letterSpacing={1.5}
+              color="$fog"
+              textTransform="uppercase"
+              text="center"
+            >
+              I already have an account · Log in
+            </Text>
+            <Text fontSize={10} color="$fog" opacity={0.72} text="center">
+              By continuing, you agree to PACE&apos;s Terms &amp; Community Code.
+            </Text>
+          </YStack>
         )}
         {step >= 1 && step <= 6 && (
           <Button style={{ width: '100%' }} onPress={goNext} disabled={nextDisabledMap[step]}>
@@ -381,74 +399,83 @@ export default function OnboardingScreen() {
   );
 }
 
+// Actual pixel dimensions of `hero_runners.png` — used to size the hero by
+// its real aspect ratio instead of a fraction of screen height, so `cover`
+// never has to crop the sides (which used to slice off the left runner).
+const HERO_ASPECT_RATIO = 1536 / 1024;
+
 function WelcomeStep() {
-  const line1 = useRef(new Animated.ValueXY({ x: -28, y: 0 })).current;
-  const line1Opacity = useRef(new Animated.Value(0)).current;
-  const line2 = useRef(new Animated.ValueXY({ x: 28, y: 0 })).current;
-  const line2Opacity = useRef(new Animated.Value(0)).current;
-  const underline = useRef(new Animated.Value(0)).current;
+  const { width, height } = useWindowDimensions();
+  // Full-width, aspect-correct height: `cover` then has nothing to crop.
+  // Clamped so very wide/short screens don't let the hero swallow the
+  // whole viewport and squeeze the copy + CTA below it.
+  const heroHeight = Math.min(Math.round(width / HERO_ASPECT_RATIO), Math.round(height * 0.42));
+
+  const heroOpacity = useRef(new Animated.Value(0)).current;
   const bodyOpacity = useRef(new Animated.Value(0)).current;
-  const bodyTranslate = useRef(new Animated.Value(10)).current;
+  const bodyTranslate = useRef(new Animated.Value(24)).current;
 
   useEffect(() => {
-    Animated.stagger(110, [
+    Animated.stagger(140, [
+      Animated.timing(heroOpacity, { toValue: 1, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
       Animated.parallel([
-        Animated.timing(line1, { toValue: { x: 0, y: 0 }, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(line1Opacity, { toValue: 1, duration: 380, useNativeDriver: true }),
+        Animated.timing(bodyOpacity, { toValue: 1, duration: 380, useNativeDriver: true }),
+        Animated.timing(bodyTranslate, { toValue: 0, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
       ]),
-      Animated.parallel([
-        Animated.timing(line2, { toValue: { x: 0, y: 0 }, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(line2Opacity, { toValue: 1, duration: 380, useNativeDriver: true }),
-      ]),
-      Animated.timing(underline, { toValue: 1, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: false }),
-      Animated.parallel([
-        Animated.timing(bodyOpacity, { toValue: 1, duration: 320, useNativeDriver: true }),
-        Animated.timing(bodyTranslate, { toValue: 0, duration: 320, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-      ]),
-      // Mount-once entrance choreography — deliberately no deps.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     ]).start();
+    // Mount-once entrance choreography — deliberately no deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <YStack flex={1} justify="center" pb={40} minH={500}>
-      <YStack pointerEvents="none" position="absolute" style={HERO_GLOW} />
+    <YStack flex={1}>
+      <Animated.View style={{ opacity: heroOpacity }}>
+        <YStack>
+          <Image source={HERO_RUNNERS} style={{ width: '100%', height: heroHeight }} resizeMode="cover" />
+          <YStack position="absolute" t={0} l={0} r={0} height={heroHeight} pointerEvents="none">
+            <Svg width="100%" height="100%">
+              <Defs>
+                <LinearGradient id="gatewayFade" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0" stopColor={colors.ink} stopOpacity={0} />
+                  <Stop offset="1" stopColor={colors.ink} stopOpacity={1} />
+                </LinearGradient>
+              </Defs>
+              <Rect width="100%" height="100%" fill="url(#gatewayFade)" />
+            </Svg>
+          </YStack>
+        </YStack>
+      </Animated.View>
 
-      <AnimatedText style={[HERO_LINE, { opacity: line1Opacity, transform: [{ translateX: line1.x }] }]}>
-        Let&apos;s build
-      </AnimatedText>
-      <AnimatedText
-        style={[
-          HERO_LINE,
-          { color: colors.ember, opacity: line2Opacity, transform: [{ translateX: line2.x }] },
-        ]}
-      >
-        your profile.
-      </AnimatedText>
+      <Animated.View style={{ flex: 1, opacity: bodyOpacity, transform: [{ translateY: bodyTranslate }] }}>
+        <YStack flex={1} px={20} pt={28} justify="center">
+          <YStack accessibilityRole="header" accessibilityLabel="Match. Train. Date.">
+            <Svg width="100%" height={120}>
+              <SvgText x={0} y={32} fontFamily={fonts.display} fontSize={40} fill={colors.bone}>
+                MATCH.
+              </SvgText>
+              <SvgText
+                x={0}
+                y={72}
+                fontFamily={fonts.display}
+                fontSize={40}
+                fill="transparent"
+                stroke={colors.bone}
+                strokeWidth={1.5}
+              >
+                TRAIN.
+              </SvgText>
+              <SvgText x={0} y={112} fontFamily={fonts.display} fontSize={40} fill={colors.ember}>
+                DATE.
+              </SvgText>
+            </Svg>
+          </YStack>
 
-      <Animated.View
-        style={{
-          height: 3,
-          borderRadius: 2,
-          backgroundColor: colors.ember,
-          marginTop: 18,
-          width: underline.interpolate({ inputRange: [0, 1], outputRange: [0, 64] }),
-        }}
-      />
-
-      <AnimatedText
-        style={{
-          color: colors.fog,
-          fontSize: 13,
-          lineHeight: 20,
-          marginTop: 20,
-          maxWidth: 300,
-          opacity: bodyOpacity,
-          transform: [{ translateY: bodyTranslate }],
-        }}
-      >
-        Six quick steps. Each one sharpens your matches — no fluff, just the right people.
-      </AnimatedText>
+          <Text fontSize={14} lineHeight={21} color="$bone" maxW={330} mt={20}>
+            Dating apps waste your time with people who don&apos;t live like you.{' '}
+            <Text color="$fog">PACE matches you with people who keep up.</Text>
+          </Text>
+        </YStack>
+      </Animated.View>
     </YStack>
   );
 }
@@ -575,13 +602,4 @@ const TOAST_STYLE = {
   shadowRadius: 24,
   shadowOffset: { width: 0, height: 8 },
   elevation: 8,
-};
-
-const HERO_GLOW = {
-  width: 380,
-  height: 380,
-  borderRadius: 190,
-  backgroundColor: 'rgba(255,77,46,0.08)',
-  left: -80,
-  bottom: -60,
 };

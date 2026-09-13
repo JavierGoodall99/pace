@@ -26,6 +26,9 @@ export const ATHLETE_ACTION_PHOTOS: Record<string, ReturnType<typeof require>> =
   'athlete-8': require('../../public/images/activity/rugby_player_sprint.jpg'),
 };
 
+// Full-bleed hero for the onboarding gateway (two runners sprinting at dusk).
+export const HERO_RUNNERS = require('../../public/images/onboarding/hero_runners.png');
+
 export const ME_AVATAR = require('../../public/images/headshots/blonde_woman_headshot.jpg');
 export const ME_COVER = require('../../public/images/activity/yoga_beach_sunrise.jpg');
 export const TRAINING_PHOTOS = [

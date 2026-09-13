@@ -1,15 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform } from 'react-native';
+import type { ScrollView as RNScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { Button, Chip, IconButton, Input } from '../../src/components/ui';
@@ -24,7 +18,7 @@ import {
   updateSessionStatus,
 } from '../../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
-import { colors, fonts, radius } from '../../src/theme/tokens';
+import { colors } from '../../src/theme/tokens';
 
 const DAY_LABELS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
@@ -58,7 +52,7 @@ export default function ThreadScreen() {
   const [date, setDate] = useState<{ key: string; label: string } | null>(null);
   const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<RNScrollView>(null);
 
   // The plan panel lives inside the scroll view; bring it into view above
   // the keyboard whenever it opens or a field gets focus.
@@ -74,9 +68,11 @@ export default function ThreadScreen() {
 
   if (!athlete) {
     return (
-      <View style={styles.screen}>
-        <Text style={styles.missing}>Conversation not found.</Text>
-      </View>
+      <YStack flex={1} bg="$ink">
+        <Text color="$fog" text="center" mt={100}>
+          Conversation not found.
+        </Text>
+      </YStack>
     );
   }
 
@@ -118,8 +114,16 @@ export default function ThreadScreen() {
   };
 
   return (
-    <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+    <YStack flex={1} bg="$ink">
+      <XStack
+        items="center"
+        gap={12}
+        px={20}
+        pb={12}
+        pt={insets.top + 8}
+        borderBottomWidth={1}
+        borderBottomColor="$line"
+      >
         <IconButton onPress={() => router.back()}>
           <Icon name="chevron-left" size={14} color={colors.bone} />
         </IconButton>
@@ -127,10 +131,12 @@ export default function ThreadScreen() {
           label={athlete.name}
           shape="circle"
           source={ATHLETE_PHOTOS[athlete.slotId]}
-          style={styles.avatar}
+          style={{ width: 36, height: 36 }}
         />
-        <Text style={styles.name}>{athlete.name}</Text>
-      </View>
+        <Text fontFamily="$mono" fontSize={13} letterSpacing={0.5} color="$bone" textTransform="uppercase">
+          {athlete.name}
+        </Text>
+      </XStack>
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -138,11 +144,12 @@ export default function ThreadScreen() {
       >
         <ScrollView
           ref={scrollRef}
-          style={{ flex: 1 }}
-          contentContainerStyle={[
-            styles.messages,
-            { paddingBottom: planning ? insets.bottom + 24 : 24 },
-          ]}
+          flex={1}
+          contentContainerStyle={{
+            p: 20,
+            gap: 10,
+            pb: planning ? insets.bottom + 24 : 24,
+          }}
           keyboardShouldPersistTaps="handled"
         >
           {messages.map((m, i) => {
@@ -155,73 +162,107 @@ export default function ThreadScreen() {
                   ? colors.fog
                   : colors.ember;
             return (
-              <View key={i} style={{ alignItems: mine ? 'flex-end' : 'flex-start' }}>
-                <View
-                  style={[
-                    styles.bubble,
-                    { backgroundColor: mine ? colors.ember : colors.ash },
-                  ]}
+              <YStack key={i} items={mine ? 'flex-end' : 'flex-start'}>
+                <YStack
+                  bg={mine ? '$ember' : '$ash'}
+                  maxW="78%"
+                  px={16}
+                  py={12}
+                  rounded={18}
                 >
                   {m.text ? (
-                    <Text style={{ color: mine ? colors.ink : colors.bone, fontSize: 13, lineHeight: 18 }}>
+                    <Text color={mine ? '$ink' : '$bone'} fontSize={13} lineHeight={18}>
                       {m.text}
                     </Text>
                   ) : null}
                   {plan ? (
-                    <View style={[styles.planCard, { marginTop: m.text ? 10 : 0 }]}>
-                      <View style={styles.planHeader}>
-                        <Text style={styles.planActivity}>{plan.activity}</Text>
-                        <Text style={[styles.planStatus, { color: statusColor }]}>{plan.status}</Text>
-                      </View>
-                      <View style={styles.planRow}>
+                    <YStack
+                      minW={180}
+                      gap={6}
+                      p={12}
+                      rounded={14}
+                      bg="$ink"
+                      borderWidth={1}
+                      borderColor="$emberBorder"
+                      mt={m.text ? 10 : 0}
+                    >
+                      <XStack items="center" justify="space-between">
+                        <Text fontFamily="$display" fontSize={15} letterSpacing={0.5} color="$bone" textTransform="uppercase">
+                          {plan.activity}
+                        </Text>
+                        <Text fontFamily="$mono" fontSize={9} letterSpacing={1.5} fontWeight="700" color={statusColor}>
+                          {plan.status}
+                        </Text>
+                      </XStack>
+                      <XStack items="center" gap={6}>
                         <Icon name="zap" size={12} color={colors.ember} />
-                        <Text style={styles.planMeta}>{plan.when}</Text>
-                      </View>
-                      <View style={styles.planRow}>
+                        <Text fontSize={11} color="$fog">
+                          {plan.when}
+                        </Text>
+                      </XStack>
+                      <XStack items="center" gap={6}>
                         <Icon name="map-pin" size={12} color={colors.ember} />
-                        <Text style={styles.planMeta}>{plan.location}</Text>
-                      </View>
+                        <Text fontSize={11} color="$fog">
+                          {plan.location}
+                        </Text>
+                      </XStack>
                       {!mine && plan.status === 'INVITE' ? (
-                        <View style={styles.planActions}>
-                          <Pressable
-                            style={[
-                              styles.planAction,
-                              { backgroundColor: colors.emberSoft, borderColor: colors.emberBorder },
-                            ]}
+                        <XStack gap={8} mt={10}>
+                          <XStack
+                            flex={1}
+                            height={36}
+                            rounded="$full"
+                            borderWidth={1}
+                            items="center"
+                            justify="center"
+                            bg="$emberSoft"
+                            borderColor="$emberBorder"
                             onPress={() => respondTo(i, 'CONFIRMED')}
                           >
-                            <Text style={[styles.planActionText, { color: colors.ember }]}>ACCEPT</Text>
-                          </Pressable>
-                          <Pressable
-                            style={[
-                              styles.planAction,
-                              { backgroundColor: colors.coal, borderColor: colors.line },
-                            ]}
+                            <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} fontWeight="700" color="$ember">
+                              ACCEPT
+                            </Text>
+                          </XStack>
+                          <XStack
+                            flex={1}
+                            height={36}
+                            rounded="$full"
+                            borderWidth={1}
+                            items="center"
+                            justify="center"
+                            bg="$coal"
+                            borderColor="$line"
                             onPress={() => respondTo(i, 'DECLINED')}
                           >
-                            <Text style={[styles.planActionText, { color: colors.fog }]}>DECLINE</Text>
-                          </Pressable>
-                        </View>
+                            <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} fontWeight="700" color="$fog">
+                              DECLINE
+                            </Text>
+                          </XStack>
+                        </XStack>
                       ) : null}
-                    </View>
+                    </YStack>
                   ) : null}
-                </View>
-              </View>
+                </YStack>
+              </YStack>
             );
           })}
 
           {planning ? (
-            <View style={styles.planForm}>
-              <View style={styles.planFormHeader}>
-                <Text style={styles.planFormLabel}>PLAN A SESSION</Text>
+            <YStack gap={16} p={14} rounded={16} bg="$coal" borderWidth={1} borderColor="$line">
+              <XStack items="center" justify="space-between">
+                <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone">
+                  PLAN A SESSION
+                </Text>
                 <IconButton size={28} onPress={() => setPlanning(false)}>
                   <Icon name="x" size={12} color={colors.fog} />
                 </IconButton>
-              </View>
+              </XStack>
 
-              <View>
-                <Text style={styles.fieldLabel}>ACTIVITY</Text>
-                <View style={styles.chipWrap}>
+              <YStack>
+                <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
+                  ACTIVITY
+                </Text>
+                <XStack flexWrap="wrap" gap={8} mt={8}>
                   {DISCIPLINES.map((d) => (
                     <Chip
                       key={d}
@@ -230,12 +271,14 @@ export default function ThreadScreen() {
                       onPress={() => setActivity(d)}
                     />
                   ))}
-                </View>
-              </View>
+                </XStack>
+              </YStack>
 
-              <View>
-                <Text style={styles.fieldLabel}>DATE</Text>
-                <View style={styles.chipWrap}>
+              <YStack>
+                <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
+                  DATE
+                </Text>
+                <XStack flexWrap="wrap" gap={8} mt={8}>
                   {dates.map((d) => (
                     <Chip
                       key={d.key}
@@ -244,12 +287,14 @@ export default function ThreadScreen() {
                       onPress={() => setDate(d)}
                     />
                   ))}
-                </View>
-              </View>
+                </XStack>
+              </YStack>
 
-              <View>
-                <Text style={styles.fieldLabel}>TIME</Text>
-                <View style={styles.chipWrap}>
+              <YStack>
+                <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
+                  TIME
+                </Text>
+                <XStack flexWrap="wrap" gap={8} mt={8}>
                   {TIME_SLOTS.map((t) => (
                     <Chip
                       key={t}
@@ -258,128 +303,66 @@ export default function ThreadScreen() {
                       onPress={() => setTime(t)}
                     />
                   ))}
-                </View>
-              </View>
+                </XStack>
+              </YStack>
 
-              <View>
-                <Text style={styles.fieldLabel}>WHERE</Text>
-                <View style={{ marginTop: 8 }}>
+              <YStack>
+                <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
+                  WHERE
+                </Text>
+                <YStack mt={8}>
                   <Input
                     placeholder="SEA POINT PROMENADE"
                     value={location}
                     onChangeText={setLocation}
                     onFocus={scrollToEnd}
                   />
-                </View>
-              </View>
+                </YStack>
+              </YStack>
 
-              <View>
-                <Text style={styles.fieldLabel}>NOTE (OPTIONAL)</Text>
-                <View style={{ marginTop: 8 }}>
+              <YStack>
+                <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
+                  NOTE (OPTIONAL)
+                </Text>
+                <YStack mt={8}>
                   <Input
                     placeholder="BRING WATER · COFFEE AFTER"
                     value={note}
                     onChangeText={setNote}
                     onFocus={scrollToEnd}
                   />
-                </View>
-              </View>
+                </YStack>
+              </YStack>
 
               <Button onPress={attachPlan} disabled={!planReady} style={{ marginTop: 4 }}>
                 Send Invite
               </Button>
-            </View>
+            </YStack>
           ) : null}
         </ScrollView>
 
         {planning ? null : (
-          <View style={[styles.composer, { paddingBottom: insets.bottom + 16 }]}>
-            <View style={{ flex: 1 }}>
+          <XStack
+            items="center"
+            gap={10}
+            px={20}
+            pt={12}
+            borderTopWidth={1}
+            borderTopColor="$line"
+            style={{ paddingBottom: insets.bottom + 16 }}
+          >
+            <YStack flex={1}>
               <Input placeholder="MESSAGE" value={note} onChangeText={setNote} />
-            </View>
+            </YStack>
             <IconButton size={44} onPress={() => setPlanning(true)}>
               <Icon name="zap" size={14} color={colors.bone} />
             </IconButton>
             <IconButton tone="accent" size={48} onPress={sendText}>
               <Icon name="arrow-right" size={16} color={colors.ember} />
             </IconButton>
-          </View>
+          </XStack>
         )}
       </KeyboardAvoidingView>
-    </View>
+    </YStack>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.ink },
-  missing: { color: colors.fog, textAlign: 'center', marginTop: 100 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.line,
-  },
-  avatar: { width: 36, height: 36 },
-  name: { fontFamily: fonts.mono, fontSize: 13, letterSpacing: 0.5, color: colors.bone, textTransform: 'uppercase' },
-  messages: { padding: 20, gap: 10 },
-  bubble: { maxWidth: '78%', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18 },
-  planCard: {
-    minWidth: 180,
-    gap: 6,
-    padding: 12,
-    borderRadius: 14,
-    backgroundColor: colors.ink,
-    borderWidth: 1,
-    borderColor: colors.emberBorder,
-  },
-  planHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  planActivity: {
-    fontFamily: fonts.display,
-    fontSize: 15,
-    letterSpacing: 0.5,
-    color: colors.bone,
-    textTransform: 'uppercase',
-  },
-  planStatus: {
-    fontFamily: fonts.mono,
-    fontSize: 9,
-    letterSpacing: 1.5,
-    fontWeight: '700',
-  },
-  planRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  planMeta: { fontSize: 11, color: colors.fog },
-  planActions: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  planAction: {
-    flex: 1,
-    height: 36,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  planActionText: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1.5, fontWeight: '700' },
-  composer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
-  },
-  planForm: {
-    gap: 16,
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: colors.coal,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  planFormHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  planFormLabel: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.bone },
-  fieldLabel: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.fog },
-  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
-});

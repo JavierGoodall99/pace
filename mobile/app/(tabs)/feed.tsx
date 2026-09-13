@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { ActivityPanel } from '../../src/components/ActivityPanel';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { athleteById, Discipline, FEED_ITEMS, tagsForDiscipline } from '../../src/data/mockData';
 import { ACTIVITY_PHOTO, ATHLETE_PHOTOS, ME_AVATAR } from '../../src/data/photos';
-import { colors, fonts } from '../../src/theme/tokens';
+import { colors } from '../../src/theme/tokens';
 
 // Feed post types map onto the discipline vocabulary so the stats
 // panel's activity tiles stay consistent with the Discover cards.
@@ -26,42 +26,56 @@ export default function FeedScreen() {
   }
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: 24 }}
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>Activity</Text>
-        <Text style={styles.subtitle}>Your training log and your matches&apos;, together.</Text>
-      </View>
+    <ScrollView flex={1} bg="$ink" contentContainerStyle={{ pt: insets.top + 12, pb: 24 }}>
+      <YStack px={20} pb={4}>
+        <Text fontFamily="$display" fontSize={32} color="$bone" textTransform="uppercase" lineHeight={32}>
+          Activity
+        </Text>
+        <Text color="$fog" fontSize={12} mt={8} mb={16}>
+          Your training log and your matches&apos;, together.
+        </Text>
+      </YStack>
 
-      <View style={styles.list}>
+      <YStack px={20} gap={14}>
         {FEED_ITEMS.map((f) => {
           const who = f.athleteId === 'me' ? null : athleteById(f.athleteId);
           const photo = f.hasPhoto ? ACTIVITY_PHOTO : who ? ATHLETE_PHOTOS[who.slotId] : ME_AVATAR;
           const discipline = TYPE_DISCIPLINE[f.type];
 
           return (
-            <View key={f.id} style={styles.card}>
-              <PhotoSlot label={who ? who.name : 'You'} shape="rect" source={photo} style={styles.photo} />
-              <View style={styles.panel}>
-                <View pointerEvents="none" style={styles.panelFade}>
-                  <Svg width="100%" height="100%">
-                    <Defs>
-                      <LinearGradient id="photoFadeFeed" x1="0" y1="0" x2="0" y2="1">
-                        <Stop offset="0" stopColor={colors.coal} stopOpacity={0} />
-                        <Stop offset="0.45" stopColor={colors.coal} stopOpacity={1} />
-                        <Stop offset="1" stopColor={colors.coal} stopOpacity={1} />
-                      </LinearGradient>
-                    </Defs>
-                    <Rect width="100%" height="100%" fill="url(#photoFadeFeed)" />
-                  </Svg>
-                </View>
-                <View style={styles.identity}>
-                  <Text style={styles.who}>{f.who}</Text>
-                  <Text style={styles.time}>{f.time}</Text>
-                </View>
-                <Text style={styles.statLine}>{f.stat}</Text>
+            <YStack key={f.id} borderWidth={1} borderColor="$line" rounded={24} bg="$ash" overflow="hidden">
+              <PhotoSlot label={who ? who.name : 'You'} shape="rect" source={photo} style={{ width: '100%', height: 230, borderRadius: 0 }} />
+              <YStack
+                pointerEvents="none"
+                position="absolute"
+                l={0}
+                r={0}
+                t={-90}
+                b={0}
+              >
+                <Svg width="100%" height="100%">
+                  <Defs>
+                    <LinearGradient id="photoFadeFeed" x1="0" y1="0" x2="0" y2="1">
+                      <Stop offset="0" stopColor={colors.coal} stopOpacity={0} />
+                      <Stop offset="0.45" stopColor={colors.coal} stopOpacity={1} />
+                      <Stop offset="1" stopColor={colors.coal} stopOpacity={1} />
+                    </LinearGradient>
+                  </Defs>
+                  <Rect width="100%" height="100%" fill="url(#photoFadeFeed)" />
+                </Svg>
+              </YStack>
+              <YStack bg="$coal" px={16} pt={12} pb={14}>
+                <XStack items="center" justify="space-between">
+                  <Text fontFamily="$display" fontSize={18} color="$bone" textTransform="uppercase" lineHeight={18}>
+                    {f.who}
+                  </Text>
+                  <Text fontFamily="$mono" fontSize={8.5} letterSpacing={1} color="$fog">
+                    {f.time}
+                  </Text>
+                </XStack>
+                <Text fontFamily="$mono" fontSize={10} letterSpacing={0.5} color="$fog" mt={6} mb={10}>
+                  {f.stat}
+                </Text>
                 <ActivityPanel
                   tags={discipline ? tagsForDiscipline(discipline) : []}
                   statLabel="KUDOS"
@@ -70,63 +84,11 @@ export default function FeedScreen() {
                   onLike={() => toggleLike(f.id)}
                   likeLabel={`Kudos ${f.who}`}
                 />
-              </View>
-            </View>
+              </YStack>
+            </YStack>
           );
         })}
-      </View>
+      </YStack>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.ink },
-  header: { paddingHorizontal: 20, paddingBottom: 4 },
-  title: {
-    fontFamily: fonts.display,
-    fontSize: 32,
-    color: colors.bone,
-    textTransform: 'uppercase',
-    lineHeight: 32,
-  },
-  subtitle: { color: colors.fog, fontSize: 12, marginTop: 8, marginBottom: 16 },
-  list: { paddingHorizontal: 20, gap: 14 },
-  card: {
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: 24,
-    backgroundColor: colors.ash,
-    overflow: 'hidden',
-  },
-  photo: { width: '100%', height: 230, borderRadius: 0 },
-  panel: {
-    backgroundColor: colors.coal,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 14,
-  },
-  // Photo fades into the panel: the coal gradient starts above the
-  // panel's top edge (over the photo) and turns solid behind the
-  // stats, so there is no hard dividing line.
-  panelFade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: -90,
-    bottom: 0,
-  },
-  identity: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  who: {
-    fontFamily: fonts.display,
-    fontSize: 18,
-    color: colors.bone,
-    textTransform: 'uppercase',
-    lineHeight: 18,
-  },
-  time: { fontFamily: fonts.mono, fontSize: 8.5, letterSpacing: 1, color: colors.fog },
-  statLine: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 0.5, color: colors.fog, marginTop: 6, marginBottom: 10 },
-});

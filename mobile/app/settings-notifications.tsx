@@ -1,10 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../src/components/Icon';
 import { IconButton, ToggleRow } from '../src/components/ui';
-import { colors, fonts } from '../src/theme/tokens';
+import { colors } from '../src/theme/tokens';
 
 const PUSH_ITEMS: { label: string; hint: string; default: boolean }[] = [
   { label: 'Likes & Kudos', hint: 'When someone likes your run or workout', default: true },
@@ -33,91 +33,67 @@ export default function SettingsNotificationsScreen() {
 
   return (
     <ScrollView
-      style={styles.screen}
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 24 }}
+      flex={1}
+      bg="$ink"
+      contentContainerStyle={{ pt: insets.top + 8, pb: insets.bottom + 24 }}
     >
-      <View style={styles.header}>
+      <XStack items="center" gap={12} px={20} pb={2}>
         <IconButton size={40} onPress={() => router.back()}>
           <Icon name="chevron-left" size={14} color={colors.bone} />
         </IconButton>
-        <Text style={styles.title}>Notifications</Text>
-      </View>
-      <Text style={styles.subtitle}>Choose what pings you, and where.</Text>
+        <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30}>
+          Notifications
+        </Text>
+      </XStack>
+      <Text color="$fog" fontSize={12} mx={20} mt={8} mb={24}>
+        Choose what pings you, and where.
+      </Text>
 
-      <Text style={styles.label}>PUSH</Text>
-      <View style={styles.group}>
-        {PUSH_ITEMS.map((item, i) => (
-          <View key={item.label} style={i === PUSH_ITEMS.length - 1 ? styles.lastRow : undefined}>
-            <ToggleRow
-              label={item.label}
-              hint={item.hint}
-              value={!!push[item.label]}
-              onChange={(v) => setPush((prev) => ({ ...prev, [item.label]: v }))}
-            />
-          </View>
+      <Text fontFamily="$mono" fontSize={10} letterSpacing={3} color="$ember" mx={20} mb={10}>
+        PUSH
+      </Text>
+      <YStack mx={20} mb={28} px={16} rounded={20} borderWidth={1} borderColor="$line" bg="$ash">
+        {PUSH_ITEMS.map((item) => (
+          <ToggleRow
+            key={item.label}
+            label={item.label}
+            hint={item.hint}
+            value={!!push[item.label]}
+            onChange={(v) => setPush((prev) => ({ ...prev, [item.label]: v }))}
+          />
         ))}
-      </View>
+      </YStack>
 
-      <Text style={styles.label}>EMAIL</Text>
-      <View style={styles.group}>
-        {EMAIL_ITEMS.map((item, i) => (
-          <View key={item.label} style={i === EMAIL_ITEMS.length - 1 ? styles.lastRow : undefined}>
-            <ToggleRow
-              label={item.label}
-              hint={item.hint}
-              value={!!email[item.label]}
-              onChange={(v) => setEmail((prev) => ({ ...prev, [item.label]: v }))}
-            />
-          </View>
+      <Text fontFamily="$mono" fontSize={10} letterSpacing={3} color="$ember" mx={20} mb={10}>
+        EMAIL
+      </Text>
+      <YStack mx={20} mb={28} px={16} rounded={20} borderWidth={1} borderColor="$line" bg="$ash">
+        {EMAIL_ITEMS.map((item) => (
+          <ToggleRow
+            key={item.label}
+            label={item.label}
+            hint={item.hint}
+            value={!!email[item.label]}
+            onChange={(v) => setEmail((prev) => ({ ...prev, [item.label]: v }))}
+          />
         ))}
-      </View>
+      </YStack>
 
-      <View style={styles.note}>
+      <XStack
+        items="center"
+        gap={10}
+        mx={20}
+        p={14}
+        rounded={16}
+        bg="rgba(255,77,46,0.06)"
+        borderWidth={1}
+        borderColor="rgba(255,77,46,0.25)"
+      >
         <Icon name="shield-check" size={14} color={colors.ember} />
-        <Text style={styles.noteText}>We never sell your data. Pings stay between you and the pack.</Text>
-      </View>
+        <Text flex={1} fontFamily="$mono" fontSize={10} letterSpacing={1} lineHeight={16} color="$fog">
+          We never sell your data. Pings stay between you and the pack.
+        </Text>
+      </XStack>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.ink },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 2,
-  },
-  title: {
-    fontFamily: fonts.display,
-    fontSize: 30,
-    color: colors.bone,
-    textTransform: 'uppercase',
-    lineHeight: 30,
-  },
-  subtitle: { color: colors.fog, fontSize: 12, marginHorizontal: 20, marginTop: 8, marginBottom: 24 },
-  label: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 3, color: colors.ember, marginHorizontal: 20, marginBottom: 10 },
-  group: {
-    marginHorizontal: 20,
-    marginBottom: 28,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.ash,
-  },
-  lastRow: { borderBottomWidth: 0 },
-  note: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginHorizontal: 20,
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,77,46,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,77,46,0.25)',
-  },
-  noteText: { flex: 1, fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1, lineHeight: 16, color: colors.fog },
-});

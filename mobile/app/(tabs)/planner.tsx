@@ -1,7 +1,7 @@
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { Badge, Button, Chip, Input } from '../../src/components/ui';
 import {
@@ -12,7 +12,7 @@ import {
   SESSIONS,
 } from '../../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
-import { colors, fonts } from '../../src/theme/tokens';
+import { colors } from '../../src/theme/tokens';
 
 export default function PlannerScreen() {
   const insets = useSafeAreaInsets();
@@ -44,155 +44,140 @@ export default function PlannerScreen() {
   const partner = athleteById(partnerId);
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: 24 }}
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>Planner</Text>
-        <Text style={styles.subtitle}>
+    <ScrollView flex={1} bg="$ink" contentContainerStyle={{ pt: insets.top + 12, pb: 24 }}>
+      <YStack px={20} pb={4}>
+        <Text fontFamily="$display" fontSize={32} color="$bone" textTransform="uppercase" lineHeight={32}>
+          Planner
+        </Text>
+        <Text color="$fog" fontSize={12} mt={8} mb={16}>
           Turn a match into a session. Pick a sport, time and place.
         </Text>
-      </View>
+      </YStack>
 
       {sent ? (
-        <View style={styles.sentBanner}>
-          <Text style={styles.sentTitle}>Invite Sent</Text>
-          <Text style={styles.sentBody}>
+        <YStack
+          mx={20}
+          mb={20}
+          p={18}
+          rounded={16}
+          bg="$emberSoft"
+          borderWidth={1}
+          borderColor="$emberBorder"
+        >
+          <Text fontFamily="$display" fontSize={16} color="$bone" textTransform="uppercase">
+            Invite Sent
+          </Text>
+          <Text fontSize={12} color="$fog" mt={6}>
             {partner?.name ?? 'They'} will get your session invite. You&apos;ll be notified when
             they respond.
           </Text>
-        </View>
+        </YStack>
       ) : null}
 
-      <View style={styles.form}>
-        <View>
-          <Text style={styles.label}>ACTIVITY</Text>
-          <View style={styles.chipWrap}>
+      <YStack px={20} gap={18}>
+        <YStack>
+          <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone">
+            ACTIVITY
+          </Text>
+          <XStack flexWrap="wrap" gap={8} mt={8}>
             {DISCIPLINES.map((d) => (
               <Chip key={d} label={d} selected={d === discipline} onPress={() => setDiscipline(d)} />
             ))}
-          </View>
-        </View>
+          </XStack>
+        </YStack>
 
-        <View>
-          <Text style={styles.label}>WITH</Text>
+        <YStack>
+          <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone">
+            WITH
+          </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
             {PLANNER_PARTNER_IDS.map((id) => {
               const a = athleteById(id);
               if (!a) return null;
               const active = id === partnerId;
               return (
-                <Pressable
+                <YStack
                   key={id}
                   onPress={() => {
                     setPartnerId(id);
                     setSent(false);
                   }}
-                  style={styles.partner}
+                  items="center"
+                  gap={6}
                 >
                   <PhotoSlot
                     label={a.name}
                     shape="circle"
                     source={ATHLETE_PHOTOS[a.slotId]}
                     style={[
-                      styles.partnerAvatar,
+                      { width: 52, height: 52 },
                       { borderWidth: 2, borderColor: active ? colors.ember : colors.line },
                     ]}
                   />
-                  <Text style={[styles.partnerName, { color: active ? colors.ember : colors.fog }]}>
+                  <Text fontFamily="$mono" fontSize={9} color={active ? '$ember' : '$fog'}>
                     {a.name}
                   </Text>
-                </Pressable>
+                </YStack>
               );
             })}
           </ScrollView>
-        </View>
+        </YStack>
 
-        <View>
-          <Text style={styles.label}>WHEN</Text>
-          <View style={{ marginTop: 8 }}>
+        <YStack>
+          <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone">
+            WHEN
+          </Text>
+          <YStack mt={8}>
             <Input placeholder="SAT · 06:00" />
-          </View>
-        </View>
+          </YStack>
+        </YStack>
 
-        <View>
-          <Text style={styles.label}>WHERE</Text>
-          <View style={{ marginTop: 8 }}>
+        <YStack>
+          <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone">
+            WHERE
+          </Text>
+          <YStack mt={8}>
             <Input placeholder="SEA POINT PROMENADE" />
-          </View>
-        </View>
+          </YStack>
+        </YStack>
 
         <Button onPress={() => setSent(true)} style={{ width: '100%', marginTop: 4 }}>
           Send Invite
         </Button>
-      </View>
+      </YStack>
 
-      <View style={styles.upcoming}>
-        <Text style={styles.upcomingLabel}>UPCOMING SESSIONS</Text>
-        <View style={{ gap: 10, marginTop: 12 }}>
+      <YStack px={20} pt={28}>
+        <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
+          UPCOMING SESSIONS
+        </Text>
+        <YStack gap={10} mt={12}>
           {SESSIONS.map((s) => {
             const a = athleteById(s.athleteId);
             return (
-              <View key={s.id} style={styles.sessionRow}>
-                <View>
-                  <Text style={styles.sessionTitle}>
+              <XStack
+                key={s.id}
+                justify="space-between"
+                items="center"
+                p={14}
+                rounded={16}
+                borderWidth={1}
+                borderColor="$line"
+                bg="$ash"
+              >
+                <YStack>
+                  <Text fontFamily="$mono" fontSize={12} color="$bone" letterSpacing={0.5}>
                     {s.activity} · {a?.name}
                   </Text>
-                  <Text style={styles.sessionMeta}>
+                  <Text fontSize={12} color="$fog" mt={4}>
                     {s.when} · {s.location}
                   </Text>
-                </View>
+                </YStack>
                 <Badge tone={s.status === 'CONFIRMED' ? 'accent' : 'neutral'}>{s.status}</Badge>
-              </View>
+              </XStack>
             );
           })}
-        </View>
-      </View>
+        </YStack>
+      </YStack>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.ink },
-  header: { paddingHorizontal: 20, paddingBottom: 4 },
-  title: {
-    fontFamily: fonts.display,
-    fontSize: 32,
-    color: colors.bone,
-    textTransform: 'uppercase',
-    lineHeight: 32,
-  },
-  subtitle: { color: colors.fog, fontSize: 12, marginTop: 8, marginBottom: 16 },
-  sentBanner: {
-    marginHorizontal: 20,
-    marginBottom: 20,
-    padding: 18,
-    borderRadius: 16,
-    backgroundColor: colors.emberSoft,
-    borderWidth: 1,
-    borderColor: colors.emberBorder,
-  },
-  sentTitle: { fontFamily: fonts.display, fontSize: 16, color: colors.bone, textTransform: 'uppercase' },
-  sentBody: { fontSize: 12, color: colors.fog, marginTop: 6 },
-  form: { paddingHorizontal: 20, gap: 18 },
-  label: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.bone },
-  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
-  partner: { alignItems: 'center', gap: 6 },
-  partnerAvatar: { width: 52, height: 52 },
-  partnerName: { fontFamily: fonts.mono, fontSize: 9 },
-  upcoming: { paddingHorizontal: 20, paddingTop: 28 },
-  upcomingLabel: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.fog },
-  sessionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.ash,
-  },
-  sessionTitle: { fontFamily: fonts.mono, fontSize: 12, color: colors.bone, letterSpacing: 0.5 },
-  sessionMeta: { fontSize: 12, color: colors.fog, marginTop: 4 },
-});

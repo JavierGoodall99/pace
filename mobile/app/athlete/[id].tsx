@@ -1,12 +1,13 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
 import { Badge, Button } from '../../src/components/ui';
 import { athleteById } from '../../src/data/mockData';
 import { ATHLETE_ACTION_PHOTOS } from '../../src/data/photos';
-import { colors, fonts } from '../../src/theme/tokens';
+import { colors } from '../../src/theme/tokens';
 
 export default function AthleteDetailScreen() {
   const insets = useSafeAreaInsets();
@@ -16,19 +17,18 @@ export default function AthleteDetailScreen() {
 
   if (!athlete) {
     return (
-      <View style={styles.screen}>
-        <Text style={styles.missing}>Athlete not found.</Text>
-      </View>
+      <YStack flex={1} bg="$ink">
+        <Text color="$fog" text="center" mt={100}>
+          Athlete not found.
+        </Text>
+      </YStack>
     );
   }
 
   return (
-    <View style={styles.screen}>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 24 }}
-      >
-        <View style={styles.hero}>
+    <YStack flex={1} bg="$ink">
+      <ScrollView flex={1} contentContainerStyle={{ pt: insets.top, pb: 24 }}>
+        <YStack width="100%" height={400} bg="$ash" overflow="hidden">
           {/* The image box is taller than the window and anchored to
               its top, so the crop shows the top of the action shot —
               a portrait source keeps its subject's head instead of
@@ -41,7 +41,7 @@ export default function AthleteDetailScreen() {
 
           {/* Header sits on the photo, held up by an ink fade so the
               back button reads cleanly over the image. */}
-          <View pointerEvents="none" style={styles.topFade}>
+          <YStack pointerEvents="none" position="absolute" t={0} l={0} r={0} height={150}>
             <Svg width="100%" height="100%">
               <Defs>
                 <LinearGradient id="heroTopFade" x1="0" y1="0" x2="0" y2="1">
@@ -51,21 +51,29 @@ export default function AthleteDetailScreen() {
               </Defs>
               <Rect width="100%" height="100%" fill="url(#heroTopFade)" />
             </Svg>
-          </View>
-          <View style={[styles.overlay, { top: 8 }]}>
-            <Pressable
+          </YStack>
+          <XStack position="absolute" l={20} r={20} t={8} items="center">
+            <XStack
               accessibilityRole="button"
               accessibilityLabel="Back"
               onPress={() => router.back()}
-              style={({ pressed }) => [styles.overlayBtn, pressed ? styles.overlayBtnPressed : null]}
+              pressStyle={{ opacity: 0.7 }}
+              width={40}
+              height={40}
+              rounded={20}
+              items="center"
+              justify="center"
+              bg="rgba(10,10,13,0.55)"
+              borderWidth={1}
+              borderColor="$lineHover"
             >
               <Icon name="chevron-left" size={14} color={colors.bone} />
-            </Pressable>
-          </View>
+            </XStack>
+          </XStack>
 
           {/* Bottom fade dissolves the photo into the body — no hard
               dividing line between the hero and the profile info. */}
-          <View pointerEvents="none" style={styles.bottomFade}>
+          <YStack pointerEvents="none" position="absolute" l={0} r={0} b={0} height={130}>
             <Svg width="100%" height="100%">
               <Defs>
                 <LinearGradient id="heroBottomFade" x1="0" y1="0" x2="0" y2="1">
@@ -75,35 +83,53 @@ export default function AthleteDetailScreen() {
               </Defs>
               <Rect width="100%" height="100%" fill="url(#heroBottomFade)" />
             </Svg>
-          </View>
-        </View>
+          </YStack>
+        </YStack>
 
-        <View style={styles.body}>
-          <View style={styles.nameRow}>
-            <Text style={styles.name}>{athlete.name}</Text>
-            <Text style={styles.age}>{athlete.age}</Text>
-          </View>
-          <View style={styles.verifiedRow}>
+        <YStack px={20} mt={-36}>
+          <XStack items="baseline" gap={10}>
+            <Text fontFamily="$display" fontSize={34} color="$bone" textTransform="uppercase" lineHeight={34}>
+              {athlete.name}
+            </Text>
+            <Text fontFamily="$mono" fontSize={14} color="$fog">
+              {athlete.age}
+            </Text>
+          </XStack>
+          <XStack items="center" gap={8} mt={10}>
             <Icon name="shield-check" size={14} color={colors.ember} />
-            <Text style={styles.verifiedText}>Verified Athlete</Text>
-            <Text style={styles.city}>· {athlete.city}</Text>
-          </View>
-          <View style={styles.badgeRow}>
+            <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$ember" textTransform="uppercase">
+              Verified Athlete
+            </Text>
+            <Text fontFamily="$mono" fontSize={10} color="$fog">
+              · {athlete.city}
+            </Text>
+          </XStack>
+          <XStack gap={8} mt={16}>
             <Badge tone="accent">{athlete.discipline}</Badge>
             <Badge>{athlete.pace}</Badge>
-          </View>
+          </XStack>
 
-          <View style={styles.statsRow}>
+          <XStack gap={10} mt={18}>
             <StatCard value={String(athlete.weekly)} label="SESSIONS/WK" />
             <StatCard value={athlete.pace} label="AVG PACE" />
             <StatCard value="94%" label="PROFILE MATCH" />
-          </View>
+          </XStack>
 
-          <Text style={styles.bio}>{athlete.bio}</Text>
-        </View>
+          <Text color="$fog" fontSize={13} lineHeight={20} mt={18}>
+            {athlete.bio}
+          </Text>
+        </YStack>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+      <XStack
+        gap={10}
+        px={20}
+        pt={16}
+        borderTopWidth={1}
+        borderTopColor="$line"
+        bg="$ink"
+        style={{ paddingBottom: insets.bottom + 16 }}
+      >
         <Button
           style={{ flex: 1 }}
           onPress={() =>
@@ -124,97 +150,30 @@ export default function AthleteDetailScreen() {
         >
           Plan Session
         </Button>
-      </View>
-    </View>
+      </XStack>
+    </YStack>
   );
 }
 
 function StatCard({ value, label }: { value: string; label: string }) {
   return (
-    <View style={styles.statCard}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
+    <YStack flex={1} items="center" py={14} px={8} rounded={16} borderWidth={1} borderColor="$line" bg="$ash">
+      <Text fontFamily="$display" fontSize={20} color="$bone" text="center">
+        {value}
+      </Text>
+      <Text fontFamily="$mono" fontSize={9} color="$fog" letterSpacing={1} mt={4} text="center">
+        {label}
+      </Text>
+    </YStack>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.ink },
-  missing: { color: colors.fog, textAlign: 'center', marginTop: 100 },
-  hero: {
-    width: '100%',
-    height: 400,
-    backgroundColor: colors.ash,
-    overflow: 'hidden',
-  },
+const styles = {
   heroImage: {
-    position: 'absolute',
+    position: 'absolute' as const,
     top: 0,
     left: 0,
-    width: '100%',
+    width: '100%' as const,
     height: 620,
   },
-  topFade: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 150,
-  },
-  overlay: {
-    position: 'absolute',
-    left: 20,
-    right: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  overlayBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(10,10,13,0.55)',
-    borderWidth: 1,
-    borderColor: colors.lineHover,
-  },
-  overlayBtnPressed: { opacity: 0.7 },
-  bottomFade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 130,
-  },
-  body: { paddingHorizontal: 20, marginTop: -36 },
-  nameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
-  name: { fontFamily: fonts.display, fontSize: 34, color: colors.bone, textTransform: 'uppercase', lineHeight: 34 },
-  age: { fontFamily: fonts.mono, fontSize: 14, color: colors.fog },
-  verifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
-  verifiedText: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1.5, color: colors.ember, textTransform: 'uppercase' },
-  city: { fontFamily: fonts.mono, fontSize: 10, color: colors.fog },
-  badgeRow: { flexDirection: 'row', gap: 8, marginTop: 16 },
-  statsRow: { flexDirection: 'row', gap: 10, marginTop: 18 },
-  statCard: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.ash,
-  },
-  statValue: { fontFamily: fonts.display, fontSize: 20, color: colors.bone, textAlign: 'center' },
-  statLabel: { fontFamily: fonts.mono, fontSize: 9, color: colors.fog, letterSpacing: 1, marginTop: 4, textAlign: 'center' },
-  bio: { color: colors.fog, fontSize: 13, lineHeight: 20, marginTop: 18 },
-  footer: {
-    flexDirection: 'row',
-    gap: 10,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
-    backgroundColor: colors.ink,
-  },
-});
+};

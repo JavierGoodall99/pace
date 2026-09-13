@@ -1,17 +1,9 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Animated,
-  Dimensions,
-  PanResponder,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Animated, Dimensions, PanResponder, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { ActivityPanel } from '../../src/components/ActivityPanel';
 import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
@@ -25,12 +17,34 @@ import {
   tagsForDiscipline,
 } from '../../src/data/mockData';
 import { ATHLETE_ACTION_PHOTOS } from '../../src/data/photos';
-import { colors, fonts } from '../../src/theme/tokens';
+import { colors } from '../../src/theme/tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.28;
 const SWIPE_OUT_DURATION = 240;
 const CARD_WIDTH = SCREEN_WIDTH - 40;
+
+// The swipe card is driven by RN's Animated API, so its frame styles
+// are plain ViewStyle objects (hex colors, not `$` tokens).
+const CARD_STYLE: ViewStyle = {
+  position: 'absolute',
+  width: CARD_WIDTH,
+  height: '94%',
+  borderRadius: 26,
+  overflow: 'hidden',
+  borderWidth: 1,
+  borderColor: colors.line,
+  backgroundColor: colors.ash,
+  shadowColor: '#000',
+  shadowOpacity: 0.5,
+  shadowRadius: 24,
+  shadowOffset: { width: 0, height: 12 },
+  elevation: 12,
+};
+const NEXT_CARD_STYLES: Record<1 | 2, ViewStyle> = {
+  1: { ...CARD_STYLE, transform: [{ scale: 0.95 }, { translateY: 10 }], opacity: 0.7 },
+  2: { ...CARD_STYLE, transform: [{ scale: 0.9 }, { translateY: 20 }], opacity: 0.45 },
+};
 
 type SwipeDirection = 'like' | 'pass';
 
@@ -90,33 +104,41 @@ export default function DiscoverScreen() {
   }
 
   return (
-    <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <View>
-          <Text style={styles.eyebrow}>FOUNDING COHORT · BATCH 01</Text>
-          <Text style={styles.title}>Discover</Text>
-        </View>
-        <View style={styles.headerRight}>
-          <View style={styles.streakRow}>
+    <YStack flex={1} bg="$ink">
+      <XStack px={20} pb={4} pt={insets.top + 12} items="flex-start" justify="space-between">
+        <YStack>
+          <Text fontFamily="$mono" fontSize={10} letterSpacing={3} color="$ember">
+            FOUNDING COHORT · BATCH 01
+          </Text>
+          <Text fontFamily="$display" fontSize={32} color="$bone" textTransform="uppercase" lineHeight={32} mt={8}>
+            Discover
+          </Text>
+        </YStack>
+        <YStack items="flex-end" gap={6} pt={6}>
+          <XStack items="center" gap={5}>
             <Icon name="zap" size={13} color={streak > 0 ? colors.ember : colors.fog} />
-            <Text style={[styles.streakText, { color: streak > 0 ? colors.ember : colors.fog }]}>{streak}</Text>
-          </View>
-          <Text style={styles.queueLabel}>{queue.length} LEFT TODAY</Text>
-        </View>
-      </View>
+            <Text fontFamily="$mono" fontSize={13} color={streak > 0 ? '$ember' : '$fog'}>
+              {streak}
+            </Text>
+          </XStack>
+          <Text fontFamily="$mono" fontSize={9} letterSpacing={1} color="$fog">
+            {queue.length} LEFT TODAY
+          </Text>
+        </YStack>
+      </XStack>
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={styles.chipScroller}
-        contentContainerStyle={styles.chipRow}
+        grow={0}
+        contentContainerStyle={{ flexDirection: 'row', gap: 8, px: 20, py: 12 }}
       >
         {DISCIPLINES.map((d) => (
           <Chip key={d} label={d} selected={filters.includes(d)} onPress={() => toggleFilter(d)} />
         ))}
       </ScrollView>
 
-      <View style={styles.stack}>
+      <YStack flex={1} items="center" justify="center">
         {exhausted ? (
           <EmptyState onReset={resetDeck} />
         ) : (
@@ -135,8 +157,8 @@ export default function DiscoverScreen() {
             ) : null}
           </>
         )}
-      </View>
-    </View>
+      </YStack>
+    </YStack>
   );
 }
 
@@ -206,24 +228,26 @@ function SwipeCard({
   return (
     <Animated.View
       style={[
-        styles.card,
+        CARD_STYLE,
         { transform: [{ translateX: pan.x }, { translateY }, { rotate }, { scale: enterScale }] },
       ]}
       {...panResponder.panHandlers}
     >
-      <Pressable
+      <YStack
         accessibilityRole="button"
         accessibilityLabel={`View ${athlete.name}'s profile`}
         onPress={onOpenProfile}
-        style={({ pressed }) => [styles.cardPhoto, pressed ? styles.photoPressed : null]}
+        pressStyle={{ opacity: 0.9 }}
+        width="100%"
+        height="100%"
       >
         <PhotoSlot
           label={athlete.name}
           shape="rect"
           source={ATHLETE_ACTION_PHOTOS[athlete.slotId]}
-          style={styles.cardPhoto}
+          style={{ width: '100%', height: '100%' }}
         />
-      </Pressable>
+      </YStack>
 
       <Animated.View pointerEvents="none" style={[styles.stamp, styles.likeStamp, { opacity: likeOpacity }]}>
         <Text style={[styles.stampText, { color: colors.mint, borderColor: colors.mint }]}>LIKE</Text>
@@ -232,7 +256,7 @@ function SwipeCard({
         <Text style={[styles.stampText, { color: colors.ember, borderColor: colors.ember }]}>PASS</Text>
       </Animated.View>
 
-      <View pointerEvents="none" style={styles.fade}>
+      <YStack pointerEvents="none" position="absolute" l={0} r={0} b={0} height={220}>
         <Svg width="100%" height="100%">
           <Defs>
             <LinearGradient id="photoFade" x1="0" y1="0" x2="0" y2="1">
@@ -243,21 +267,23 @@ function SwipeCard({
           </Defs>
           <Rect width="100%" height="100%" fill="url(#photoFade)" />
         </Svg>
-      </View>
+      </YStack>
 
-      <View style={styles.panel}>
-        <View style={styles.identity}>
-          <Text style={styles.panelName}>
+      <YStack position="absolute" l={0} r={0} b={0} bg="$coal" px={16} pt={12} pb={14}>
+        <YStack mb={10}>
+          <Text fontFamily="$display" fontSize={20} color="$bone" textTransform="uppercase" lineHeight={20}>
             {athlete.name}, {athlete.age}
           </Text>
-          <Text style={styles.panelMeta}>{athlete.city}</Text>
-        </View>
+          <Text fontFamily="$mono" fontSize={8.5} letterSpacing={1} color="$fog" mt={4}>
+            {athlete.city}
+          </Text>
+        </YStack>
         <ActivityPanel
           tags={tagsForDiscipline(athlete.discipline)}
           onLike={onLike}
           likeLabel={`Like ${athlete.name}`}
         />
-      </View>
+      </YStack>
     </Animated.View>
   );
 }
@@ -271,132 +297,58 @@ function NextCard({
   depth: 1 | 2;
   onOpenProfile: () => void;
 }) {
-  const style = depth === 1 ? styles.nextCard : styles.nextCard2;
   return (
-    <View style={[styles.card, style]}>
-      <Pressable
+    <YStack style={NEXT_CARD_STYLES[depth]}>
+      <YStack
         accessibilityRole="button"
         accessibilityLabel={`View ${athlete.name}'s profile`}
         onPress={onOpenProfile}
-        style={({ pressed }) => [styles.cardPhoto, pressed ? styles.photoPressed : null]}
+        pressStyle={{ opacity: 0.9 }}
+        width="100%"
+        height="100%"
       >
         <PhotoSlot
           label={athlete.name}
           shape="rect"
           source={ATHLETE_ACTION_PHOTOS[athlete.slotId]}
-          style={styles.cardPhoto}
+          style={{ width: '100%', height: '100%' }}
         />
-      </Pressable>
-    </View>
+      </YStack>
+    </YStack>
   );
 }
 
 function EmptyState({ onReset }: { onReset: () => void }) {
   return (
-    <View style={styles.empty}>
+    <YStack items="center" px={40} gap={10}>
       <Icon name="shield-check" size={28} color={colors.ember} />
-      <Text style={styles.emptyTitle}>All caught up</Text>
-      <Text style={styles.emptyBody}>
+      <Text fontFamily="$display" fontSize={22} color="$bone" textTransform="uppercase" mt={8}>
+        All caught up
+      </Text>
+      <Text color="$fog" fontSize={13} text="center" lineHeight={20}>
         You&apos;ve seen every athlete training this way. Widen the search or check back tomorrow.
       </Text>
-      <Pressable onPress={onReset} style={styles.emptyButton}>
-        <Text style={styles.emptyButtonText}>RESET DECK</Text>
-      </Pressable>
-    </View>
+      <XStack onPress={onReset} mt={14} px={24} py={12} rounded={999} bg="$ember">
+        <Text fontFamily="$mono" fontSize={11} letterSpacing={2} color="$ink" fontWeight="700">
+          RESET DECK
+        </Text>
+      </XStack>
+    </YStack>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.ink },
-  header: {
-    paddingHorizontal: 20,
-    paddingBottom: 4,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  eyebrow: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 3, color: colors.ember },
-  title: {
-    fontFamily: fonts.display,
-    fontSize: 32,
-    color: colors.bone,
-    textTransform: 'uppercase',
-    lineHeight: 32,
-    marginTop: 8,
-  },
-  headerRight: { alignItems: 'flex-end', gap: 6, paddingTop: 6 },
-  streakRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  streakText: { fontFamily: fonts.mono, fontSize: 13 },
-  queueLabel: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 1, color: colors.fog },
-  chipScroller: { flexGrow: 0 },
-  chipRow: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  stack: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  card: {
-    position: 'absolute',
-    width: CARD_WIDTH,
-    height: '94%',
-    borderRadius: 26,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.ash,
-    shadowColor: '#000',
-    shadowOpacity: 0.5,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 12,
-  },
-  nextCard: { transform: [{ scale: 0.95 }, { translateY: 10 }], opacity: 0.7 },
-  nextCard2: { transform: [{ scale: 0.9 }, { translateY: 20 }], opacity: 0.45 },
-  cardPhoto: { width: '100%', height: '100%' },
-  photoPressed: { opacity: 0.9 },
-  // Stats panel sits over the photo's lower third — the photo owns
-  // the card, the panel owns the data, joined by the fade above.
-  panel: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: colors.coal,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 14,
-  },
-  // Photo fades into the panel: a coal gradient sits behind the panel
-  // and extends well above its top edge, so there is no hard dividing
-  // line between the photo and the stats.
-  fade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 220,
-  },
-  identity: { marginBottom: 10 },
-  panelName: {
-    fontFamily: fonts.display,
-    fontSize: 20,
-    color: colors.bone,
-    textTransform: 'uppercase',
-    lineHeight: 20,
-  },
-  panelMeta: { fontFamily: fonts.mono, fontSize: 8.5, letterSpacing: 1, color: colors.fog, marginTop: 4 },
+const styles = {
   stamp: {
-    position: 'absolute',
+    position: 'absolute' as const,
     top: 28,
     padding: 8,
   },
   likeStamp: { left: 20 },
   passStamp: { right: 20 },
   stampText: {
-    fontFamily: fonts.mono,
+    fontFamily: 'JetBrainsMono_400Regular',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     letterSpacing: 2,
     borderWidth: 2,
     borderRadius: 8,
@@ -404,15 +356,4 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     transform: [{ rotate: '-12deg' }],
   },
-  empty: { alignItems: 'center', paddingHorizontal: 40, gap: 10 },
-  emptyTitle: { fontFamily: fonts.display, fontSize: 22, color: colors.bone, textTransform: 'uppercase', marginTop: 8 },
-  emptyBody: { color: colors.fog, fontSize: 13, textAlign: 'center', lineHeight: 20 },
-  emptyButton: {
-    marginTop: 14,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 999,
-    backgroundColor: colors.ember,
-  },
-  emptyButtonText: { fontFamily: fonts.mono, fontSize: 11, letterSpacing: 2, color: colors.ink, fontWeight: '700' },
-});
+};

@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { buildConfettiPieces, Confetti } from '../src/components/Confetti';
 import { Icon } from '../src/components/Icon';
 import {
@@ -45,6 +46,19 @@ const NEXT_LABEL: Record<number, string> = {
   3: 'Continue',
   4: 'Continue',
   6: 'Continue',
+};
+
+// `Animated.Text` needs a component it can drive with animated styles —
+// the shared Tamagui Text is the app's text primitive, so wrap that.
+const AnimatedText = Animated.createAnimatedComponent(Text);
+
+const BODY_STYLE = { px: 20, pt: 4, pb: 24, flexGrow: 1 };
+const HERO_LINE = {
+  fontFamily: fonts.display,
+  fontSize: 46,
+  color: colors.bone,
+  textTransform: 'uppercase' as const,
+  lineHeight: 46,
 };
 
 export default function OnboardingScreen() {
@@ -135,12 +149,12 @@ export default function OnboardingScreen() {
   const showSkip = step === 5 && !stepsDone.sync;
 
   return (
-    <View style={styles.screen}>
+    <YStack flex={1} bg="$ink">
       {toastMsg ? (
         <Animated.View
           pointerEvents="none"
           style={[
-            styles.toast,
+            TOAST_STYLE,
             {
               top: insets.top + 60,
               opacity: toastAnim,
@@ -152,96 +166,124 @@ export default function OnboardingScreen() {
             },
           ]}
         >
-          <Text style={styles.toastText}>{toastMsg}</Text>
+          <Text fontFamily="$mono" fontSize={11} letterSpacing={1.5} color="$ink">
+            {toastMsg}
+          </Text>
         </Animated.View>
       ) : null}
 
       {showHeader ? (
-        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-          <View style={styles.headerRow}>
+        <YStack px={20} pb={12} gap={12} pt={insets.top + 8}>
+          <XStack items="center" justify="space-between">
             <IconButton size={36} onPress={goBack}>
               <Icon name="chevron-left" size={13} color={colors.bone} />
             </IconButton>
-            <Text style={styles.stepLabel}>STEP {step} / 6</Text>
-            <Pressable onPress={goNext} hitSlop={8} style={{ opacity: showSkip ? 1 : 0 }}>
-              <Text style={styles.skipLabel}>SKIP</Text>
-            </Pressable>
-          </View>
+            <Text fontFamily="$mono" fontSize={10} letterSpacing={3} color="$fog">
+              STEP {step} / 6
+            </Text>
+            <YStack onPress={goNext} hitSlop={8} opacity={showSkip ? 1 : 0}>
+              <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
+                SKIP
+              </Text>
+            </YStack>
+          </XStack>
           <ProgressBar pct={(step / 6) * 100} />
-        </View>
+        </YStack>
       ) : (
-        <View style={{ height: insets.top + 12 }} />
+        <YStack height={insets.top + 12} />
       )}
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.body}>
+      <ScrollView flex={1} contentContainerStyle={BODY_STYLE}>
         {step === 0 && <WelcomeStep />}
 
         {step === 1 && (
-          <View>
-            <Text style={styles.stepTitle}>Say hello.</Text>
-            <Text style={styles.stepSubtitle}>Just enough for a warm introduction.</Text>
-            <View style={{ gap: 14 }}>
+          <YStack>
+            <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30} mt={10}>
+              Say hello.
+            </Text>
+            <Text color="$fog" fontSize={12} mt={8} mb={20}>
+              Just enough for a warm introduction.
+            </Text>
+            <YStack gap={14}>
               <Input placeholder="FIRST NAME" value={name} onChangeText={setName} />
               <Input placeholder="AGE" value={age} onChangeText={setAge} />
               <Input placeholder="CITY" value={city} onChangeText={setCity} />
-            </View>
-          </View>
+            </YStack>
+          </YStack>
         )}
 
         {step === 2 && (
-          <View>
-            <Text style={styles.stepTitle}>Your sports.</Text>
-            <Text style={styles.stepSubtitle}>Pick what you train. This is what we match on.</Text>
-            <View style={styles.chipWrap}>
+          <YStack>
+            <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30} mt={10}>
+              Your sports.
+            </Text>
+            <Text color="$fog" fontSize={12} mt={8} mb={20}>
+              Pick what you train. This is what we match on.
+            </Text>
+            <XStack flexWrap="wrap" gap={10}>
               {DISCIPLINES.map((d) => (
                 <Chip key={d} label={d} selected={disciplines.includes(d)} onPress={() => toggleDiscipline(d)} />
               ))}
-            </View>
-          </View>
+            </XStack>
+          </YStack>
         )}
 
         {step === 3 && (
-          <View>
-            <Text style={styles.stepTitle}>Your rhythm.</Text>
-            <Text style={styles.stepSubtitle}>How often, and when you actually train.</Text>
-            <Text style={styles.label}>WEEKLY VOLUME</Text>
-            <View style={{ marginTop: 10 }}>
+          <YStack>
+            <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30} mt={10}>
+              Your rhythm.
+            </Text>
+            <Text color="$fog" fontSize={12} mt={8} mb={20}>
+              How often, and when you actually train.
+            </Text>
+            <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone">
+              WEEKLY VOLUME
+            </Text>
+            <YStack mt={10}>
               <SegmentedControl options={CADENCE_OPTIONS} value={cadence} onChange={setCadence} />
-            </View>
-            <Text style={[styles.label, { marginTop: 22 }]}>TIME OF DAY</Text>
-            <View style={[styles.chipWrap, { marginTop: 10 }]}>
+            </YStack>
+            <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone" mt={22}>
+              TIME OF DAY
+            </Text>
+            <XStack flexWrap="wrap" gap={10} mt={10}>
               {TIME_OPTIONS.map((t) => (
                 <Chip key={t} label={t} selected={times.includes(t)} onPress={() => toggleTime(t)} />
               ))}
-            </View>
-          </View>
+            </XStack>
+          </YStack>
         )}
 
         {step === 4 && (
-          <View>
-            <Text style={styles.stepTitle}>Put a face to it.</Text>
-            <Text style={styles.stepSubtitle}>One good photo beats a paragraph of bio.</Text>
-            <View style={styles.photoGrid}>
-              <View style={[styles.photoTile, styles.photoTileMain]} />
-              <View style={styles.photoTile} />
-              <View style={styles.photoTile} />
-            </View>
-            <Pressable onPress={() => setPhotosAdded(true)} style={[styles.confirmRow, { opacity: photosAdded ? 1 : 0.5 }]}>
+          <YStack>
+            <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30} mt={10}>
+              Put a face to it.
+            </Text>
+            <Text color="$fog" fontSize={12} mt={8} mb={20}>
+              One good photo beats a paragraph of bio.
+            </Text>
+            <XStack gap={10} height={260}>
+              <YStack flex={1.4} rounded={18} bg="$ash" borderWidth={1} borderColor="$line" />
+              <YStack flex={1} rounded={18} bg="$ash" borderWidth={1} borderColor="$line" />
+              <YStack flex={1} rounded={18} bg="$ash" borderWidth={1} borderColor="$line" />
+            </XStack>
+            <XStack onPress={() => setPhotosAdded(true)} items="center" gap={8} mt={16} opacity={photosAdded ? 1 : 0.5}>
               <Icon name="check" size={13} color={photosAdded ? colors.ember : colors.fog} />
-              <Text style={[styles.confirmLabel, { color: photosAdded ? colors.ember : colors.fog }]}>
+              <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color={photosAdded ? '$ember' : '$fog'}>
                 {photosAdded ? 'PHOTOS ADDED' : 'MARK PHOTOS AS ADDED'}
               </Text>
-            </Pressable>
-          </View>
+            </XStack>
+          </YStack>
         )}
 
         {step === 5 && (
-          <View>
-            <Text style={styles.stepTitle}>Share your training.</Text>
-            <Text style={styles.stepSubtitle}>
+          <YStack>
+            <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30} mt={10}>
+              Share your training.
+            </Text>
+            <Text color="$fog" fontSize={12} mt={8} mb={20}>
               Connect your data so your matches see the real, verified you.
             </Text>
-            <View style={{ gap: 10 }}>
+            <YStack gap={10}>
               <SyncRow
                 icon="activity"
                 label="STRAVA"
@@ -254,36 +296,49 @@ export default function OnboardingScreen() {
                 connected={garminConnected}
                 onPress={() => setGarminConnected((v) => !v)}
               />
-            </View>
-            <View style={styles.silverBox}>
-              <Text style={styles.silverLabel}>UNLOCKS SILVER TIER</Text>
-              <Text style={styles.silverBody}>
+            </YStack>
+            <YStack
+              mt={18}
+              p={16}
+              rounded={16}
+              bg="rgba(255,77,46,0.06)"
+              borderWidth={1}
+              borderColor="rgba(255,77,46,0.25)"
+            >
+              <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$ember">
+                UNLOCKS SILVER TIER
+              </Text>
+              <Text fontSize={12} color="$fog" mt={6} lineHeight={18}>
                 Wider match radius and a verified-stats badge on your card.
               </Text>
-            </View>
-          </View>
+            </YStack>
+          </YStack>
         )}
 
         {step === 6 && (
-          <View>
-            <Text style={styles.stepTitle}>You are you.</Text>
-            <Text style={styles.stepSubtitle}>
+          <YStack>
+            <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30} mt={10}>
+              You are you.
+            </Text>
+            <Text color="$fog" fontSize={12} mt={8} mb={20}>
               A quick liveness check — matched against your photo. Ten seconds, no document
               needed.
             </Text>
-            <View style={styles.verifyBody}>
-              <View style={[styles.selfie, { borderColor: verified ? colors.ember : colors.line }]} />
+            <YStack items="center" gap={18} py={10}>
+              <YStack width={140} height={140} rounded={70} borderWidth={3} bg="$ash" borderColor={verified ? '$ember' : '$line'} />
               <Button onPress={() => setVerified(true)} style={{ width: '100%' }}>
                 {verified ? 'Verified' : 'Verify Me'}
               </Button>
               {verified ? (
-                <View style={styles.confirmRow}>
+                <XStack items="center" gap={8}>
                   <Icon name="shield-check" size={13} color={colors.ember} />
-                  <Text style={[styles.confirmLabel, { color: colors.ember }]}>GOLD TIER UNLOCKED</Text>
-                </View>
+                  <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$ember">
+                    GOLD TIER UNLOCKED
+                  </Text>
+                </XStack>
               ) : null}
-            </View>
-          </View>
+            </YStack>
+          </YStack>
         )}
 
         {step === 7 && (
@@ -298,7 +353,14 @@ export default function OnboardingScreen() {
         )}
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
+      <YStack
+        px={20}
+        pt={16}
+        borderTopWidth={1}
+        borderTopColor="$line"
+        bg="$ink"
+        style={{ paddingBottom: insets.bottom + 20 }}
+      >
         {step === 7 && (
           <Button style={{ width: '100%' }} onPress={() => router.replace('/(tabs)/discover')}>
             Enter Pace
@@ -314,8 +376,8 @@ export default function OnboardingScreen() {
             {nextLabel}
           </Button>
         )}
-      </View>
-    </View>
+      </YStack>
+    </YStack>
   );
 }
 
@@ -349,40 +411,45 @@ function WelcomeStep() {
   }, []);
 
   return (
-    <View style={styles.hero}>
-      <View style={styles.heroGlow} pointerEvents="none" />
+    <YStack flex={1} justify="center" pb={40} minH={500}>
+      <YStack pointerEvents="none" position="absolute" style={HERO_GLOW} />
 
-      <Animated.Text
-        style={[
-          styles.heroLine,
-          { opacity: line1Opacity, transform: [{ translateX: line1.x }] },
-        ]}
-      >
+      <AnimatedText style={[HERO_LINE, { opacity: line1Opacity, transform: [{ translateX: line1.x }] }]}>
         Let&apos;s build
-      </Animated.Text>
-      <Animated.Text
+      </AnimatedText>
+      <AnimatedText
         style={[
-          styles.heroLine,
-          styles.heroLineAccent,
-          { opacity: line2Opacity, transform: [{ translateX: line2.x }] },
+          HERO_LINE,
+          { color: colors.ember, opacity: line2Opacity, transform: [{ translateX: line2.x }] },
         ]}
       >
         your profile.
-      </Animated.Text>
+      </AnimatedText>
 
       <Animated.View
-        style={[
-          styles.heroUnderline,
-          { width: underline.interpolate({ inputRange: [0, 1], outputRange: [0, 64] }) },
-        ]}
+        style={{
+          height: 3,
+          borderRadius: 2,
+          backgroundColor: colors.ember,
+          marginTop: 18,
+          width: underline.interpolate({ inputRange: [0, 1], outputRange: [0, 64] }),
+        }}
       />
 
-      <Animated.Text
-        style={[styles.heroBody, { opacity: bodyOpacity, transform: [{ translateY: bodyTranslate }] }]}
+      <AnimatedText
+        style={{
+          color: colors.fog,
+          fontSize: 13,
+          lineHeight: 20,
+          marginTop: 20,
+          maxWidth: 300,
+          opacity: bodyOpacity,
+          transform: [{ translateY: bodyTranslate }],
+        }}
       >
         Six quick steps. Each one sharpens your matches — no fluff, just the right people.
-      </Animated.Text>
-    </View>
+      </AnimatedText>
+    </YStack>
   );
 }
 
@@ -399,14 +466,25 @@ function SyncRow({
 }) {
   const tint = connected ? colors.ember : colors.fog;
   return (
-    <Pressable
+    <XStack
       onPress={onPress}
-      style={[styles.syncRow, { borderColor: connected ? 'rgba(255,77,46,0.4)' : colors.line }]}
+      items="center"
+      gap={12}
+      px={16}
+      py={14}
+      rounded={16}
+      borderWidth={1}
+      borderColor={connected ? 'rgba(255,77,46,0.4)' : '$line'}
+      bg="$ash"
     >
       <Icon name={icon} size={18} color={tint} />
-      <Text style={styles.syncLabel}>{label}</Text>
-      <Text style={[styles.syncStatus, { color: tint }]}>{connected ? 'CONNECTED' : 'CONNECT'}</Text>
-    </Pressable>
+      <Text flex={1} fontFamily="$mono" fontSize={12} letterSpacing={1} color="$bone">
+        {label}
+      </Text>
+      <Text fontFamily="$mono" fontSize={10} letterSpacing={1} color={tint}>
+        {connected ? 'CONNECTED' : 'CONNECT'}
+      </Text>
+    </XStack>
   );
 }
 
@@ -439,145 +517,71 @@ function LaunchStep({
   const badges = disciplines.length ? disciplines : ['ATHLETE'];
 
   return (
-    <View style={styles.launch}>
-      <Text style={styles.launchEyebrow}>PROFILE STRENGTH · {profileStrength}%</Text>
-      <Text style={styles.launchTitle}>Welcome to the pack.</Text>
+    <YStack items="center" pt={20}>
+      <Text fontFamily="$mono" fontSize={10} letterSpacing={4} color="$ember">
+        PROFILE STRENGTH · {profileStrength}%
+      </Text>
+      <Text fontFamily="$display" fontSize={32} color="$bone" textTransform="uppercase" lineHeight={32} mt={12} mb={4} text="center">
+        Welcome to the pack.
+      </Text>
 
       <Confetti pieces={CONFETTI_PIECES} />
 
-      <View style={styles.launchCard}>
-        <View style={styles.launchHero}>
+      <YStack width="100%" mt={16} rounded={16} overflow="hidden" borderWidth={1} borderColor="$line" bg="$ash">
+        <YStack height={260} bg="$coal" justify="space-between" p={12}>
           <Animated.View
-            style={[
-              styles.launchBadge,
-              { opacity: badgeAnim, transform: [{ scale: badgeAnim.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0.5, 1.12, 1] }) }] },
-            ]}
+            style={{ alignSelf: 'flex-end', opacity: badgeAnim, transform: [{ scale: badgeAnim.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0.5, 1.12, 1] }) }] }}
           >
             <Badge tone="accent">{badgeTierLabel}</Badge>
           </Animated.View>
-          <View>
-            <Text style={styles.launchName}>
+          <YStack>
+            <Text fontFamily="$mono" fontSize={14} color="$bone">
               {name || 'You'}, {age || '—'}
             </Text>
-            <Text style={styles.launchCity}>{city || 'South Africa'}</Text>
-          </View>
-        </View>
-        <View style={styles.launchBadgeRow}>
+            <Text fontFamily="$mono" fontSize={10} color="$fog" mt={2}>
+              {city || 'South Africa'}
+            </Text>
+          </YStack>
+        </YStack>
+        <XStack p={14} gap={8} flexWrap="wrap">
           {badges.map((d) => (
             <Badge key={d}>{d}</Badge>
           ))}
-        </View>
-      </View>
-      <Text style={styles.launchFooter}>
+        </XStack>
+      </YStack>
+      <Text color="$fog" fontSize={12} lineHeight={18} mt={20} text="center">
         Your card looks great. Every step you took just made your matches feel a little more like
         home.
       </Text>
-    </View>
+    </YStack>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.ink },
-  toast: {
-    position: 'absolute',
-    left: '50%',
-    marginLeft: -110,
-    width: 220,
-    zIndex: 40,
-    backgroundColor: colors.ember,
-    borderRadius: 999,
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    alignItems: 'center',
-    shadowColor: colors.ember,
-    shadowOpacity: 0.35,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
-  },
-  toastText: { fontFamily: fonts.mono, fontSize: 11, letterSpacing: 1.5, color: colors.ink },
-  header: { paddingHorizontal: 20, paddingBottom: 12, gap: 12 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  stepLabel: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 3, color: colors.fog },
-  skipLabel: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.fog },
-  body: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 24, flexGrow: 1 },
-  hero: { flex: 1, justifyContent: 'center', paddingBottom: 40, minHeight: 500 },
-  heroGlow: {
-    position: 'absolute',
-    width: 380,
-    height: 380,
-    borderRadius: 190,
-    backgroundColor: 'rgba(255,77,46,0.08)',
-    left: -80,
-    bottom: -60,
-  },
-  heroLine: {
-    fontFamily: fonts.display,
-    fontSize: 46,
-    color: colors.bone,
-    textTransform: 'uppercase',
-    lineHeight: 46,
-  },
-  heroLineAccent: { color: colors.ember },
-  heroUnderline: { height: 3, borderRadius: 2, backgroundColor: colors.ember, marginTop: 18 },
-  heroBody: { color: colors.fog, fontSize: 13, lineHeight: 20, marginTop: 20, maxWidth: 300 },
-  stepTitle: { fontFamily: fonts.display, fontSize: 30, color: colors.bone, textTransform: 'uppercase', lineHeight: 30, marginTop: 10 },
-  stepSubtitle: { color: colors.fog, fontSize: 12, marginTop: 8, marginBottom: 20 },
-  label: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.bone },
-  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  photoGrid: { flexDirection: 'row', gap: 10, height: 260 },
-  photoTile: { flex: 1, borderRadius: 18, backgroundColor: colors.ash, borderWidth: 1, borderColor: colors.line },
-  photoTileMain: { flex: 1.4 },
-  confirmRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
-  confirmLabel: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1.5 },
-  syncRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 16,
-    borderWidth: 1,
-    backgroundColor: colors.ash,
-  },
-  syncLabel: { flex: 1, fontFamily: fonts.mono, fontSize: 12, letterSpacing: 1, color: colors.bone },
-  syncStatus: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1 },
-  silverBox: {
-    marginTop: 18,
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,77,46,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,77,46,0.25)',
-  },
-  silverLabel: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1.5, color: colors.ember },
-  silverBody: { fontSize: 12, color: colors.fog, marginTop: 6, lineHeight: 18 },
-  verifyBody: { alignItems: 'center', gap: 18, paddingVertical: 10 },
-  selfie: { width: 140, height: 140, borderRadius: 70, borderWidth: 3, backgroundColor: colors.ash },
-  launch: { alignItems: 'center', paddingTop: 20 },
-  launchEyebrow: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 4, color: colors.ember },
-  launchTitle: {
-    fontFamily: fonts.display,
-    fontSize: 32,
-    color: colors.bone,
-    textTransform: 'uppercase',
-    lineHeight: 32,
-    marginTop: 12,
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  launchCard: { width: '100%', marginTop: 16, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.line, backgroundColor: colors.ash },
-  launchHero: { height: 260, backgroundColor: colors.coal, justifyContent: 'space-between', padding: 12 },
-  launchBadge: { alignSelf: 'flex-end' },
-  launchName: { fontFamily: fonts.mono, fontSize: 14, color: colors.bone },
-  launchCity: { fontFamily: fonts.mono, fontSize: 10, color: colors.fog, marginTop: 2 },
-  launchBadgeRow: { padding: 14, flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  launchFooter: { color: colors.fog, fontSize: 12, lineHeight: 18, marginTop: 20, textAlign: 'center' },
-  footer: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
-    backgroundColor: colors.ink,
-  },
-});
+// Static frame styles used by the Animated wrappers — plain values
+// because RN's Animated API consumes them directly.
+const TOAST_STYLE = {
+  position: 'absolute' as const,
+  left: '50%' as const,
+  marginLeft: -110,
+  width: 220,
+  zIndex: 40,
+  backgroundColor: colors.ember,
+  borderRadius: 999,
+  paddingVertical: 10,
+  paddingHorizontal: 18,
+  alignItems: 'center' as const,
+  shadowColor: colors.ember,
+  shadowOpacity: 0.35,
+  shadowRadius: 24,
+  shadowOffset: { width: 0, height: 8 },
+  elevation: 8,
+};
+
+const HERO_GLOW = {
+  width: 380,
+  height: 380,
+  borderRadius: 190,
+  backgroundColor: 'rgba(255,77,46,0.08)',
+  left: -80,
+  bottom: -60,
+};

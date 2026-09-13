@@ -1,6 +1,7 @@
 import React from 'react';
-import { Image, ImageSourcePropType, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
-import { colors, fonts } from '../theme/tokens';
+import { Image, StyleProp, ViewStyle } from 'react-native';
+import { Text, YStack } from 'tamagui';
+import { colors } from '../theme/tokens';
 
 // Stand-in for the design mockup's <image-slot>. Renders a real photo when
 // a `source` is supplied (see `src/data/photos.ts`), falling back to a
@@ -9,9 +10,18 @@ interface PhotoSlotProps {
   label: string;
   shape?: 'rect' | 'circle' | 'rounded';
   radius?: number;
-  source?: ImageSourcePropType;
+  source?: Image['props']['source'];
   style?: StyleProp<ViewStyle>;
 }
+
+const BASE_STYLE = {
+  backgroundColor: colors.ash,
+  borderWidth: 1,
+  borderColor: colors.line,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  overflow: 'hidden' as const,
+};
 
 export function PhotoSlot({ label, shape = 'rounded', radius = 16, source, style }: PhotoSlotProps) {
   const initial = label.trim().charAt(0).toUpperCase() || '?';
@@ -24,35 +34,17 @@ export function PhotoSlot({ label, shape = 'rounded', radius = 16, source, style
 
   if (source) {
     return (
-      <View style={[styles.base, shapeStyle, style]}>
-        <Image source={source} style={styles.image} resizeMode="cover" />
-      </View>
+      <YStack style={[BASE_STYLE, shapeStyle, style]}>
+        <Image source={source} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+      </YStack>
     );
   }
 
   return (
-    <View style={[styles.base, shapeStyle, style]}>
-      <Text style={styles.initial}>{initial}</Text>
-    </View>
+    <YStack style={[BASE_STYLE, shapeStyle, style]}>
+      <Text fontFamily="$display" fontSize={28} color="$fog">
+        {initial}
+      </Text>
+    </YStack>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    backgroundColor: colors.ash,
-    borderWidth: 1,
-    borderColor: colors.line,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  initial: {
-    fontFamily: fonts.display,
-    fontSize: 28,
-    color: colors.fog,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-});

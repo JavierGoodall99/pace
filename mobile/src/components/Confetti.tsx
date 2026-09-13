@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet, View } from 'react-native';
+import { Animated, Easing } from 'react-native';
+import { YStack } from 'tamagui';
 
 // Shared by the onboarding Launch step and the Discover match
 // celebration — both ports of the same `confettiFall` CSS keyframe in
@@ -45,7 +46,7 @@ export function Confetti({ pieces, fallDistance = 300 }: { pieces: ConfettiPiece
   }, []);
 
   return (
-    <View style={styles.field} pointerEvents="none">
+    <YStack pointerEvents="none" style={{ width: '100%', height: 0, overflow: 'visible' }}>
       {pieces.map((piece, i) => {
         const anim = anims[i];
         return (
@@ -68,10 +69,6 @@ export function Confetti({ pieces, fallDistance = 300 }: { pieces: ConfettiPiece
           />
         );
       })}
-    </View>
+    </YStack>
   );
 }
-
-const styles = StyleSheet.create({
-  field: { width: '100%', height: 0, overflow: 'visible' },
-});

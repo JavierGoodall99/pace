@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Text } from 'tamagui';
 import { Icon, IconName } from '../../src/components/Icon';
 import { colors, fonts } from '../../src/theme/tokens';
 
@@ -39,16 +39,14 @@ export default function TabsLayout() {
           name={tab.name}
           options={{
             title: tab.label,
-            tabBarIcon: ({ color }) => <Icon name={tab.icon} size={20} color={color as string} />,
+            tabBarIcon: ({ color }) => <Icon name={tab.icon} size={20} color={color as any} />,
             tabBarLabel: ({ color }) => (
               <Text
-                style={{
-                  fontFamily: fonts.mono,
-                  fontSize: 9,
-                  letterSpacing: 1,
-                  color: color as string,
-                  textTransform: 'uppercase',
-                }}
+                fontFamily="$mono"
+                fontSize={9}
+                letterSpacing={1}
+                color={color as any}
+                textTransform="uppercase"
               >
                 {tab.label}
               </Text>

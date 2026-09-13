@@ -1,10 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../src/components/Icon';
 import { IconButton, SegmentedControl, ToggleRow } from '../src/components/ui';
-import { colors, fonts } from '../src/theme/tokens';
+import { colors } from '../src/theme/tokens';
 
 const VISIBILITY_OPTIONS = ['EVERYONE', 'MATCHES ONLY'];
 
@@ -25,87 +25,61 @@ export default function SettingsPrivacyScreen() {
 
   return (
     <ScrollView
-      style={styles.screen}
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 24 }}
+      flex={1}
+      bg="$ink"
+      contentContainerStyle={{ pt: insets.top + 8, pb: insets.bottom + 24 }}
     >
-      <View style={styles.header}>
+      <XStack items="center" gap={12} px={20} pb={2}>
         <IconButton size={40} onPress={() => router.back()}>
           <Icon name="chevron-left" size={14} color={colors.bone} />
         </IconButton>
-        <Text style={styles.title}>Privacy</Text>
-      </View>
-      <Text style={styles.subtitle}>You control who sees your pace.</Text>
+        <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30}>
+          Privacy
+        </Text>
+      </XStack>
+      <Text color="$fog" fontSize={12} mx={20} mt={8} mb={24}>
+        You control who sees your pace.
+      </Text>
 
-      <Text style={styles.label}>PROFILE VISIBILITY</Text>
-      <View style={styles.controlWrap}>
+      <Text fontFamily="$mono" fontSize={10} letterSpacing={3} color="$ember" mx={20} mb={10}>
+        PROFILE VISIBILITY
+      </Text>
+      <YStack mx={20} mb={28}>
         <SegmentedControl options={VISIBILITY_OPTIONS} value={visibility} onChange={setVisibility} />
-      </View>
+      </YStack>
 
-      <Text style={styles.label}>ON MY CARD</Text>
-      <View style={styles.group}>
-        {TOGGLES.map((t, i) => (
-          <View key={t.label} style={i === TOGGLES.length - 1 ? styles.lastRow : undefined}>
-            <ToggleRow
-              label={t.label}
-              hint={t.hint}
-              value={!!toggles[t.label]}
-              onChange={(v) => setToggles((prev) => ({ ...prev, [t.label]: v }))}
-            />
-          </View>
+      <Text fontFamily="$mono" fontSize={10} letterSpacing={3} color="$ember" mx={20} mb={10}>
+        ON MY CARD
+      </Text>
+      <YStack mx={20} mb={28} px={16} rounded={20} borderWidth={1} borderColor="$line" bg="$ash">
+        {TOGGLES.map((t) => (
+          <ToggleRow
+            key={t.label}
+            label={t.label}
+            hint={t.hint}
+            value={!!toggles[t.label]}
+            onChange={(v) => setToggles((prev) => ({ ...prev, [t.label]: v }))}
+          />
         ))}
-      </View>
+      </YStack>
 
-      <View style={styles.note}>
+      <XStack
+        items="center"
+        gap={10}
+        mx={20}
+        p={14}
+        rounded={16}
+        bg="rgba(255,77,46,0.06)"
+        borderWidth={1}
+        borderColor="rgba(255,77,46,0.25)"
+      >
         <Icon name="lock" size={14} color={colors.ember} />
-        <Text style={styles.noteText}>
+        <Text flex={1} fontFamily="$mono" fontSize={10} letterSpacing={1} lineHeight={16} color="$fog">
           {visibility === 'EVERYONE'
             ? 'Anyone on Pace can see your profile. Switch to Matches Only to hide from the discover deck.'
             : 'Only athletes you match with can see your full profile.'}
         </Text>
-      </View>
+      </XStack>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.ink },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 2,
-  },
-  title: {
-    fontFamily: fonts.display,
-    fontSize: 30,
-    color: colors.bone,
-    textTransform: 'uppercase',
-    lineHeight: 30,
-  },
-  subtitle: { color: colors.fog, fontSize: 12, marginHorizontal: 20, marginTop: 8, marginBottom: 24 },
-  label: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 3, color: colors.ember, marginHorizontal: 20, marginBottom: 10 },
-  controlWrap: { marginHorizontal: 20, marginBottom: 28 },
-  group: {
-    marginHorizontal: 20,
-    marginBottom: 28,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.ash,
-  },
-  lastRow: { borderBottomWidth: 0 },
-  note: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginHorizontal: 20,
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,77,46,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,77,46,0.25)',
-  },
-  noteText: { flex: 1, fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1, lineHeight: 16, color: colors.fog },
-});

@@ -1,11 +1,12 @@
 import { useRouter, type Href } from 'expo-router';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon, IconName } from '../src/components/Icon';
 import { PhotoSlot } from '../src/components/PhotoSlot';
 import { Badge, IconButton } from '../src/components/ui';
 import { ME_AVATAR } from '../src/data/photos';
-import { colors, fonts } from '../src/theme/tokens';
+import { colors } from '../src/theme/tokens';
 
 interface SettingsRow {
   icon: IconName;
@@ -50,27 +51,36 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView
-      style={styles.screen}
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 24 }}
+      flex={1}
+      bg="$ink"
+      contentContainerStyle={{ pt: insets.top + 8, pb: insets.bottom + 24 }}
     >
-      <View style={styles.header}>
+      <XStack items="center" gap={12} px={20} pb={14}>
         <IconButton size={40} onPress={() => router.back()}>
           <Icon name="chevron-left" size={14} color={colors.bone} />
         </IconButton>
-        <Text style={styles.title}>Settings</Text>
-      </View>
+        <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30}>
+          Settings
+        </Text>
+      </XStack>
 
-      <View style={styles.accountCard}>
-        <PhotoSlot label="Naledi" shape="circle" source={ME_AVATAR} style={styles.avatar} />
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={styles.accountName}>Naledi Khumalo</Text>
-          <Text style={styles.accountMeta}>naledi@pace.fit</Text>
-        </View>
+      <XStack items="center" gap={14} mx={20} p={16} rounded={20} borderWidth={1} borderColor="$line" bg="$ash">
+        <PhotoSlot label="Naledi" shape="circle" source={ME_AVATAR} style={{ width: 60, height: 60 }} />
+        <YStack flex={1} minW={0}>
+          <Text fontFamily="$mono" fontSize={13} letterSpacing={0.5} color="$bone" textTransform="uppercase">
+            Naledi Khumalo
+          </Text>
+          <Text fontFamily="$mono" fontSize={10} letterSpacing={1} color="$fog" mt={4}>
+            naledi@pace.fit
+          </Text>
+        </YStack>
         <Badge tone="accent">GOLD · VERIFIED</Badge>
-      </View>
+      </XStack>
 
-      <Text style={styles.sectionLabel}>PREFERENCES</Text>
-      <View style={styles.group}>
+      <Text fontFamily="$mono" fontSize={10} letterSpacing={3} color="$ember" mx={20} mt={26} mb={10}>
+        PREFERENCES
+      </Text>
+      <YStack mx={20} rounded={20} borderWidth={1} borderColor="$line" bg="$ash" overflow="hidden">
         {PREFERENCE_ROWS.map((row) => (
           <Row
             key={row.label}
@@ -80,13 +90,15 @@ export default function SettingsScreen() {
             onPress={() => router.push(row.route)}
           />
         ))}
-      </View>
+      </YStack>
 
-      <Text style={styles.sectionLabel}>ACCOUNT</Text>
-      <View style={styles.group}>
+      <Text fontFamily="$mono" fontSize={10} letterSpacing={3} color="$ember" mx={20} mt={26} mb={10}>
+        ACCOUNT
+      </Text>
+      <YStack mx={20} rounded={20} borderWidth={1} borderColor="$line" bg="$ash" overflow="hidden">
         <Row icon="log-out" label="Sign Out" danger onPress={confirmSignOut} />
         <Row icon="trash" label="Delete Account" danger onPress={confirmDelete} />
-      </View>
+      </YStack>
     </ScrollView>
   );
 }
@@ -105,111 +117,45 @@ function Row({
   danger?: boolean;
 }) {
   return (
-    <Pressable
+    <XStack
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed ? styles.rowPressed : null]}
+      pressStyle={{ opacity: 0.7 }}
+      items="center"
+      gap={12}
+      px={16}
+      py={14}
+      borderBottomWidth={0.5}
+      borderBottomColor="$line"
+      bg="$ash"
     >
-      <View
-        style={[
-          styles.rowIcon,
-          danger ? styles.rowIconDanger : null,
-        ]}
+      <XStack
+        width={34}
+        height={34}
+        rounded={10}
+        items="center"
+        justify="center"
+        bg={danger ? '$emberSoft' : '$coal'}
+        borderWidth={1}
+        borderColor={danger ? '$emberBorder' : '$line'}
       >
         <Icon name={icon} size={16} color={danger ? colors.ember : colors.fog} />
-      </View>
-      <Text style={[styles.rowLabel, danger ? styles.rowLabelDanger : null]}>{label}</Text>
-      {value ? <Text style={styles.rowValue}>{value}</Text> : null}
+      </XStack>
+      <Text
+        flex={1}
+        fontFamily="$mono"
+        fontSize={11}
+        letterSpacing={1}
+        color={danger ? '$ember' : '$bone'}
+        textTransform="uppercase"
+      >
+        {label}
+      </Text>
+      {value ? (
+        <Text fontFamily="$mono" fontSize={9} letterSpacing={1} color="$fog">
+          {value}
+        </Text>
+      ) : null}
       <Icon name="chevron-right" size={16} color={colors.fog} />
-    </Pressable>
+    </XStack>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.ink },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 14,
-  },
-  title: {
-    fontFamily: fonts.display,
-    fontSize: 30,
-    color: colors.bone,
-    textTransform: 'uppercase',
-    lineHeight: 30,
-  },
-  accountCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    marginHorizontal: 20,
-    padding: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.ash,
-  },
-  avatar: { width: 60, height: 60 },
-  accountName: {
-    fontFamily: fonts.mono,
-    fontSize: 13,
-    letterSpacing: 0.5,
-    color: colors.bone,
-    textTransform: 'uppercase',
-  },
-  accountMeta: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1, color: colors.fog, marginTop: 4 },
-  sectionLabel: {
-    fontFamily: fonts.mono,
-    fontSize: 10,
-    letterSpacing: 3,
-    color: colors.ember,
-    marginHorizontal: 20,
-    marginTop: 26,
-    marginBottom: 10,
-  },
-  group: {
-    marginHorizontal: 20,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.ash,
-    overflow: 'hidden',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.line,
-    backgroundColor: colors.ash,
-  },
-  rowPressed: { opacity: 0.7 },
-  rowIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.coal,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  rowIconDanger: {
-    backgroundColor: 'rgba(255,77,46,0.08)',
-    borderColor: 'rgba(255,77,46,0.3)',
-  },
-  rowLabel: {
-    flex: 1,
-    fontFamily: fonts.mono,
-    fontSize: 11,
-    letterSpacing: 1,
-    color: colors.bone,
-    textTransform: 'uppercase',
-  },
-  rowLabelDanger: { color: colors.ember },
-  rowValue: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 1, color: colors.fog },
-});

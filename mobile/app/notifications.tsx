@@ -1,13 +1,13 @@
 import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../src/components/Icon';
 import { PhotoSlot } from '../src/components/PhotoSlot';
 import { IconButton } from '../src/components/ui';
 import { athleteById, AppNotification, NOTIFICATIONS } from '../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../src/data/photos';
-import { colors, fonts } from '../src/theme/tokens';
+import { colors } from '../src/theme/tokens';
 
 const GROUPS: AppNotification['group'][] = ['TODAY', 'EARLIER'];
 
@@ -33,138 +33,87 @@ export default function NotificationsScreen() {
 
   return (
     <ScrollView
-      style={styles.screen}
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 24 }}
+      flex={1}
+      bg="$ink"
+      contentContainerStyle={{ pt: insets.top + 8, pb: insets.bottom + 24 }}
     >
-      <View style={styles.header}>
+      <XStack items="center" gap={12} px={20} pb={10}>
         <IconButton size={40} onPress={() => router.back()}>
           <Icon name="chevron-left" size={14} color={colors.bone} />
         </IconButton>
-        <Text style={styles.title}>Notifications</Text>
+        <Text flex={1} fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30}>
+          Notifications
+        </Text>
         {unreadCount > 0 ? (
-          <Pressable style={styles.markAll} onPress={() => setUnread({})} hitSlop={8}>
-            <Text style={styles.markAllText}>MARK ALL READ</Text>
-          </Pressable>
+          <XStack onPress={() => setUnread({})} hitSlop={8} py={4}>
+            <Text fontFamily="$mono" fontSize={9} letterSpacing={1.5} color="$ember">
+              MARK ALL READ
+            </Text>
+          </XStack>
         ) : null}
-      </View>
+      </XStack>
 
       {unreadCount > 0 ? (
-        <View style={styles.summaryRow}>
-          <View style={styles.summaryDot} />
-          <Text style={styles.summaryText}>
+        <XStack items="center" gap={8} mx={20} mb={6}>
+          <XStack width={7} height={7} rounded={4} bg="$ember" />
+          <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$fog" textTransform="uppercase">
             {unreadCount} new update{unreadCount === 1 ? '' : 's'}
           </Text>
-        </View>
+        </XStack>
       ) : null}
 
       {GROUPS.map((group) => {
         const items = NOTIFICATIONS.filter((n) => n.group === group);
         if (items.length === 0) return null;
         return (
-          <View key={group}>
-            <Text style={styles.groupLabel}>{group}</Text>
-            <View style={styles.group}>
+          <YStack key={group}>
+            <Text fontFamily="$mono" fontSize={10} letterSpacing={3} color="$ember" mx={20} mt={18} mb={10}>
+              {group}
+            </Text>
+            <YStack mx={20} rounded={20} borderWidth={1} borderColor="$line" bg="$ash" overflow="hidden">
               {items.map((n, i) => {
                 const a = athleteById(n.athleteId);
                 if (!a) return null;
                 const isUnread = !!unread[n.id];
                 return (
-                  <Pressable
+                  <XStack
                     key={n.id}
-                    style={({ pressed }) => [
-                      styles.row,
-                      i === items.length - 1 ? styles.lastRow : undefined,
-                      pressed ? styles.rowPressed : undefined,
-                    ]}
                     onPress={() => {
                       if (isUnread) {
                         setUnread((prev) => ({ ...prev, [n.id]: false }));
                       }
                       router.push(routeFor(n));
                     }}
+                    pressStyle={{ opacity: 0.7 }}
+                    items="center"
+                    gap={12}
+                    px={14}
+                    py={12}
+                    borderBottomWidth={i === items.length - 1 ? 0 : 0.5}
+                    borderBottomColor="$line"
                   >
-                    <PhotoSlot label={a.name} shape="circle" source={ATHLETE_PHOTOS[a.slotId]} style={styles.avatar} />
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text style={styles.rowText} numberOfLines={2}>
-                        <Text style={styles.rowName}>{a.name}</Text>
-                        <Text style={{ color: colors.fog }}> {n.text}</Text>
+                    <PhotoSlot label={a.name} shape="circle" source={ATHLETE_PHOTOS[a.slotId]} style={{ width: 44, height: 44 }} />
+                    <YStack flex={1} minW={0}>
+                      <Text fontSize={13} lineHeight={18} numberOfLines={2}>
+                        <Text fontFamily="$mono" fontWeight="700" fontSize={12} letterSpacing={0.5} color="$bone" textTransform="uppercase">
+                          {a.name}
+                        </Text>
+                        <Text color="$fog"> {n.text}</Text>
                       </Text>
-                    </View>
-                    <View style={styles.rowRight}>
-                      <Text style={styles.rowTime}>{n.time}</Text>
-                      {isUnread ? <View style={styles.dot} /> : null}
-                    </View>
-                  </Pressable>
+                    </YStack>
+                    <YStack items="flex-end" gap={8}>
+                      <Text fontFamily="$mono" fontSize={10} color="$fog">
+                        {n.time}
+                      </Text>
+                      {isUnread ? <XStack width={8} height={8} rounded={4} bg="$ember" /> : null}
+                    </YStack>
+                  </XStack>
                 );
               })}
-            </View>
-          </View>
+            </YStack>
+          </YStack>
         );
       })}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.ink },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-  },
-  title: {
-    flex: 1,
-    fontFamily: fonts.display,
-    fontSize: 30,
-    color: colors.bone,
-    textTransform: 'uppercase',
-    lineHeight: 30,
-  },
-  markAll: { paddingVertical: 4 },
-  markAllText: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 1.5, color: colors.ember },
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginHorizontal: 20,
-    marginBottom: 6,
-  },
-  summaryDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.ember },
-  summaryText: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1.5, color: colors.fog, textTransform: 'uppercase' },
-  groupLabel: {
-    fontFamily: fonts.mono,
-    fontSize: 10,
-    letterSpacing: 3,
-    color: colors.ember,
-    marginHorizontal: 20,
-    marginTop: 18,
-    marginBottom: 10,
-  },
-  group: {
-    marginHorizontal: 20,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.ash,
-    overflow: 'hidden',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.line,
-  },
-  rowPressed: { opacity: 0.7 },
-  lastRow: { borderBottomWidth: 0 },
-  avatar: { width: 44, height: 44 },
-  rowText: { fontSize: 13, lineHeight: 18 },
-  rowName: { fontFamily: fonts.monoBold, fontSize: 12, letterSpacing: 0.5, color: colors.bone, textTransform: 'uppercase' },
-  rowRight: { alignItems: 'flex-end', gap: 8 },
-  rowTime: { fontFamily: fonts.mono, fontSize: 10, color: colors.fog },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.ember },
-});

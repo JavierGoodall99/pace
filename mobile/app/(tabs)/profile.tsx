@@ -1,11 +1,11 @@
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { Badge } from '../../src/components/ui';
 import { ME_AVATAR, ME_COVER, TRAINING_PHOTOS } from '../../src/data/photos';
-import { colors, fonts } from '../../src/theme/tokens';
+import { colors } from '../../src/theme/tokens';
 
 const STATS = [
   { value: '42KM', label: 'WEEKLY VOL.' },
@@ -18,117 +18,88 @@ export default function ProfileScreen() {
   const router = useRouter();
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 24 }}>
-      <View>
+    <ScrollView flex={1} bg="$ink" contentContainerStyle={{ pb: 24 }}>
+      <YStack>
         <PhotoSlot
           label="Cover photo"
           shape="rect"
           source={ME_COVER}
           style={{ width: '100%', height: 160, marginTop: insets.top }}
         />
-        <Pressable
+        <XStack
           accessibilityRole="button"
           accessibilityLabel="Settings"
           onPress={() => router.push('/settings')}
-          style={[styles.settingsBtn, { top: insets.top + 12 }]}
+          position="absolute"
+          t={insets.top + 12}
+          r={16}
+          width={40}
+          height={40}
+          rounded={20}
+          items="center"
+          justify="center"
+          bg="rgba(10,10,13,0.55)"
+          borderWidth={1}
+          borderColor="$lineHover"
         >
           <Icon name="settings" size={18} color={colors.bone} />
-        </Pressable>
-      </View>
+        </XStack>
+      </YStack>
 
-      <View style={styles.body}>
-        <PhotoSlot label="Naledi" shape="circle" source={ME_AVATAR} style={styles.avatar} />
-        <Text style={styles.name}>Naledi Khumalo</Text>
-        <View style={styles.verifiedRow}>
+      <YStack px={20} mt={-40}>
+        <PhotoSlot
+          label="Naledi"
+          shape="circle"
+          source={ME_AVATAR}
+          style={{ width: 84, height: 84, borderWidth: 3, borderColor: colors.ink }}
+        />
+        <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30} mt={14}>
+          Naledi Khumalo
+        </Text>
+        <XStack items="center" gap={8} mt={8}>
           <Icon name="shield-check" size={13} color={colors.ember} />
-          <Text style={styles.verifiedText}>Verified · Pretoria</Text>
-        </View>
-        <Text style={styles.bio}>
+          <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$ember" textTransform="uppercase">
+            Verified · Pretoria
+          </Text>
+        </XStack>
+        <Text color="$fog" fontSize={13} lineHeight={20} my={14}>
           Competing at regionals next year. Coffee after WODs, always.
         </Text>
-        <View style={styles.badgeRow}>
+        <XStack gap={8} mb={18}>
           <Badge tone="accent">CROSSFIT</Badge>
           <Badge>5X / WK</Badge>
-        </View>
+        </XStack>
 
-        <View style={styles.statsRow}>
+        <XStack gap={10} mb={20}>
           {STATS.map((s) => (
-            <View key={s.label} style={styles.statCard}>
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
-            </View>
+            <YStack key={s.label} flex={1} items="center" py={14} px={8} rounded={16} borderWidth={1} borderColor="$line" bg="$ash">
+              <Text fontFamily="$display" fontSize={22} color="$bone">
+                {s.value}
+              </Text>
+              <Text fontFamily="$mono" fontSize={9} color="$fog" letterSpacing={1} mt={4}>
+                {s.label}
+              </Text>
+            </YStack>
           ))}
-        </View>
+        </XStack>
 
-        <Text style={styles.photosLabel}>TRAINING PHOTOS</Text>
-        <View style={styles.photoGrid}>
-          <PhotoSlot label="Photo" shape="rounded" source={TRAINING_PHOTOS[0]} style={styles.gridPhoto} />
-          <PhotoSlot label="Photo" shape="rounded" source={TRAINING_PHOTOS[1]} style={styles.gridPhoto} />
-          <PhotoSlot label="Photo" shape="rounded" source={TRAINING_PHOTOS[2]} style={styles.gridPhoto} />
-        </View>
+        <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
+          TRAINING PHOTOS
+        </Text>
+        <XStack gap={8} mt={10}>
+          <PhotoSlot label="Photo" shape="rounded" source={TRAINING_PHOTOS[0]} style={{ flex: 1, aspectRatio: 1 }} />
+          <PhotoSlot label="Photo" shape="rounded" source={TRAINING_PHOTOS[1]} style={{ flex: 1, aspectRatio: 1 }} />
+          <PhotoSlot label="Photo" shape="rounded" source={TRAINING_PHOTOS[2]} style={{ flex: 1, aspectRatio: 1 }} />
+        </XStack>
 
         {__DEV__ ? (
-          <Pressable onPress={() => router.push('/onboarding')} style={styles.devButton}>
-            <Text style={styles.devButtonText}>DEV · VIEW ONBOARDING</Text>
-          </Pressable>
+          <XStack onPress={() => router.push('/onboarding')} mt={24} py={12} rounded={12} borderWidth={1} borderColor="$line" borderStyle="dashed" items="center">
+            <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$fog">
+              DEV · VIEW ONBOARDING
+            </Text>
+          </XStack>
         ) : null}
-      </View>
+      </YStack>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.ink },
-  settingsBtn: {
-    position: 'absolute',
-    right: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(10,10,13,0.55)',
-    borderWidth: 1,
-    borderColor: colors.lineHover,
-  },
-  body: { paddingHorizontal: 20, marginTop: -40 },
-  avatar: { width: 84, height: 84, borderWidth: 3, borderColor: colors.ink },
-  name: {
-    fontFamily: fonts.display,
-    fontSize: 30,
-    color: colors.bone,
-    textTransform: 'uppercase',
-    lineHeight: 30,
-    marginTop: 14,
-  },
-  verifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
-  verifiedText: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1.5, color: colors.ember, textTransform: 'uppercase' },
-  bio: { color: colors.fog, fontSize: 13, lineHeight: 20, marginVertical: 14 },
-  badgeRow: { flexDirection: 'row', gap: 8, marginBottom: 18 },
-  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
-  statCard: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.ash,
-  },
-  statValue: { fontFamily: fonts.display, fontSize: 22, color: colors.bone },
-  statLabel: { fontFamily: fonts.mono, fontSize: 9, color: colors.fog, letterSpacing: 1, marginTop: 4 },
-  photosLabel: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.fog },
-  photoGrid: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  gridPhoto: { flex: 1, aspectRatio: 1 },
-  devButton: {
-    marginTop: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderStyle: 'dashed',
-    alignItems: 'center',
-  },
-  devButtonText: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1.5, color: colors.fog },
-});

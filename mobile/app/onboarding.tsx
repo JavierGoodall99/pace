@@ -174,19 +174,7 @@ export default function OnboardingScreen() {
       )}
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.body}>
-        {step === 0 && (
-          <View style={styles.welcome}>
-            <View style={styles.welcomeIcon}>
-              <Icon name="zap" size={28} color={colors.ember} />
-            </View>
-            <Text style={styles.welcomeEyebrow}>FOUNDING COHORT · BATCH 01</Text>
-            <Text style={styles.welcomeTitle}>Let&apos;s build{'\n'}your profile.</Text>
-            <Text style={styles.welcomeBody}>
-              Six easy steps. Every one earns you profile strength and unlocks better matches —
-              watch it grow as you go.
-            </Text>
-          </View>
-        )}
+        {step === 0 && <WelcomeStep />}
 
         {step === 1 && (
           <View>
@@ -331,6 +319,73 @@ export default function OnboardingScreen() {
   );
 }
 
+function WelcomeStep() {
+  const line1 = useRef(new Animated.ValueXY({ x: -28, y: 0 })).current;
+  const line1Opacity = useRef(new Animated.Value(0)).current;
+  const line2 = useRef(new Animated.ValueXY({ x: 28, y: 0 })).current;
+  const line2Opacity = useRef(new Animated.Value(0)).current;
+  const underline = useRef(new Animated.Value(0)).current;
+  const bodyOpacity = useRef(new Animated.Value(0)).current;
+  const bodyTranslate = useRef(new Animated.Value(10)).current;
+
+  useEffect(() => {
+    Animated.stagger(110, [
+      Animated.parallel([
+        Animated.timing(line1, { toValue: { x: 0, y: 0 }, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(line1Opacity, { toValue: 1, duration: 380, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(line2, { toValue: { x: 0, y: 0 }, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(line2Opacity, { toValue: 1, duration: 380, useNativeDriver: true }),
+      ]),
+      Animated.timing(underline, { toValue: 1, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: false }),
+      Animated.parallel([
+        Animated.timing(bodyOpacity, { toValue: 1, duration: 320, useNativeDriver: true }),
+        Animated.timing(bodyTranslate, { toValue: 0, duration: 320, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      ]),
+      // Mount-once entrance choreography — deliberately no deps.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    ]).start();
+  }, []);
+
+  return (
+    <View style={styles.hero}>
+      <View style={styles.heroGlow} pointerEvents="none" />
+
+      <Animated.Text
+        style={[
+          styles.heroLine,
+          { opacity: line1Opacity, transform: [{ translateX: line1.x }] },
+        ]}
+      >
+        Let&apos;s build
+      </Animated.Text>
+      <Animated.Text
+        style={[
+          styles.heroLine,
+          styles.heroLineAccent,
+          { opacity: line2Opacity, transform: [{ translateX: line2.x }] },
+        ]}
+      >
+        your profile.
+      </Animated.Text>
+
+      <Animated.View
+        style={[
+          styles.heroUnderline,
+          { width: underline.interpolate({ inputRange: [0, 1], outputRange: [0, 64] }) },
+        ]}
+      />
+
+      <Animated.Text
+        style={[styles.heroBody, { opacity: bodyOpacity, transform: [{ translateY: bodyTranslate }] }]}
+      >
+        Six quick steps. Each one sharpens your matches — no fluff, just the right people.
+      </Animated.Text>
+    </View>
+  );
+}
+
 function SyncRow({
   icon,
   label,
@@ -446,27 +501,26 @@ const styles = StyleSheet.create({
   stepLabel: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 3, color: colors.fog },
   skipLabel: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.fog },
   body: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 24, flexGrow: 1 },
-  welcome: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 40, minHeight: 500 },
-  welcomeIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    backgroundColor: colors.emberSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
+  hero: { flex: 1, justifyContent: 'center', paddingBottom: 40, minHeight: 500 },
+  heroGlow: {
+    position: 'absolute',
+    width: 380,
+    height: 380,
+    borderRadius: 190,
+    backgroundColor: 'rgba(255,77,46,0.08)',
+    left: -80,
+    bottom: -60,
   },
-  welcomeEyebrow: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 4, color: colors.ember },
-  welcomeTitle: {
+  heroLine: {
     fontFamily: fonts.display,
-    fontSize: 44,
+    fontSize: 46,
     color: colors.bone,
     textTransform: 'uppercase',
-    lineHeight: 40,
-    textAlign: 'center',
-    marginTop: 14,
+    lineHeight: 46,
   },
-  welcomeBody: { color: colors.fog, fontSize: 13, lineHeight: 20, marginTop: 18, maxWidth: 280, textAlign: 'center' },
+  heroLineAccent: { color: colors.ember },
+  heroUnderline: { height: 3, borderRadius: 2, backgroundColor: colors.ember, marginTop: 18 },
+  heroBody: { color: colors.fog, fontSize: 13, lineHeight: 20, marginTop: 20, maxWidth: 300 },
   stepTitle: { fontFamily: fonts.display, fontSize: 30, color: colors.bone, textTransform: 'uppercase', lineHeight: 30, marginTop: 10 },
   stepSubtitle: { color: colors.fog, fontSize: 12, marginTop: 8, marginBottom: 20 },
   label: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.bone },

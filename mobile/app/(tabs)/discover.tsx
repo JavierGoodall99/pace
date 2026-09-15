@@ -18,6 +18,7 @@ import {
 } from '../../src/data/mockData';
 import { ATHLETE_ACTION_PHOTOS } from '../../src/data/photos';
 import { cityWithinRadius, useFilters } from '../../src/data/filters';
+import { useSocial } from '../../src/data/social';
 import { colors } from '../../src/theme/tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -53,6 +54,7 @@ export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const disc = useFilters();
+  const { blocked } = useSocial();
 
   const [filters, setFilters] = useState<Discipline[]>([]);
   const [swiped, setSwiped] = useState<Record<number, SwipeDirection>>({});
@@ -68,12 +70,13 @@ export default function DiscoverScreen() {
         (a) =>
           (filters.length === 0 || filters.includes(a.discipline)) &&
           !(a.id in swiped) &&
+          !blocked.includes(a.id) &&
           a.age >= disc.ageMin &&
           a.age <= disc.ageMax &&
           (!disc.verifiedOnly || a.verified) &&
           cityWithinRadius(a.city, disc.radiusKm)
       ),
-    [filters, swiped, disc]
+    [filters, swiped, disc, blocked]
   );
 
   const filtersActive =

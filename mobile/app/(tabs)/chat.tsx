@@ -6,11 +6,14 @@ import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { IconButton } from '../../src/components/ui';
 import { athleteById, CHAT_THREADS } from '../../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
+import { useSocial } from '../../src/data/social';
 import { colors } from '../../src/theme/tokens';
 
 export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { blocked } = useSocial();
+  const threads = CHAT_THREADS.filter((t) => !blocked.includes(t.athleteId));
 
   return (
     <ScrollView flex={1} bg="$ink" contentContainerStyle={{ pt: insets.top + 12, pb: 24 }}>
@@ -25,7 +28,7 @@ export default function ChatScreen() {
       </XStack>
 
       <YStack px={20} pt={8}>
-        {CHAT_THREADS.map((t) => {
+        {threads.map((t) => {
           const a = athleteById(t.athleteId);
           if (!a) return null;
           return (

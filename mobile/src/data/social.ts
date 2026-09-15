@@ -11,11 +11,12 @@ export const MATCH_IDS = [1, 3, 5, 7];
 interface SocialState {
   likes: number[];
   matches: number[];
+  blocked: number[];
 }
 
 const STORAGE_KEY = 'pace.social.v1';
 
-const DEFAULT_STATE: SocialState = { likes: LIKES_IDS, matches: MATCH_IDS };
+const DEFAULT_STATE: SocialState = { likes: LIKES_IDS, matches: MATCH_IDS, blocked: [] };
 
 let state: SocialState = DEFAULT_STATE;
 const listeners = new Set<() => void>();
@@ -53,6 +54,7 @@ AsyncStorage.getItem(STORAGE_KEY)
       setState({
         likes: saved.likes ?? LIKES_IDS,
         matches: saved.matches ?? MATCH_IDS,
+        blocked: saved.blocked ?? [],
       });
     }
   })
@@ -68,5 +70,14 @@ export async function likeBack(athleteId: number) {
 
 export async function passOn(athleteId: number) {
   setState({ likes: state.likes.filter((id) => id !== athleteId) });
+  await persist();
+}
+
+export async function blockAthlete(athleteId: number) {
+  setState({
+    likes: state.likes.filter((id) => id !== athleteId),
+    matches: state.matches.filter((id) => id !== athleteId),
+    blocked: state.blocked.includes(athleteId) ? state.blocked : [...state.blocked, athleteId],
+  });
   await persist();
 }

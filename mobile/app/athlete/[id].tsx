@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Image } from 'react-native';
+import { Alert, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
@@ -7,6 +7,7 @@ import { Icon } from '../../src/components/Icon';
 import { Badge, Button } from '../../src/components/ui';
 import { athleteById } from '../../src/data/mockData';
 import { ATHLETE_ACTION_PHOTOS } from '../../src/data/photos';
+import { blockAthlete } from '../../src/data/social';
 import { colors } from '../../src/theme/tokens';
 
 export default function AthleteDetailScreen() {
@@ -22,6 +23,25 @@ export default function AthleteDetailScreen() {
           Athlete not found.
         </Text>
       </YStack>
+    );
+  }
+
+  function confirmBlock() {
+    if (!athlete) return;
+    Alert.alert(
+      `Block ${athlete.name}?`,
+      "They won't be able to message you, and won't appear in Discover again.",
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            await blockAthlete(athlete.id);
+            router.back();
+          },
+        },
+      ]
     );
   }
 
@@ -52,7 +72,7 @@ export default function AthleteDetailScreen() {
               <Rect width="100%" height="100%" fill="url(#heroTopFade)" />
             </Svg>
           </YStack>
-          <XStack position="absolute" l={20} r={20} t={8} items="center">
+          <XStack position="absolute" l={20} r={20} t={8} items="center" justify="space-between">
             <XStack
               accessibilityRole="button"
               accessibilityLabel="Back"
@@ -68,6 +88,22 @@ export default function AthleteDetailScreen() {
               borderColor="$lineHover"
             >
               <Icon name="chevron-left" size={14} color={colors.bone} />
+            </XStack>
+            <XStack
+              accessibilityRole="button"
+              accessibilityLabel={`Block ${athlete.name}`}
+              onPress={confirmBlock}
+              pressStyle={{ opacity: 0.7 }}
+              width={40}
+              height={40}
+              rounded={20}
+              items="center"
+              justify="center"
+              bg="rgba(10,10,13,0.55)"
+              borderWidth={1}
+              borderColor="$lineHover"
+            >
+              <Icon name="ban" size={14} color={colors.bone} />
             </XStack>
           </XStack>
 

@@ -35,6 +35,10 @@ let state: DiscoverFilterState = DEFAULT_FILTERS;
 const listeners = new Set<() => void>();
 
 function setState(patch: Partial<DiscoverFilterState>) {
+  const changed = (Object.keys(patch) as (keyof DiscoverFilterState)[]).some(
+    (k) => patch[k] !== state[k],
+  );
+  if (!changed) return;
   state = { ...state, ...patch };
   listeners.forEach((l) => l());
 }

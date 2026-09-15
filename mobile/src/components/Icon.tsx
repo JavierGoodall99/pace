@@ -24,7 +24,8 @@ export type IconName =
   | 'chevron-right'
   | 'user'
   | 'mail'
-  | 'upload';
+  | 'upload'
+  | 'ban';
 
 interface IconProps {
   name: IconName;
@@ -199,6 +200,13 @@ export function Icon({ name, size = 20, color = '#8f8d97' }: IconProps) {
           <Path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
           <Path d="m17 8-5-5-5 5" />
           <Path d="M12 3v12" />
+        </Svg>
+      );
+    case 'ban':
+      return (
+        <Svg {...common}>
+          <Circle cx="12" cy="12" r="10" />
+          <Path d="m4.9 4.9 14.2 14.2" />
         </Svg>
       );
     default:

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Slider, Text, XStack, YStack } from 'tamagui';
@@ -17,6 +18,18 @@ export default function DiscoverFiltersScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const f = useFilters();
+  const ageMinValue = useMemo(() => [f.ageMin], [f.ageMin]);
+  const ageMaxValue = useMemo(() => [f.ageMax], [f.ageMax]);
+
+  function setAgeMin(v: number) {
+    const next = Math.min(v, f.ageMax);
+    if (next !== f.ageMin) setFilters({ ageMin: next });
+  }
+
+  function setAgeMax(v: number) {
+    const next = Math.max(v, f.ageMin);
+    if (next !== f.ageMax) setFilters({ ageMax: next });
+  }
 
   function toggleTime(t: string) {
     setFilters({
@@ -55,11 +68,11 @@ export default function DiscoverFiltersScreen() {
               </Text>
             </XStack>
             <Slider
-              value={[f.ageMin]}
+              value={ageMinValue}
               min={AGE_RANGE.min}
               max={AGE_RANGE.max}
               step={1}
-              onValueChange={([v]) => setFilters({ ageMin: Math.min(v, f.ageMax) })}
+              onValueChange={([v]) => setAgeMin(v)}
             >
               <Slider.Track>
                 <Slider.TrackActive />
@@ -67,11 +80,11 @@ export default function DiscoverFiltersScreen() {
               <Slider.Thumb index={0} />
             </Slider>
             <Slider
-              value={[f.ageMax]}
+              value={ageMaxValue}
               min={AGE_RANGE.min}
               max={AGE_RANGE.max}
               step={1}
-              onValueChange={([v]) => setFilters({ ageMax: Math.max(v, f.ageMin) })}
+              onValueChange={([v]) => setAgeMax(v)}
             >
               <Slider.Track>
                 <Slider.TrackActive />

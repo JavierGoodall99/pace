@@ -37,6 +37,7 @@
     "eslint-config-prettier": "^10.1.8",
     "jest": "^29.7.0",
     "jest-expo": "~57.0.5",
+    "lint-staged": "^17.5.1",
     "prettier": "^3.9.6",
     "react-test-renderer": "19.2.3",
     "typescript": "~6.0.3"
@@ -49,6 +50,12 @@
     "test": "jest",
     "lint": "eslint .",
     "format": "prettier --write ."
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   },
   "private": true
 }

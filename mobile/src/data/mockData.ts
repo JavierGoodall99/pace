@@ -1,6 +1,5 @@
 // Mock data ported 1:1 from the DC script in `../Pace App.dc.html`.
 
-export const LINT_STAGED_VERIFICATION = 'husky pre-commit hook check';
 export type Discipline =
   'RUNNING' | 'CYCLING' | 'TRAIL' | 'SWIMMING' | 'CROSSFIT' | 'CLIMBING' | 'TRIATHLON';
 

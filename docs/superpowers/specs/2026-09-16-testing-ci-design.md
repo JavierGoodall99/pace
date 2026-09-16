@@ -66,11 +66,19 @@ user's choice, that can be extended later.
   `blockAthlete`: liking back moves an id from `likes` to `matches`;
   passing removes it from `likes` only; blocking removes the id from both
   `likes` and `matches` and adds it to `blocked` exactly once (no
-  duplicates on repeated calls).
+  duplicates on repeated calls). `social.ts` exposes state only through the
+  `useSocial()` React hook (backed by `useSyncExternalStore`) — there is no
+  plain getter to read state directly. Reading the effect of a mutation
+  therefore requires rendering that hook via `@testing-library/react-native`'s
+  `renderHook`, wrapping each mutating call in `act()`, and asserting on
+  `result.current`. This is why `@testing-library/react-native` is a
+  dependency from the start rather than only for future screen tests — it
+  is exercised by `social.test.ts` immediately.
 - `mobile/src/data/session.test.ts` — covers `signUp` and `signIn`
   validation paths: empty name, invalid email, short password, duplicate
   sign-up while already signed in, wrong credentials on sign-in, and the
-  success path for both.
+  success path for both. No hook rendering needed here — both functions
+  return an `AuthResult` directly, so tests assert on the return value.
 
 Both modules hold module-level mutable state (`let state = ...`) that
 persists for the lifetime of the module instance — it does not reset

@@ -1,28 +1,15 @@
 import React from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 import { Icon } from './Icon';
-import { colors } from '../theme/tokens';
+import { colors, formatLabel } from '../theme/tokens';
 
-// The stats cluster from the app's card mockup: a row of activity
-// tiles on the left and a round heart button on the right. When a
-// stat is provided (kudos on feed cards) it sits between the tiles
-// and the heart. Shared by the Discover cards and the Activity feed
-// cards.
+// The footer row shared by Discover cards and Activity feed cards:
+// sport tags on the left, a like control on the right. On feed cards
+// the like control is a pill carrying the kudos count; on Discover it's
+// a round accent button, the card's primary action.
 //
-// Tiles follow the app's Badge/Chip neutral-vs-accent language rather
-// than per-discipline hues, so the panel reads as one design system
-// with the rest of the app: the athlete's primary discipline (first
-// tag) gets the ember accent treatment, the rest stay neutral.
-
-const DISCIPLINE_ABBR: Record<string, string> = {
-  RUNNING: 'RUN',
-  CYCLING: 'RIDE',
-  TRAIL: 'TRA',
-  SWIMMING: 'SWM',
-  CROSSFIT: 'CFX',
-  CLIMBING: 'CLB',
-  TRIATHLON: 'TRI',
-};
+// The athlete's primary sport (first tag) gets the accent treatment;
+// the rest stay neutral.
 
 interface ActivityPanelProps {
   tags: string[];
@@ -31,6 +18,9 @@ interface ActivityPanelProps {
   liked?: boolean;
   onLike: () => void;
   likeLabel?: string;
+  // Discover only: a secondary "pass" button beside the like button.
+  onPass?: () => void;
+  passLabel?: string;
 }
 
 export function ActivityPanel({
@@ -40,67 +30,105 @@ export function ActivityPanel({
   liked = false,
   onLike,
   likeLabel = 'Like',
+  onPass,
+  passLabel = 'Pass',
 }: ActivityPanelProps) {
+  const hasStat = statValue != null;
   return (
     <XStack items="center" gap={10}>
-      {tags.length > 0 ? (
-        <XStack gap={6}>
-          {tags.slice(0, 3).map((t, i) => {
-            const accent = i === 0;
-            return (
-              <YStack
-                key={t}
-                height={36}
-                px={16}
-                rounded="$full"
-                borderWidth={1}
-                items="center"
-                justify="center"
-                bg={accent ? '$emberSoft' : '$coal'}
-                borderColor={accent ? '$emberBorder' : '$line'}
-              >
-                <Text fontFamily="$mono" fontWeight="700" fontSize={12} letterSpacing={1} color={accent ? '$ember' : '$bone'}>
-                  {DISCIPLINE_ABBR[t] ?? t.slice(0, 3)}
-                </Text>
-              </YStack>
-            );
-          })}
-        </XStack>
-      ) : null}
+      <XStack flex={1} flexWrap="wrap" gap={6}>
+        {tags.slice(0, 2).map((t, i) => {
+          const accent = i === 0;
+          return (
+            <YStack
+              key={t}
+              height={30}
+              px={12}
+              rounded="$full"
+              items="center"
+              justify="center"
+              bg={accent ? '$accentSoft' : '$surface'}
+            >
+              <Text fontFamily="$semibold" fontSize={13} color={accent ? '$accent' : '$text'}>
+                {formatLabel(t)}
+              </Text>
+            </YStack>
+          );
+        })}
+      </XStack>
 
-      {statValue != null ? (
-        <YStack items="flex-start" justify="center">
-          <Text fontFamily="$mono" fontSize={8} letterSpacing={1.5} color="$fog">
-            {statLabel}
-          </Text>
-          <Text fontFamily="$display" fontSize={34} lineHeight={38} color="$bone" mt={2}>
+      {hasStat ? (
+        <XStack
+          accessibilityRole="button"
+          accessibilityLabel={likeLabel}
+          accessibilityState={{ selected: liked }}
+          onPress={onLike}
+          pressStyle={{ scale: 0.95 }}
+          hitSlop={6}
+          items="center"
+          gap={6}
+          height={36}
+          px={14}
+          rounded="$full"
+          bg={liked ? '$accentSoft' : '$surface'}
+        >
+          <Icon
+            name="heart"
+            size={16}
+            color={liked ? colors.accent : colors.text}
+            filled={liked}
+            strokeWidth={2}
+          />
+          <Text fontFamily="$semibold" fontSize={14} color={liked ? '$accent' : '$text'}>
             {statValue}
           </Text>
-        </YStack>
-      ) : null}
-
-      <XStack flex={1} />
-
-      <XStack
-        accessibilityRole="button"
-        accessibilityLabel={likeLabel}
-        onPress={onLike}
-        pressStyle={{ transform: [{ scale: 0.9 }] }}
-        hitSlop={6}
-        width={44}
-        height={44}
-        rounded={22}
-        bg={liked ? '$ember' : '$bone'}
-        items="center"
-        justify="center"
-        shadowColor="#000"
-        shadowOpacity={0.35}
-        shadowRadius={8}
-        shadowOffset={{ width: 0, height: 4 }}
-        elevation={5}
-      >
-        <Icon name="heart" size={20} color={colors.ink} />
-      </XStack>
+          {statLabel ? (
+            <Text fontSize={13} color="$muted">
+              {statLabel}
+            </Text>
+          ) : null}
+        </XStack>
+      ) : (
+        <XStack items="center" gap={10}>
+          {onPass ? (
+            <XStack
+              accessibilityRole="button"
+              accessibilityLabel={passLabel}
+              onPress={onPass}
+              pressStyle={{ scale: 0.92 }}
+              hitSlop={6}
+              width={44}
+              height={44}
+              rounded={22}
+              bg="$card"
+              items="center"
+              justify="center"
+            >
+              <Icon name="x" size={20} color={colors.text} strokeWidth={2.2} />
+            </XStack>
+          ) : null}
+          <XStack
+            accessibilityRole="button"
+            accessibilityLabel={likeLabel}
+            onPress={onLike}
+            pressStyle={{ scale: 0.92 }}
+            hitSlop={6}
+            width={52}
+            height={52}
+            rounded={26}
+            bg="$accent"
+            items="center"
+            justify="center"
+            shadowColor={colors.accent}
+            shadowOpacity={0.35}
+            shadowRadius={12}
+            shadowOffset={{ width: 0, height: 6 }}
+            elevation={5}
+          >
+            <Icon name="heart" size={22} color={colors.onAccent} filled />
+          </XStack>
+        </XStack>
+      )}
     </XStack>
   );
 }

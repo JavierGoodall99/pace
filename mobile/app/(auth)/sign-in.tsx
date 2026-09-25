@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 import { AuthScreen } from '../../src/components/AuthScreen';
-import { Button, Input } from '../../src/components/ui';
+import { Button, Input, TextAction } from '../../src/components/ui';
 import { signIn, useSession } from '../../src/data/session';
 
 export default function SignInScreen() {
@@ -27,13 +27,13 @@ export default function SignInScreen() {
 
   return (
     <AuthScreen
-      eyebrow="WELCOME BACK"
-      title="Sign in."
+      eyebrow="Welcome back"
+      title="Sign in to Pace"
       subtitle="Your training is waiting. Pick up right where you left off."
     >
       <YStack gap={14}>
         <Input
-          placeholder="EMAIL"
+          placeholder="Email"
           value={email}
           onChangeText={(v) => {
             setEmail(v);
@@ -45,7 +45,7 @@ export default function SignInScreen() {
           returnKeyType="next"
         />
         <Input
-          placeholder="PASSWORD"
+          placeholder="Password"
           value={password}
           onChangeText={(v) => {
             setPassword(v);
@@ -58,29 +58,23 @@ export default function SignInScreen() {
           onSubmitEditing={submit}
         />
         {error ? (
-          <Text fontFamily="$mono" fontSize={10} letterSpacing={1} color="$ember" lineHeight={16}>
+          <Text fontFamily="$medium" fontSize={14} color="$accent" lineHeight={20}>
             {error}
           </Text>
         ) : null}
         <Button onPress={submit} disabled={busy} style={{ width: '100%', marginTop: 4 }}>
-          {busy ? 'Signing In…' : 'Sign In'}
+          {busy ? 'Signing in…' : 'Sign in'}
         </Button>
 
         <YStack items="center" gap={16} mt={4}>
-          <XStack onPress={() => router.push('/forgot-password')} py={4}>
-            <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$fog" textTransform="uppercase">
-              Forgot Password?
-            </Text>
-          </XStack>
-          <XStack items="center" gap={6}>
-            <Text color="$fog" fontSize={12}>
+          <TextAction tone="muted" onPress={() => router.push('/forgot-password')}>
+            Forgot password?
+          </TextAction>
+          <XStack items="center" gap={4}>
+            <Text color="$muted" fontSize={15}>
               New to Pace?
             </Text>
-            <XStack onPress={() => router.push('/sign-up')} py={4}>
-              <Text fontFamily="$mono" fontSize={11} letterSpacing={1} color="$ember" textTransform="uppercase" fontWeight="700">
-                Create Account
-              </Text>
-            </XStack>
+            <TextAction onPress={() => router.push('/sign-up')}>Create an account</TextAction>
           </XStack>
         </YStack>
       </YStack>

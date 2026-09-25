@@ -3,7 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
-import { Badge, Button, Chip, Input } from '../../src/components/ui';
+import { Icon } from '../../src/components/Icon';
+import { Badge, Button, Callout, Chip, Input, SectionTitle } from '../../src/components/ui';
 import {
   athleteById,
   DISCIPLINES,
@@ -12,7 +13,7 @@ import {
   SESSIONS,
 } from '../../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
-import { colors } from '../../src/theme/tokens';
+import { colors, formatLabel, shadow } from '../../src/theme/tokens';
 
 export default function PlannerScreen() {
   const insets = useSafeAreaInsets();
@@ -44,53 +45,55 @@ export default function PlannerScreen() {
   const partner = athleteById(partnerId);
 
   return (
-    <ScrollView flex={1} bg="$ink" contentContainerStyle={{ pt: insets.top + 12, pb: 24 }}>
-      <YStack px={20} pb={4}>
-        <Text fontFamily="$display" fontSize={32} color="$bone" textTransform="uppercase" lineHeight={32}>
-          Planner
+    <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pt: insets.top + 12, pb: 32 }}>
+      <YStack px={20} pb={20}>
+        <Text fontFamily="$bold" fontSize={28} lineHeight={34} letterSpacing={-0.5} color="$text">
+          Plans
         </Text>
-        <Text color="$fog" fontSize={12} mt={8} mb={16}>
-          Turn a match into a session. Pick a sport, time and place.
+        <Text fontSize={15} lineHeight={22} color="$muted" mt={4}>
+          Turn a match into a session. Pick a sport, a time and a place.
         </Text>
       </YStack>
 
       {sent ? (
-        <YStack
-          mx={20}
-          mb={20}
-          p={18}
-          rounded={16}
-          bg="$emberSoft"
-          borderWidth={1}
-          borderColor="$emberBorder"
-        >
-          <Text fontFamily="$display" fontSize={16} color="$bone" textTransform="uppercase">
-            Invite Sent
-          </Text>
-          <Text fontSize={12} color="$fog" mt={6}>
-            {partner?.name ?? 'They'} will get your session invite. You&apos;ll be notified when
-            they respond.
-          </Text>
+        <YStack mx={20} mb={20}>
+          <Callout icon="check" tone="success" title="Invite sent">
+            {partner?.name ?? 'They'} will get your invite. We&apos;ll let you know when they reply.
+          </Callout>
         </YStack>
       ) : null}
 
-      <YStack px={20} gap={18}>
+      <YStack
+        mx={20}
+        p={20}
+        gap={24}
+        rounded={24}
+        bg="$card"
+        borderWidth={1}
+        borderColor="$border"
+        style={shadow.card}
+      >
         <YStack>
-          <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone">
-            ACTIVITY
-          </Text>
-          <XStack flexWrap="wrap" gap={8} mt={8}>
+          <SectionTitle>Activity</SectionTitle>
+          <XStack flexWrap="wrap" gap={8}>
             {DISCIPLINES.map((d) => (
-              <Chip key={d} label={d} selected={d === discipline} onPress={() => setDiscipline(d)} />
+              <Chip
+                key={d}
+                label={d}
+                selected={d === discipline}
+                onPress={() => setDiscipline(d)}
+              />
             ))}
           </XStack>
         </YStack>
 
         <YStack>
-          <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone">
-            WITH
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+          <SectionTitle>With</SectionTitle>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 14 }}
+          >
             {PLANNER_PARTNER_IDS.map((id) => {
               const a = athleteById(id);
               if (!a) return null;
@@ -98,6 +101,8 @@ export default function PlannerScreen() {
               return (
                 <YStack
                   key={id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
                   onPress={() => {
                     setPartnerId(id);
                     setSent(false);
@@ -105,16 +110,24 @@ export default function PlannerScreen() {
                   items="center"
                   gap={6}
                 >
-                  <PhotoSlot
-                    label={a.name}
-                    shape="circle"
-                    source={ATHLETE_PHOTOS[a.slotId]}
-                    style={[
-                      { width: 52, height: 52 },
-                      { borderWidth: 2, borderColor: active ? colors.ember : colors.line },
-                    ]}
-                  />
-                  <Text fontFamily="$mono" fontSize={9} color={active ? '$ember' : '$fog'}>
+                  <YStack
+                    p={2}
+                    rounded={32}
+                    borderWidth={2}
+                    borderColor={active ? '$accent' : 'transparent'}
+                  >
+                    <PhotoSlot
+                      label={a.name}
+                      shape="circle"
+                      source={ATHLETE_PHOTOS[a.slotId]}
+                      style={{ width: 52, height: 52 }}
+                    />
+                  </YStack>
+                  <Text
+                    fontFamily={active ? '$semibold' : '$medium'}
+                    fontSize={13}
+                    color={active ? '$accent' : '$muted'}
+                  >
                     {a.name}
                   </Text>
                 </YStack>
@@ -124,55 +137,55 @@ export default function PlannerScreen() {
         </YStack>
 
         <YStack>
-          <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone">
-            WHEN
-          </Text>
-          <YStack mt={8}>
-            <Input placeholder="SAT · 06:00" />
-          </YStack>
+          <SectionTitle>When</SectionTitle>
+          <Input placeholder="e.g. Saturday, 6:00 am" />
         </YStack>
 
         <YStack>
-          <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone">
-            WHERE
-          </Text>
-          <YStack mt={8}>
-            <Input placeholder="SEA POINT PROMENADE" />
-          </YStack>
+          <SectionTitle>Where</SectionTitle>
+          <Input placeholder="e.g. Sea Point Promenade" />
         </YStack>
 
-        <Button onPress={() => setSent(true)} style={{ width: '100%', marginTop: 4 }}>
-          Send Invite
+        <Button onPress={() => setSent(true)} icon="send" style={{ width: '100%' }}>
+          Send invite
         </Button>
       </YStack>
 
-      <YStack px={20} pt={28}>
-        <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
-          UPCOMING SESSIONS
-        </Text>
-        <YStack gap={10} mt={12}>
+      <YStack px={20} pt={32}>
+        <SectionTitle>Upcoming</SectionTitle>
+        <YStack gap={10}>
           {SESSIONS.map((s) => {
             const a = athleteById(s.athleteId);
             return (
               <XStack
                 key={s.id}
-                justify="space-between"
                 items="center"
+                gap={12}
                 p={14}
-                rounded={16}
+                rounded={20}
                 borderWidth={1}
-                borderColor="$line"
-                bg="$ash"
+                borderColor="$border"
+                bg="$card"
               >
-                <YStack>
-                  <Text fontFamily="$mono" fontSize={12} color="$bone" letterSpacing={0.5}>
-                    {s.activity} · {a?.name}
+                <XStack
+                  width={44}
+                  height={44}
+                  rounded={14}
+                  bg="$accentSoft"
+                  items="center"
+                  justify="center"
+                >
+                  <Icon name="calendar" size={20} color={colors.accent} />
+                </XStack>
+                <YStack flex={1} minW={0}>
+                  <Text fontFamily="$semibold" fontSize={15} color="$text" numberOfLines={1}>
+                    {formatLabel(s.activity)} with {a?.name}
                   </Text>
-                  <Text fontSize={12} color="$fog" mt={4}>
+                  <Text fontSize={13} color="$muted" mt={2} numberOfLines={1}>
                     {s.when} · {s.location}
                   </Text>
                 </YStack>
-                <Badge tone={s.status === 'CONFIRMED' ? 'accent' : 'neutral'}>{s.status}</Badge>
+                <Badge tone={s.status === 'CONFIRMED' ? 'success' : 'neutral'}>{s.status}</Badge>
               </XStack>
             );
           })}

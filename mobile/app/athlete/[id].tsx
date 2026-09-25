@@ -8,7 +8,7 @@ import { Badge, Button } from '../../src/components/ui';
 import { athleteById } from '../../src/data/mockData';
 import { ATHLETE_ACTION_PHOTOS } from '../../src/data/photos';
 import { blockAthlete } from '../../src/data/social';
-import { colors } from '../../src/theme/tokens';
+import { colors, formatLabel, shadow } from '../../src/theme/tokens';
 
 export default function AthleteDetailScreen() {
   const insets = useSafeAreaInsets();
@@ -18,8 +18,8 @@ export default function AthleteDetailScreen() {
 
   if (!athlete) {
     return (
-      <YStack flex={1} bg="$ink">
-        <Text color="$fog" text="center" mt={100}>
+      <YStack flex={1} bg="$canvas">
+        <Text color="$muted" text="center" mt={100}>
           Athlete not found.
         </Text>
       </YStack>
@@ -46,9 +46,9 @@ export default function AthleteDetailScreen() {
   }
 
   return (
-    <YStack flex={1} bg="$ink">
+    <YStack flex={1} bg="$canvas">
       <ScrollView flex={1} contentContainerStyle={{ pt: insets.top, pb: 24 }}>
-        <YStack width="100%" height={400} bg="$ash" overflow="hidden">
+        <YStack width="100%" height={400} bg="$card" overflow="hidden">
           {/* The image box is taller than the window and anchored to
               its top, so the crop shows the top of the action shot —
               a portrait source keeps its subject's head instead of
@@ -59,14 +59,14 @@ export default function AthleteDetailScreen() {
             resizeMode="cover"
           />
 
-          {/* Header sits on the photo, held up by an ink fade so the
-              back button reads cleanly over the image. */}
+          {/* Header sits on the photo, held up by a light scrim so the
+              frosted buttons read cleanly over the image. */}
           <YStack pointerEvents="none" position="absolute" t={0} l={0} r={0} height={150}>
             <Svg width="100%" height="100%">
               <Defs>
                 <LinearGradient id="heroTopFade" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor={colors.ink} stopOpacity={0.9} />
-                  <Stop offset="1" stopColor={colors.ink} stopOpacity={0} />
+                  <Stop offset="0" stopColor="#1C1917" stopOpacity={0.35} />
+                  <Stop offset="1" stopColor="#1C1917" stopOpacity={0} />
                 </LinearGradient>
               </Defs>
               <Rect width="100%" height="100%" fill="url(#heroTopFade)" />
@@ -83,11 +83,9 @@ export default function AthleteDetailScreen() {
               rounded={20}
               items="center"
               justify="center"
-              bg="rgba(10,10,13,0.55)"
-              borderWidth={1}
-              borderColor="$lineHover"
+              bg="$glass"
             >
-              <Icon name="chevron-left" size={14} color={colors.bone} />
+              <Icon name="chevron-left" size={20} color={colors.text} />
             </XStack>
             <XStack
               accessibilityRole="button"
@@ -99,11 +97,9 @@ export default function AthleteDetailScreen() {
               rounded={20}
               items="center"
               justify="center"
-              bg="rgba(10,10,13,0.55)"
-              borderWidth={1}
-              borderColor="$lineHover"
+              bg="$glass"
             >
-              <Icon name="ban" size={14} color={colors.bone} />
+              <Icon name="ban" size={18} color={colors.text} />
             </XStack>
           </XStack>
 
@@ -113,8 +109,8 @@ export default function AthleteDetailScreen() {
             <Svg width="100%" height="100%">
               <Defs>
                 <LinearGradient id="heroBottomFade" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor={colors.ink} stopOpacity={0} />
-                  <Stop offset="1" stopColor={colors.ink} stopOpacity={1} />
+                  <Stop offset="0" stopColor={colors.canvas} stopOpacity={0} />
+                  <Stop offset="1" stopColor={colors.canvas} stopOpacity={1} />
                 </LinearGradient>
               </Defs>
               <Rect width="100%" height="100%" fill="url(#heroBottomFade)" />
@@ -122,68 +118,78 @@ export default function AthleteDetailScreen() {
           </YStack>
         </YStack>
 
-        <YStack px={20} mt={-36}>
-          <XStack items="baseline" gap={10}>
-            <Text fontFamily="$display" fontSize={34} color="$bone" textTransform="uppercase" lineHeight={34}>
-              {athlete.name}
+        <YStack
+          mx={16}
+          mt={-56}
+          p={20}
+          rounded={28}
+          bg="$card"
+          borderWidth={1}
+          borderColor="$border"
+          style={shadow.raised}
+        >
+          <XStack items="center" gap={8}>
+            <Text
+              fontFamily="$bold"
+              fontSize={28}
+              lineHeight={34}
+              letterSpacing={-0.5}
+              color="$text"
+            >
+              {athlete.name}, {athlete.age}
             </Text>
-            <Text fontFamily="$mono" fontSize={14} color="$fog">
-              {athlete.age}
-            </Text>
-          </XStack>
-          <XStack items="center" gap={8} mt={10}>
             {athlete.verified ? (
-              <>
-                <Icon name="shield-check" size={14} color={colors.ember} />
-                <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$ember" textTransform="uppercase">
-                  Verified Athlete
-                </Text>
-                <Text fontFamily="$mono" fontSize={10} color="$fog">
-                  · {athlete.city}
-                </Text>
-              </>
-            ) : (
-              <Text fontFamily="$mono" fontSize={10} color="$fog">
-                {athlete.city} · Unverified
-              </Text>
-            )}
+              <Icon name="shield-check" size={22} color={colors.accent} strokeWidth={2} />
+            ) : null}
           </XStack>
-          <XStack gap={8} mt={16}>
+          <XStack items="center" gap={5} mt={4}>
+            <Icon name="map-pin" size={14} color={colors.muted} />
+            <Text fontFamily="$medium" fontSize={14} color="$muted">
+              {athlete.city}
+              {athlete.verified ? ' · Verified athlete' : ' · Not verified yet'}
+            </Text>
+          </XStack>
+          <XStack gap={8} mt={16} flexWrap="wrap">
             <Badge tone="accent">{athlete.discipline}</Badge>
             <Badge>{athlete.pace}</Badge>
           </XStack>
 
-          <XStack gap={10} mt={18}>
-            <StatCard value={String(athlete.weekly)} label="SESSIONS/WK" />
-            <StatCard value={athlete.pace} label="AVG PACE" />
-            <StatCard value="94%" label="PROFILE MATCH" />
-          </XStack>
-
-          <Text color="$fog" fontSize={13} lineHeight={20} mt={18}>
+          <Text color="$text" fontSize={16} lineHeight={24} mt={18}>
             {athlete.bio}
           </Text>
+
+          <XStack mt={20} pt={18} borderTopWidth={1} borderTopColor="$border">
+            <StatCard value={String(athlete.weekly)} label="Sessions / wk" />
+            <StatCard value={formatLabel(athlete.pace)} label="Avg pace" divider />
+            <StatCard value="94%" label="Profile match" divider />
+          </XStack>
         </YStack>
       </ScrollView>
 
       <XStack
         gap={10}
         px={20}
-        pt={16}
+        pt={12}
         borderTopWidth={1}
-        borderTopColor="$line"
-        bg="$ink"
-        style={{ paddingBottom: insets.bottom + 16 }}
+        borderTopColor="$border"
+        bg="$card"
+        style={{ paddingBottom: insets.bottom + 12 }}
       >
         <Button
+          icon="message-circle"
           style={{ flex: 1 }}
           onPress={() =>
-            router.replace({ pathname: '/thread/[athleteId]', params: { athleteId: String(athlete.id) } })
+            router.replace({
+              pathname: '/thread/[athleteId]',
+              params: { athleteId: String(athlete.id) },
+            })
           }
         >
           Message
         </Button>
         <Button
-          variant="ghost"
+          variant="secondary"
+          icon="calendar"
           style={{ flex: 1, paddingHorizontal: 12 }}
           onPress={() =>
             router.replace({
@@ -192,20 +198,41 @@ export default function AthleteDetailScreen() {
             })
           }
         >
-          Plan Session
+          Plan session
         </Button>
       </XStack>
     </YStack>
   );
 }
 
-function StatCard({ value, label }: { value: string; label: string }) {
+function StatCard({
+  value,
+  label,
+  divider = false,
+}: {
+  value: string;
+  label: string;
+  divider?: boolean;
+}) {
   return (
-    <YStack flex={1} items="center" py={14} px={8} rounded={16} borderWidth={1} borderColor="$line" bg="$ash">
-      <Text fontFamily="$display" fontSize={20} color="$bone" text="center">
+    <YStack
+      flex={1}
+      items="center"
+      px={6}
+      borderLeftWidth={divider ? 1 : 0}
+      borderLeftColor="$border"
+    >
+      <Text
+        fontFamily="$bold"
+        fontSize={17}
+        lineHeight={22}
+        color="$text"
+        text="center"
+        numberOfLines={1}
+      >
         {value}
       </Text>
-      <Text fontFamily="$mono" fontSize={9} color="$fog" letterSpacing={1} mt={4} text="center">
+      <Text fontSize={12} color="$muted" mt={2} text="center">
         {label}
       </Text>
     </YStack>

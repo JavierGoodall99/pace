@@ -1,11 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
-import { Icon } from '../src/components/Icon';
-import { Chip, IconButton, SegmentedControl } from '../src/components/ui';
+import { ScrollView, XStack, YStack } from 'tamagui';
+import { Callout, Chip, ScreenHeader, SectionTitle, SegmentedControl } from '../src/components/ui';
 import { DISCIPLINES, Discipline } from '../src/data/mockData';
-import { colors } from '../src/theme/tokens';
+import { formatLabel } from '../src/theme/tokens';
 
 const CADENCE_OPTIONS = ['2-3X/WK', '4-5X/WK', '6+X/WK'];
 const TIME_OPTIONS = ['EARLY MORNING', 'EVENING', 'WEEKENDS'];
@@ -26,65 +25,48 @@ export default function SettingsPreferencesScreen() {
   }
 
   return (
-    <ScrollView
-      flex={1}
-      bg="$ink"
-      contentContainerStyle={{ pt: insets.top + 8, pb: insets.bottom + 24 }}
-    >
-      <XStack items="center" gap={12} px={20} pb={2}>
-        <IconButton size={40} onPress={() => router.back()}>
-          <Icon name="chevron-left" size={14} color={colors.bone} />
-        </IconButton>
-        <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30}>
-          Training
-        </Text>
-      </XStack>
-      <Text color="$fog" fontSize={12} mx={20} mt={8} mb={24} lineHeight={18}>
-        What you train, and when. This is what we match on.
-      </Text>
+    <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
+      <ScreenHeader
+        title="Training"
+        subtitle="What you train, and when. This is what we match on."
+        onBack={() => router.back()}
+      />
 
-      <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone" mx={20} mb={12}>
-        DISCIPLINES
-      </Text>
-      <XStack flexWrap="wrap" gap={10} mx={20} mb={32}>
-        {DISCIPLINES.map((d) => (
-          <Chip key={d} label={d} selected={disciplines.includes(d)} onPress={() => toggleDiscipline(d)} />
-        ))}
-      </XStack>
+      <YStack px={20} pt={20} gap={28}>
+        <YStack>
+          <SectionTitle>Sports</SectionTitle>
+          <XStack flexWrap="wrap" gap={8}>
+            {DISCIPLINES.map((d) => (
+              <Chip
+                key={d}
+                label={d}
+                selected={disciplines.includes(d)}
+                onPress={() => toggleDiscipline(d)}
+              />
+            ))}
+          </XStack>
+        </YStack>
 
-      <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone" mx={20} mb={12}>
-        WEEKLY CADENCE
-      </Text>
-      <YStack mx={20} mb={32}>
-        <SegmentedControl options={CADENCE_OPTIONS} value={cadence} onChange={setCadence} />
-      </YStack>
+        <YStack>
+          <SectionTitle>How often</SectionTitle>
+          <SegmentedControl options={CADENCE_OPTIONS} value={cadence} onChange={setCadence} />
+        </YStack>
 
-      <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone" mx={20} mb={12}>
-        TIME OF DAY
-      </Text>
-      <XStack flexWrap="wrap" gap={10} mx={20} mb={32}>
-        {TIME_OPTIONS.map((t) => (
-          <Chip key={t} label={t} selected={times.includes(t)} onPress={() => toggleTime(t)} />
-        ))}
-      </XStack>
+        <YStack>
+          <SectionTitle>Time of day</SectionTitle>
+          <XStack flexWrap="wrap" gap={8}>
+            {TIME_OPTIONS.map((t) => (
+              <Chip key={t} label={t} selected={times.includes(t)} onPress={() => toggleTime(t)} />
+            ))}
+          </XStack>
+        </YStack>
 
-      <XStack
-        items="center"
-        gap={10}
-        mx={20}
-        p={14}
-        rounded={16}
-        bg="rgba(255,77,46,0.06)"
-        borderWidth={1}
-        borderColor="rgba(255,77,46,0.25)"
-      >
-        <Icon name="zap" size={14} color={colors.ember} />
-        <Text flex={1} fontFamily="$mono" fontSize={10} letterSpacing={1} lineHeight={16} color="$fog">
+        <Callout icon="sparkles">
           {disciplines.length > 0
-            ? `Matching on ${disciplines.join(' · ')} · ${cadence}`
-            : 'Pick at least one discipline to stay searchable.'}
-        </Text>
-      </XStack>
+            ? `Matching on ${disciplines.map(formatLabel).join(', ')} · ${formatLabel(cadence)}`
+            : 'Pick at least one sport to stay visible in Discover.'}
+        </Callout>
+      </YStack>
     </ScrollView>
   );
 }

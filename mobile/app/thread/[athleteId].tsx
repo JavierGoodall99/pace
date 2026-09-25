@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
-import { Button, Chip, IconButton, Input } from '../../src/components/ui';
+import { Badge, Button, Chip, IconButton, Input } from '../../src/components/ui';
 import {
   addSession,
   athleteById,
@@ -18,21 +18,21 @@ import {
   updateSessionStatus,
 } from '../../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
-import { colors } from '../../src/theme/tokens';
+import { colors, formatLabel, shadow } from '../../src/theme/tokens';
 
-const DAY_LABELS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 // Tapping instead of typing a time — the slots users most often train in.
 const TIME_SLOTS = ['06:00', '07:00', '08:00', '12:00', '17:00', '18:00', '19:00', '20:00'];
 
-// Next `count` days as tappable chips — TODAY / TOMORROW for the first
-// two, then weekday + day number (e.g. SAT 19).
+// Next `count` days as tappable chips — Today / Tomorrow for the first
+// two, then weekday + day number (e.g. Sat 19).
 function upcomingDates(count: number): { key: string; label: string }[] {
   const now = new Date();
   return Array.from({ length: count }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
-    if (i === 0) return { key: `d${i}`, label: 'TODAY' };
-    if (i === 1) return { key: `d${i}`, label: 'TOMORROW' };
+    if (i === 0) return { key: `d${i}`, label: 'Today' };
+    if (i === 1) return { key: `d${i}`, label: 'Tomorrow' };
     return { key: `d${i}`, label: `${DAY_LABELS[d.getDay()]} ${d.getDate()}` };
   });
 }
@@ -68,8 +68,8 @@ export default function ThreadScreen() {
 
   if (!athlete) {
     return (
-      <YStack flex={1} bg="$ink">
-        <Text color="$fog" text="center" mt={100}>
+      <YStack flex={1} bg="$canvas">
+        <Text color="$muted" text="center" mt={100}>
           Conversation not found.
         </Text>
       </YStack>
@@ -114,28 +114,43 @@ export default function ThreadScreen() {
   };
 
   return (
-    <YStack flex={1} bg="$ink">
+    <YStack flex={1} bg="$canvas">
       <XStack
         items="center"
         gap={12}
-        px={20}
+        px={16}
         pb={12}
         pt={insets.top + 8}
         borderBottomWidth={1}
-        borderBottomColor="$line"
+        borderBottomColor="$border"
+        bg="$card"
       >
-        <IconButton onPress={() => router.back()}>
-          <Icon name="chevron-left" size={14} color={colors.bone} />
+        <IconButton size={40} onPress={() => router.back()} accessibilityLabel="Back">
+          <Icon name="chevron-left" size={20} color={colors.text} />
         </IconButton>
-        <PhotoSlot
-          label={athlete.name}
-          shape="circle"
-          source={ATHLETE_PHOTOS[athlete.slotId]}
-          style={{ width: 36, height: 36 }}
-        />
-        <Text fontFamily="$mono" fontSize={13} letterSpacing={0.5} color="$bone" textTransform="uppercase">
-          {athlete.name}
-        </Text>
+        <XStack
+          flex={1}
+          items="center"
+          gap={10}
+          onPress={() =>
+            router.push({ pathname: '/athlete/[id]', params: { id: String(athlete.id) } })
+          }
+        >
+          <PhotoSlot
+            label={athlete.name}
+            shape="circle"
+            source={ATHLETE_PHOTOS[athlete.slotId]}
+            style={{ width: 40, height: 40 }}
+          />
+          <YStack>
+            <Text fontFamily="$semibold" fontSize={16} color="$text">
+              {athlete.name}
+            </Text>
+            <Text fontSize={13} color="$muted">
+              {formatLabel(athlete.discipline)} · {athlete.city}
+            </Text>
+          </YStack>
+        </XStack>
       </XStack>
 
       <KeyboardAvoidingView
@@ -155,54 +170,60 @@ export default function ThreadScreen() {
           {messages.map((m, i) => {
             const mine = m.from === 'me';
             const plan = m.plan;
-            const statusColor =
-              plan?.status === 'CONFIRMED'
-                ? colors.mint
-                : plan?.status === 'DECLINED'
-                  ? colors.fog
-                  : colors.ember;
             return (
               <YStack key={i} items={mine ? 'flex-end' : 'flex-start'}>
                 <YStack
-                  bg={mine ? '$ember' : '$ash'}
-                  maxW="78%"
-                  px={16}
-                  py={12}
-                  rounded={18}
+                  bg={mine ? '$accent' : '$card'}
+                  borderWidth={mine ? 0 : 1}
+                  borderColor="$border"
+                  maxW="80%"
+                  px={14}
+                  py={10}
+                  rounded={20}
+                  borderBottomRightRadius={mine ? 6 : 20}
+                  borderBottomLeftRadius={mine ? 20 : 6}
                 >
                   {m.text ? (
-                    <Text color={mine ? '$ink' : '$bone'} fontSize={13} lineHeight={18}>
+                    <Text color={mine ? '$onAccent' : '$text'} fontSize={15} lineHeight={21}>
                       {m.text}
                     </Text>
                   ) : null}
                   {plan ? (
                     <YStack
-                      minW={180}
-                      gap={6}
-                      p={12}
-                      rounded={14}
-                      bg="$ink"
-                      borderWidth={1}
-                      borderColor="$emberBorder"
+                      minW={220}
+                      gap={8}
+                      p={14}
+                      rounded={16}
+                      bg="$card"
+                      borderWidth={mine ? 0 : 1}
+                      borderColor="$border"
                       mt={m.text ? 10 : 0}
                     >
-                      <XStack items="center" justify="space-between">
-                        <Text fontFamily="$display" fontSize={15} letterSpacing={0.5} color="$bone" textTransform="uppercase">
-                          {plan.activity}
+                      <XStack items="center" justify="space-between" gap={8}>
+                        <Text fontFamily="$bold" fontSize={16} color="$text">
+                          {formatLabel(plan.activity)}
                         </Text>
-                        <Text fontFamily="$mono" fontSize={9} letterSpacing={1.5} fontWeight="700" color={statusColor}>
-                          {plan.status}
-                        </Text>
+                        <Badge
+                          tone={
+                            plan.status === 'CONFIRMED'
+                              ? 'success'
+                              : plan.status === 'DECLINED'
+                                ? 'neutral'
+                                : 'accent'
+                          }
+                        >
+                          {plan.status === 'INVITE' ? 'Invite' : plan.status}
+                        </Badge>
                       </XStack>
-                      <XStack items="center" gap={6}>
-                        <Icon name="zap" size={12} color={colors.ember} />
-                        <Text fontSize={11} color="$fog">
+                      <XStack items="center" gap={8}>
+                        <Icon name="clock" size={15} color={colors.muted} />
+                        <Text fontSize={14} color="$text">
                           {plan.when}
                         </Text>
                       </XStack>
-                      <XStack items="center" gap={6}>
-                        <Icon name="map-pin" size={12} color={colors.ember} />
-                        <Text fontSize={11} color="$fog">
+                      <XStack items="center" gap={8}>
+                        <Icon name="map-pin" size={15} color={colors.muted} />
+                        <Text fontSize={14} color="$text">
                           {plan.location}
                         </Text>
                       </XStack>
@@ -210,32 +231,30 @@ export default function ThreadScreen() {
                         <XStack gap={8} mt={10}>
                           <XStack
                             flex={1}
-                            height={36}
+                            height={40}
                             rounded="$full"
-                            borderWidth={1}
                             items="center"
                             justify="center"
-                            bg="$emberSoft"
-                            borderColor="$emberBorder"
-                            onPress={() => respondTo(i, 'CONFIRMED')}
+                            bg="$surface"
+                            pressStyle={{ opacity: 0.8 }}
+                            onPress={() => respondTo(i, 'DECLINED')}
                           >
-                            <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} fontWeight="700" color="$ember">
-                              ACCEPT
+                            <Text fontFamily="$semibold" fontSize={14} color="$text">
+                              Decline
                             </Text>
                           </XStack>
                           <XStack
                             flex={1}
-                            height={36}
+                            height={40}
                             rounded="$full"
-                            borderWidth={1}
                             items="center"
                             justify="center"
-                            bg="$coal"
-                            borderColor="$line"
-                            onPress={() => respondTo(i, 'DECLINED')}
+                            bg="$accent"
+                            pressStyle={{ opacity: 0.85 }}
+                            onPress={() => respondTo(i, 'CONFIRMED')}
                           >
-                            <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} fontWeight="700" color="$fog">
-                              DECLINE
+                            <Text fontFamily="$semibold" fontSize={14} color="$onAccent">
+                              Accept
                             </Text>
                           </XStack>
                         </XStack>
@@ -248,21 +267,29 @@ export default function ThreadScreen() {
           })}
 
           {planning ? (
-            <YStack gap={16} p={14} rounded={16} bg="$coal" borderWidth={1} borderColor="$line">
+            <YStack
+              gap={20}
+              p={18}
+              rounded={24}
+              bg="$card"
+              borderWidth={1}
+              borderColor="$border"
+              style={shadow.card}
+            >
               <XStack items="center" justify="space-between">
-                <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone">
-                  PLAN A SESSION
+                <Text fontFamily="$bold" fontSize={18} color="$text">
+                  Plan a session
                 </Text>
-                <IconButton size={28} onPress={() => setPlanning(false)}>
-                  <Icon name="x" size={12} color={colors.fog} />
+                <IconButton size={32} onPress={() => setPlanning(false)} accessibilityLabel="Close">
+                  <Icon name="x" size={16} color={colors.muted} />
                 </IconButton>
               </XStack>
 
               <YStack>
-                <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
-                  ACTIVITY
+                <Text fontFamily="$semibold" fontSize={15} color="$text">
+                  Activity
                 </Text>
-                <XStack flexWrap="wrap" gap={8} mt={8}>
+                <XStack flexWrap="wrap" gap={8} mt={10}>
                   {DISCIPLINES.map((d) => (
                     <Chip
                       key={d}
@@ -275,10 +302,10 @@ export default function ThreadScreen() {
               </YStack>
 
               <YStack>
-                <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
-                  DATE
+                <Text fontFamily="$semibold" fontSize={15} color="$text">
+                  Date
                 </Text>
-                <XStack flexWrap="wrap" gap={8} mt={8}>
+                <XStack flexWrap="wrap" gap={8} mt={10}>
                   {dates.map((d) => (
                     <Chip
                       key={d.key}
@@ -291,28 +318,23 @@ export default function ThreadScreen() {
               </YStack>
 
               <YStack>
-                <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
-                  TIME
+                <Text fontFamily="$semibold" fontSize={15} color="$text">
+                  Time
                 </Text>
-                <XStack flexWrap="wrap" gap={8} mt={8}>
+                <XStack flexWrap="wrap" gap={8} mt={10}>
                   {TIME_SLOTS.map((t) => (
-                    <Chip
-                      key={t}
-                      label={t}
-                      selected={time === t}
-                      onPress={() => setTime(t)}
-                    />
+                    <Chip key={t} label={t} selected={time === t} onPress={() => setTime(t)} />
                   ))}
                 </XStack>
               </YStack>
 
               <YStack>
-                <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
-                  WHERE
+                <Text fontFamily="$semibold" fontSize={15} color="$text">
+                  Where
                 </Text>
-                <YStack mt={8}>
+                <YStack mt={10}>
                   <Input
-                    placeholder="SEA POINT PROMENADE"
+                    placeholder="e.g. Sea Point Promenade"
                     value={location}
                     onChangeText={setLocation}
                     onFocus={scrollToEnd}
@@ -321,12 +343,12 @@ export default function ThreadScreen() {
               </YStack>
 
               <YStack>
-                <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
-                  NOTE (OPTIONAL)
+                <Text fontFamily="$semibold" fontSize={15} color="$text">
+                  Note (optional)
                 </Text>
-                <YStack mt={8}>
+                <YStack mt={10}>
                   <Input
-                    placeholder="BRING WATER · COFFEE AFTER"
+                    placeholder="e.g. Coffee after?"
                     value={note}
                     onChangeText={setNote}
                     onFocus={scrollToEnd}
@@ -334,8 +356,8 @@ export default function ThreadScreen() {
                 </YStack>
               </YStack>
 
-              <Button onPress={attachPlan} disabled={!planReady} style={{ marginTop: 4 }}>
-                Send Invite
+              <Button onPress={attachPlan} disabled={!planReady} icon="send">
+                Send invite
               </Button>
             </YStack>
           ) : null}
@@ -344,21 +366,44 @@ export default function ThreadScreen() {
         {planning ? null : (
           <XStack
             items="center"
-            gap={10}
-            px={20}
-            pt={12}
+            gap={8}
+            px={16}
+            pt={10}
             borderTopWidth={1}
-            borderTopColor="$line"
-            style={{ paddingBottom: insets.bottom + 16 }}
+            borderTopColor="$border"
+            bg="$card"
+            style={{ paddingBottom: insets.bottom + 12 }}
           >
-            <YStack flex={1}>
-              <Input placeholder="MESSAGE" value={note} onChangeText={setNote} />
-            </YStack>
-            <IconButton size={44} onPress={() => setPlanning(true)}>
-              <Icon name="zap" size={14} color={colors.bone} />
+            <IconButton
+              size={44}
+              tone="accent"
+              onPress={() => setPlanning(true)}
+              accessibilityLabel="Plan a session"
+            >
+              <Icon name="calendar" size={20} color={colors.accent} />
             </IconButton>
-            <IconButton tone="accent" size={48} onPress={sendText}>
-              <Icon name="arrow-right" size={16} color={colors.ember} />
+            <YStack flex={1}>
+              <Input
+                placeholder="Message"
+                value={note}
+                onChangeText={setNote}
+                returnKeyType="send"
+                onSubmitEditing={sendText}
+                style={{
+                  borderRadius: 22,
+                  height: 44,
+                  backgroundColor: colors.surface,
+                  borderWidth: 0,
+                }}
+              />
+            </YStack>
+            <IconButton
+              tone={note.trim() ? 'solid' : 'accent'}
+              size={44}
+              onPress={sendText}
+              accessibilityLabel="Send"
+            >
+              <Icon name="send" size={18} color={note.trim() ? colors.onAccent : colors.accent} />
             </IconButton>
           </XStack>
         )}

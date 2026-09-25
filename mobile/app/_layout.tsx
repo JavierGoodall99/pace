@@ -1,14 +1,11 @@
-import { Anton_400Regular, useFonts as useAnton } from '@expo-google-fonts/anton';
 import {
-  Archivo_400Regular,
-  Archivo_600SemiBold,
-  useFonts as useArchivo,
-} from '@expo-google-fonts/archivo';
-import {
-  JetBrainsMono_400Regular,
-  JetBrainsMono_700Bold,
-  useFonts as useJetBrainsMono,
-} from '@expo-google-fonts/jetbrains-mono';
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+  useFonts,
+} from '@expo-google-fonts/plus-jakarta-sans';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
@@ -21,11 +18,13 @@ import tamaguiConfig from '../tamagui.config';
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
-  const [antonLoaded] = useAnton({ Anton_400Regular });
-  const [archivoLoaded] = useArchivo({ Archivo_400Regular, Archivo_600SemiBold });
-  const [monoLoaded] = useJetBrainsMono({ JetBrainsMono_400Regular, JetBrainsMono_700Bold });
-
-  const fontsLoaded = antonLoaded && archivoLoaded && monoLoaded;
+  const [fontsLoaded] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
+  });
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -39,12 +38,12 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <TamaguiProvider config={tamaguiConfig} defaultTheme="dark">
-        <StatusBar style="light" />
+      <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
+        <StatusBar style="dark" />
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: colors.ink },
+            contentStyle: { backgroundColor: colors.canvas },
           }}
         >
           <Stack.Screen name="(tabs)" />

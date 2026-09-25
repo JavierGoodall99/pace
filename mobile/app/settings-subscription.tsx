@@ -3,13 +3,13 @@ import { Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../src/components/Icon';
-import { Badge, Button, IconButton } from '../src/components/ui';
+import { Badge, Button, Card, ScreenHeader } from '../src/components/ui';
 import { colors } from '../src/theme/tokens';
 
 const PRO_FEATURES = [
   'Unlimited likes',
   'See who liked you',
-  'Priority match radius · 2x',
+  'Double the match radius',
   'Verified stats badge',
 ];
 
@@ -18,88 +18,121 @@ export default function SettingsSubscriptionScreen() {
   const router = useRouter();
 
   return (
-    <ScrollView
-      flex={1}
-      bg="$ink"
-      contentContainerStyle={{ pt: insets.top + 8, pb: insets.bottom + 24 }}
-    >
-      <XStack items="center" gap={12} px={20} pb={2}>
-        <IconButton size={40} onPress={() => router.back()}>
-          <Icon name="chevron-left" size={14} color={colors.bone} />
-        </IconButton>
-        <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30}>
-          Subscription
-        </Text>
-      </XStack>
+    <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
+      <ScreenHeader title="Subscription" onBack={() => router.back()} />
 
-      <YStack mx={20} mt={18} p={16} rounded={20} borderWidth={1} borderColor="$line" bg="$ash">
-        <XStack items="center" gap={12}>
-          <YStack flex={1}>
-            <Text fontFamily="$display" fontSize={20} color="$bone" textTransform="uppercase" lineHeight={20}>
-              PACE FREE
-            </Text>
-            <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$fog" mt={4}>
-              R0 / month · forever
-            </Text>
-          </YStack>
-          <Badge>CURRENT PLAN</Badge>
-        </XStack>
-        <Text color="$fog" fontSize={12} lineHeight={18} mt={12}>
-          5 likes a day, standard match radius, and your training log.
-        </Text>
-      </YStack>
-
-      <YStack mx={20} mt={24} p={20} rounded={24} borderWidth={1} borderColor="rgba(255,77,46,0.4)" bg="$ash" overflow="hidden">
-        <YStack position="absolute" t={-80} r={-60} width={200} height={200} rounded={100} bg="rgba(255,77,46,0.14)" pointerEvents="none" />
-        <XStack items="flex-start" justify="space-between">
-          <YStack>
-            <Text fontFamily="$mono" fontSize={9} letterSpacing={3} color="$ember">
-              GO FURTHER
-            </Text>
-            <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30} mt={6}>
-              PACE PRO
-            </Text>
-          </YStack>
-          <XStack items="baseline">
-            <Text fontFamily="$display" fontSize={30} color="$ember">
-              R79
-            </Text>
-            <Text fontFamily="$mono" fontSize={10} color="$fog" letterSpacing={1}>
-              {' '}/ MONTH
-            </Text>
+      <YStack px={20} pt={20} gap={16}>
+        <Card px={18} py={18}>
+          <XStack items="center" gap={12}>
+            <YStack flex={1}>
+              <Text fontFamily="$bold" fontSize={20} color="$text">
+                Pace Free
+              </Text>
+              <Text fontSize={14} color="$muted" mt={2}>
+                R0 / month · forever
+              </Text>
+            </YStack>
+            <Badge>Current plan</Badge>
           </XStack>
-        </XStack>
+          <Text color="$muted" fontSize={15} lineHeight={22} mt={12}>
+            5 likes a day, the standard match radius, and your training log.
+          </Text>
+        </Card>
 
-        <YStack mt={18} gap={10}>
-          {PRO_FEATURES.map((f) => (
-            <XStack key={f} items="center" gap={10}>
-              <Icon name="check" size={14} color={colors.ember} />
-              <Text flex={1} fontFamily="$mono" fontSize={11} letterSpacing={1} color="$bone">
-                {f}
+        <YStack
+          p={20}
+          rounded={28}
+          bg="$accentSoft"
+          borderWidth={1}
+          borderColor="$accentBorder"
+          overflow="hidden"
+        >
+          <YStack
+            position="absolute"
+            t={-80}
+            r={-60}
+            width={200}
+            height={200}
+            rounded={100}
+            bg="$card"
+            opacity={0.5}
+            pointerEvents="none"
+          />
+          <XStack items="flex-start" justify="space-between">
+            <YStack>
+              <Badge
+                tone="accent"
+                icon="sparkles"
+                style={{ backgroundColor: colors.card, alignSelf: 'flex-start' }}
+              >
+                Go further
+              </Badge>
+              <Text
+                fontFamily="$bold"
+                fontSize={28}
+                lineHeight={34}
+                letterSpacing={-0.5}
+                color="$text"
+                mt={12}
+              >
+                Pace Pro
+              </Text>
+            </YStack>
+            <XStack items="baseline" mt={40}>
+              <Text fontFamily="$bold" fontSize={28} color="$accent">
+                R79
+              </Text>
+              <Text fontFamily="$medium" fontSize={14} color="$muted">
+                {' '}
+                / month
               </Text>
             </XStack>
-          ))}
-        </YStack>
+          </XStack>
 
-        <Button
-          style={{ width: '100%', marginTop: 18 }}
-          onPress={() =>
-            Alert.alert('Pace Pro', 'Upgrade flow coming soon — this is a shipping milestone, not a live payment screen.', [
-              { text: 'Got It' },
-            ])
-          }
-        >
-          Upgrade to Pro
-        </Button>
-        <Button
-          variant="ghost"
-          style={{ width: '100%', marginTop: 10 }}
-          onPress={() =>
-            Alert.alert('Manage Payment', 'Payment method and receipts will live here.', [{ text: 'Got It' }])
-          }
-        >
-          Manage Payment
-        </Button>
+          <YStack mt={18} gap={12}>
+            {PRO_FEATURES.map((f) => (
+              <XStack key={f} items="center" gap={10}>
+                <XStack
+                  width={24}
+                  height={24}
+                  rounded={12}
+                  bg="$accent"
+                  items="center"
+                  justify="center"
+                >
+                  <Icon name="check" size={14} color={colors.onAccent} strokeWidth={2.5} />
+                </XStack>
+                <Text flex={1} fontFamily="$medium" fontSize={15} color="$text">
+                  {f}
+                </Text>
+              </XStack>
+            ))}
+          </YStack>
+
+          <Button
+            style={{ width: '100%', marginTop: 22 }}
+            onPress={() =>
+              Alert.alert(
+                'Pace Pro',
+                'Upgrade flow coming soon — this is a shipping milestone, not a live payment screen.',
+                [{ text: 'Got it' }]
+              )
+            }
+          >
+            Upgrade to Pro
+          </Button>
+          <Button
+            variant="ghost"
+            style={{ width: '100%', marginTop: 10, backgroundColor: colors.card }}
+            onPress={() =>
+              Alert.alert('Manage payment', 'Payment method and receipts will live here.', [
+                { text: 'Got it' },
+              ])
+            }
+          >
+            Manage payment
+          </Button>
+        </YStack>
       </YStack>
     </ScrollView>
   );

@@ -1,23 +1,21 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
-import { Icon } from '../src/components/Icon';
-import { IconButton, ToggleRow } from '../src/components/ui';
-import { colors } from '../src/theme/tokens';
+import { ScrollView, YStack } from 'tamagui';
+import { Callout, Card, ScreenHeader, SectionTitle, ToggleRow } from '../src/components/ui';
 
 const PUSH_ITEMS: { label: string; hint: string; default: boolean }[] = [
-  { label: 'Likes & Kudos', hint: 'When someone likes your run or workout', default: true },
+  { label: 'Likes & kudos', hint: 'When someone likes your run or workout', default: true },
   { label: 'Messages', hint: 'Direct messages from your matches', default: true },
-  { label: 'New Matches', hint: 'When a mutual grinder finds you', default: true },
-  { label: 'Session Invites', hint: 'Planner invites to run, ride, or lift', default: true },
-  { label: 'Training Reminders', hint: 'Nudges when your streak is at risk', default: false },
+  { label: 'New matches', hint: 'When someone you liked likes you back', default: true },
+  { label: 'Session invites', hint: 'Planner invites to run, ride, or lift', default: true },
+  { label: 'Training reminders', hint: 'Nudges when your streak is at risk', default: false },
 ];
 
 const EMAIL_ITEMS: { label: string; hint: string; default: boolean }[] = [
-  { label: 'Weekly Digest', hint: 'Your week in pace, every Monday', default: true },
-  { label: 'New Match Emails', hint: 'A note when you match', default: false },
-  { label: 'Product Updates', hint: 'New features and beta invites', default: false },
+  { label: 'Weekly digest', hint: 'Your week in pace, every Monday', default: true },
+  { label: 'New match emails', hint: 'A note when you match', default: false },
+  { label: 'Product updates', hint: 'New features and beta invites', default: false },
 ];
 
 export default function SettingsNotificationsScreen() {
@@ -32,68 +30,50 @@ export default function SettingsNotificationsScreen() {
   );
 
   return (
-    <ScrollView
-      flex={1}
-      bg="$ink"
-      contentContainerStyle={{ pt: insets.top + 8, pb: insets.bottom + 24 }}
-    >
-      <XStack items="center" gap={12} px={20} pb={2}>
-        <IconButton size={40} onPress={() => router.back()}>
-          <Icon name="chevron-left" size={14} color={colors.bone} />
-        </IconButton>
-        <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30}>
-          Notifications
-        </Text>
-      </XStack>
-      <Text color="$fog" fontSize={12} mx={20} mt={8} mb={24}>
-        Choose what pings you, and where.
-      </Text>
+    <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
+      <ScreenHeader
+        title="Notifications"
+        subtitle="Choose what pings you, and where."
+        onBack={() => router.back()}
+      />
 
-      <Text fontFamily="$mono" fontSize={10} letterSpacing={3} color="$ember" mx={20} mb={10}>
-        PUSH
-      </Text>
-      <YStack mx={20} mb={28} px={16} rounded={20} borderWidth={1} borderColor="$line" bg="$ash">
-        {PUSH_ITEMS.map((item) => (
-          <ToggleRow
-            key={item.label}
-            label={item.label}
-            hint={item.hint}
-            value={!!push[item.label]}
-            onChange={(v) => setPush((prev) => ({ ...prev, [item.label]: v }))}
-          />
-        ))}
+      <YStack px={20} pt={20} gap={28}>
+        <YStack>
+          <SectionTitle>Push notifications</SectionTitle>
+          <Card>
+            {PUSH_ITEMS.map((item, i) => (
+              <ToggleRow
+                key={item.label}
+                label={item.label}
+                hint={item.hint}
+                last={i === PUSH_ITEMS.length - 1}
+                value={!!push[item.label]}
+                onChange={(v) => setPush((prev) => ({ ...prev, [item.label]: v }))}
+              />
+            ))}
+          </Card>
+        </YStack>
+
+        <YStack>
+          <SectionTitle>Email</SectionTitle>
+          <Card>
+            {EMAIL_ITEMS.map((item, i) => (
+              <ToggleRow
+                key={item.label}
+                label={item.label}
+                hint={item.hint}
+                last={i === EMAIL_ITEMS.length - 1}
+                value={!!email[item.label]}
+                onChange={(v) => setEmail((prev) => ({ ...prev, [item.label]: v }))}
+              />
+            ))}
+          </Card>
+        </YStack>
+
+        <Callout icon="shield-check">
+          We never sell your data. Notifications stay between you and your matches.
+        </Callout>
       </YStack>
-
-      <Text fontFamily="$mono" fontSize={10} letterSpacing={3} color="$ember" mx={20} mb={10}>
-        EMAIL
-      </Text>
-      <YStack mx={20} mb={28} px={16} rounded={20} borderWidth={1} borderColor="$line" bg="$ash">
-        {EMAIL_ITEMS.map((item) => (
-          <ToggleRow
-            key={item.label}
-            label={item.label}
-            hint={item.hint}
-            value={!!email[item.label]}
-            onChange={(v) => setEmail((prev) => ({ ...prev, [item.label]: v }))}
-          />
-        ))}
-      </YStack>
-
-      <XStack
-        items="center"
-        gap={10}
-        mx={20}
-        p={14}
-        rounded={16}
-        bg="rgba(255,77,46,0.06)"
-        borderWidth={1}
-        borderColor="rgba(255,77,46,0.25)"
-      >
-        <Icon name="shield-check" size={14} color={colors.ember} />
-        <Text flex={1} fontFamily="$mono" fontSize={10} letterSpacing={1} lineHeight={16} color="$fog">
-          We never sell your data. Pings stay between you and the pack.
-        </Text>
-      </XStack>
     </ScrollView>
   );
 }

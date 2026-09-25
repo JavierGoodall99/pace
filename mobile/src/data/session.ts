@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
+import type { Level, Prompt } from './athleteDepth';
 import type { Discipline } from './mockData';
 
 // Local mock of the auth + profile backend. There is no real server yet:
@@ -24,6 +25,12 @@ export interface MeProfile {
   // The days they train, Monday first. Drives rhythm matching; null
   // until onboarding's "build your week" step.
   trainingDays: boolean[] | null;
+  // Effort level 1–4 (see athleteDepth LEVELS); null until onboarding.
+  level: Level | null;
+  // Race they're training for. null = not asked yet, '' = nothing specific.
+  goalRaceId: string | null;
+  prompts: Prompt[];
+  pbs: { label: string; value: string }[];
 }
 
 export type Intent = 'love' | 'partner' | 'both';
@@ -57,6 +64,16 @@ const DEFAULT_ME: MeProfile = {
   verified: true,
   intent: 'both',
   trainingDays: null,
+  level: 3,
+  goalRaceId: 'soweto-marathon',
+  prompts: [
+    { q: 'Coffee after…', a: 'Every WOD. Every single one.' },
+    { q: 'My ideal first date', a: 'A sunrise run, then breakfast somewhere with a view.' },
+  ],
+  pbs: [
+    { label: 'Back squat', value: '105 kg' },
+    { label: '5 km', value: '22:40' },
+  ],
 };
 
 const DEFAULT_STATE: SessionState = {
@@ -140,6 +157,10 @@ export function freshMe(name: string, email: string): MeProfile {
     verified: false,
     intent: null,
     trainingDays: null,
+    level: null,
+    goalRaceId: null,
+    prompts: [],
+    pbs: [],
   };
 }
 

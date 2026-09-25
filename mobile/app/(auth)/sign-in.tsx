@@ -22,7 +22,7 @@ export default function SignInScreen() {
       setError(result.error);
       return;
     }
-    router.replace(onboarded ? '/(tabs)/discover' : '/onboarding');
+    router.replace(onboarded ? '/(tabs)/today' : '/onboarding');
   }
 
   return (

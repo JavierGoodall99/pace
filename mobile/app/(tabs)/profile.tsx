@@ -3,21 +3,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon, IconName } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
+import { GoalCard, Heatmap, PersonalBests, PromptCard } from '../../src/components/Proof';
 import { RhythmStrip } from '../../src/components/Rhythm';
 import { useTabBarSpace } from '../../src/components/TabBar';
 import { Badge, Button, DisplayTitle } from '../../src/components/ui';
 import { rhythmForMe, WEEK_DAY_NAMES } from '../../src/data/rhythm';
+import { levelLabel } from '../../src/data/athleteDepth';
+import { effectiveStatus, usePlans } from '../../src/data/plans';
+import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { ME_AVATAR, ME_COVER, TRAINING_PHOTOS } from '../../src/data/photos';
 import { useMe } from '../../src/data/session';
 import { useSocial } from '../../src/data/social';
 import { useColors } from '../../src/theme/appearance';
 import { shadow } from '../../src/theme/tokens';
-
-const STATS = [
-  { value: '42 km', label: 'This week' },
-  { value: '5', label: 'Sessions / wk' },
-  { value: '94%', label: 'Profile match' },
-];
 
 export default function ProfileScreen() {
   const colors = useColors();
@@ -31,6 +29,14 @@ export default function ProfileScreen() {
   const primary = me.disciplines[0] ?? 'ATHLETE';
   const myRhythm = rhythmForMe(me.cadence, me.trainingDays);
   const myDays = myRhythm.map((on, i) => (on ? WEEK_DAY_NAMES[i] : null)).filter(Boolean);
+  const plansState = usePlans();
+  const sessionsDone = plansState.plans.filter((p) => effectiveStatus(p) === 'done').length;
+  const STATS = [
+    { value: String(myDays.length), label: 'Days / week' },
+    { value: me.level ? levelLabel(me.level).split(' ')[0] : '—', label: 'Effort' },
+    { value: String(sessionsDone), label: 'Sessions' },
+  ];
+  const goal = raceById(me.goalRaceId);
   const photoTiles: (string | null)[] = [
     me.photos[0] ?? null,
     me.photos[1] ?? null,
@@ -153,6 +159,42 @@ export default function ProfileScreen() {
             We match you with people who train on {myDays.slice(0, 3).join(', ')} and more.
           </Text>
         </YStack>
+
+        <YStack mt={12}>
+          {goal ? (
+            <GoalCard
+              race={goal}
+              others={athletesTrainingFor(goal.id).length}
+              mine
+              onPress={() => router.push({ pathname: '/race/[id]', params: { id: goal.id } })}
+            />
+          ) : (
+            <Button
+              variant="ghost"
+              icon="plus"
+              onPress={() => router.push('/races')}
+              style={{ width: '100%' }}
+            >
+              Add a race you’re training for
+            </Button>
+          )}
+        </YStack>
+
+        <YStack mt={12} p={16} rounded={20} borderWidth={1} borderColor="$border" bg="$card">
+          <Heatmap rhythm={myRhythm} seed={3} />
+        </YStack>
+
+        {me.pbs.length ? (
+          <YStack mt={12}>
+            <PersonalBests pbs={me.pbs} />
+          </YStack>
+        ) : null}
+
+        {me.prompts.map((p) => (
+          <YStack key={p.q} mt={12}>
+            <PromptCard prompt={p} />
+          </YStack>
+        ))}
 
         <XStack gap={10} mt={12}>
           <QuickLink

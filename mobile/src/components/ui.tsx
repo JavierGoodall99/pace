@@ -402,7 +402,6 @@ export function ScreenHeader({
       pb={bordered ? 14 : 4}
       borderBottomWidth={bordered ? 1 : 0}
       borderBottomColor="$border"
-      bg="$canvas"
     >
       <XStack items="center" justify="space-between" minH={44}>
         {onBack ? (

@@ -75,6 +75,12 @@ export default function RootLayout() {
             <Stack.Screen name="settings-privacy" />
             <Stack.Screen name="settings-subscription" />
             <Stack.Screen name="notifications" />
+            <Stack.Screen name="invite/[athleteId]" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="session/[id]" />
+            <Stack.Screen name="session-new" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="races" />
+            <Stack.Screen name="race/[id]" />
+            <Stack.Screen name="safety" />
           </Stack>
         </Theme>
       </TamaguiProvider>

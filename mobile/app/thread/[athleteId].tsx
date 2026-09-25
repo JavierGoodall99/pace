@@ -1,42 +1,23 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { KeyboardAvoidingView, Platform } from 'react-native';
-import type { ScrollView as RNScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
-import { Badge, Button, Chip, IconButton, Input } from '../../src/components/ui';
+import { JourneyLadder } from '../../src/components/Proof';
+import { Badge, IconButton, Input } from '../../src/components/ui';
 import {
-  addSession,
   athleteById,
-  DISCIPLINES,
-  Discipline,
-  PlanCard,
   THREAD_MESSAGES,
   ThreadMessage,
   updateSessionStatus,
 } from '../../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
+import { sessionsTogether, stageWith, usePlans } from '../../src/data/plans';
+import { useSocial } from '../../src/data/social';
 import { useColors } from '../../src/theme/appearance';
-import { formatLabel, shadow } from '../../src/theme/tokens';
-
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-// Tapping instead of typing a time — the slots users most often train in.
-const TIME_SLOTS = ['06:00', '07:00', '08:00', '12:00', '17:00', '18:00', '19:00', '20:00'];
-
-// Next `count` days as tappable chips — Today / Tomorrow for the first
-// two, then weekday + day number (e.g. Sat 19).
-function upcomingDates(count: number): { key: string; label: string }[] {
-  const now = new Date();
-  return Array.from({ length: count }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
-    if (i === 0) return { key: `d${i}`, label: 'Today' };
-    if (i === 1) return { key: `d${i}`, label: 'Tomorrow' };
-    return { key: `d${i}`, label: `${DAY_LABELS[d.getDay()]} ${d.getDate()}` };
-  });
-}
+import { formatLabel } from '../../src/theme/tokens';
 
 export default function ThreadScreen() {
   const colors = useColors();
@@ -49,24 +30,8 @@ export default function ThreadScreen() {
     () => THREAD_MESSAGES[Number(athleteId)] ?? []
   );
   const [note, setNote] = useState('');
-  const [planning, setPlanning] = useState(false);
-  const [activity, setActivity] = useState<Discipline>(athlete?.discipline ?? 'RUNNING');
-  const [date, setDate] = useState<{ key: string; label: string } | null>(null);
-  const [time, setTime] = useState('');
-  const [location, setLocation] = useState('');
-  const scrollRef = useRef<RNScrollView>(null);
-
-  // The plan panel lives inside the scroll view; bring it into view above
-  // the keyboard whenever it opens or a field gets focus.
-  const scrollToEnd = () =>
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
-
-  useEffect(() => {
-    if (planning) {
-      const t = scrollToEnd();
-      return () => clearTimeout(t);
-    }
-  }, [planning]);
+  const plansState = usePlans();
+  const { matches } = useSocial();
 
   if (!athlete) {
     return (
@@ -78,32 +43,15 @@ export default function ThreadScreen() {
     );
   }
 
-  const dates = upcomingDates(7);
-  const planReady = !!date && time.length > 0 && location.trim().length > 0;
+  const stage = stageWith(plansState, athlete.id, matches.includes(athlete.id));
+  const together = sessionsTogether(plansState, athlete.id);
+  const inviteToTrain = () =>
+    router.push({ pathname: '/invite/[athleteId]', params: { athleteId: String(athlete.id) } });
 
   const sendText = () => {
     if (!note.trim()) return;
     setMessages((prev) => [...prev, { from: 'me', text: note.trim() }]);
     setNote('');
-  };
-
-  const attachPlan = () => {
-    if (!planReady || !date) return;
-    const when = `${date.label} · ${time.trim()}`;
-    const session = addSession(athlete.id, activity, when, location.trim());
-    const plan: PlanCard = {
-      id: session.id,
-      activity,
-      when,
-      location: location.trim(),
-      status: 'INVITE',
-    };
-    setMessages((prev) => [...prev, { from: 'me', text: note.trim(), plan }]);
-    setNote('');
-    setDate(null);
-    setTime('');
-    setLocation('');
-    setPlanning(false);
   };
 
   const respondTo = (index: number, status: 'CONFIRMED' | 'DECLINED') => {
@@ -155,17 +103,20 @@ export default function ThreadScreen() {
         </XStack>
       </XStack>
 
+      <YStack px={20} py={12} bg="$card" borderBottomWidth={1} borderBottomColor="$border">
+        <JourneyLadder stage={stage ?? 'match'} sessions={together} compact />
+      </YStack>
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          ref={scrollRef}
           flex={1}
           contentContainerStyle={{
             p: 20,
             gap: 10,
-            pb: planning ? insets.bottom + 24 : 24,
+            pb: 24,
           }}
           keyboardShouldPersistTaps="handled"
         >
@@ -267,105 +218,9 @@ export default function ThreadScreen() {
               </YStack>
             );
           })}
-
-          {planning ? (
-            <YStack
-              gap={20}
-              p={18}
-              rounded={24}
-              bg="$card"
-              borderWidth={1}
-              borderColor="$border"
-              style={shadow.card}
-            >
-              <XStack items="center" justify="space-between">
-                <Text fontFamily="$bold" fontSize={18} color="$text">
-                  Plan a session
-                </Text>
-                <IconButton size={32} onPress={() => setPlanning(false)} accessibilityLabel="Close">
-                  <Icon name="x" size={16} color={colors.muted} />
-                </IconButton>
-              </XStack>
-
-              <YStack>
-                <Text fontFamily="$semibold" fontSize={15} color="$text">
-                  Activity
-                </Text>
-                <XStack flexWrap="wrap" gap={8} mt={10}>
-                  {DISCIPLINES.map((d) => (
-                    <Chip
-                      key={d}
-                      label={d}
-                      selected={d === activity}
-                      onPress={() => setActivity(d)}
-                    />
-                  ))}
-                </XStack>
-              </YStack>
-
-              <YStack>
-                <Text fontFamily="$semibold" fontSize={15} color="$text">
-                  Date
-                </Text>
-                <XStack flexWrap="wrap" gap={8} mt={10}>
-                  {dates.map((d) => (
-                    <Chip
-                      key={d.key}
-                      label={d.label}
-                      selected={date?.key === d.key}
-                      onPress={() => setDate(d)}
-                    />
-                  ))}
-                </XStack>
-              </YStack>
-
-              <YStack>
-                <Text fontFamily="$semibold" fontSize={15} color="$text">
-                  Time
-                </Text>
-                <XStack flexWrap="wrap" gap={8} mt={10}>
-                  {TIME_SLOTS.map((t) => (
-                    <Chip key={t} label={t} selected={time === t} onPress={() => setTime(t)} />
-                  ))}
-                </XStack>
-              </YStack>
-
-              <YStack>
-                <Text fontFamily="$semibold" fontSize={15} color="$text">
-                  Where
-                </Text>
-                <YStack mt={10}>
-                  <Input
-                    placeholder="e.g. Sea Point Promenade"
-                    value={location}
-                    onChangeText={setLocation}
-                    onFocus={scrollToEnd}
-                  />
-                </YStack>
-              </YStack>
-
-              <YStack>
-                <Text fontFamily="$semibold" fontSize={15} color="$text">
-                  Note (optional)
-                </Text>
-                <YStack mt={10}>
-                  <Input
-                    placeholder="e.g. Coffee after?"
-                    value={note}
-                    onChangeText={setNote}
-                    onFocus={scrollToEnd}
-                  />
-                </YStack>
-              </YStack>
-
-              <Button onPress={attachPlan} disabled={!planReady} icon="send">
-                Send invite
-              </Button>
-            </YStack>
-          ) : null}
         </ScrollView>
 
-        {planning ? null : (
+        {
           <XStack
             items="center"
             gap={8}
@@ -379,8 +234,8 @@ export default function ThreadScreen() {
             <IconButton
               size={44}
               tone="accent"
-              onPress={() => setPlanning(true)}
-              accessibilityLabel="Plan a session"
+              onPress={inviteToTrain}
+              accessibilityLabel="Invite to train"
             >
               <Icon name="calendar" size={20} color={colors.accentText} />
             </IconButton>
@@ -412,7 +267,7 @@ export default function ThreadScreen() {
               />
             </IconButton>
           </XStack>
-        )}
+        }
       </KeyboardAvoidingView>
     </YStack>
   );

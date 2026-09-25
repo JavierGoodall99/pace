@@ -1,16 +1,29 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import React from 'react';
 import { Alert, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
+import {
+  GoalCard,
+  Heatmap,
+  JourneyLadder,
+  PersonalBests,
+  PromptCard,
+  WhyMatch,
+} from '../../src/components/Proof';
 import { RhythmLegend, RhythmStrip, SyncBadge } from '../../src/components/Rhythm';
 import { Badge, Button, DisplayTitle } from '../../src/components/ui';
 import { athleteById } from '../../src/data/mockData';
-import { rhythmForAthlete, rhythmForMe, sharedDaysLabel, syncScore } from '../../src/data/rhythm';
+import { sharedDaysLabel } from '../../src/data/rhythm';
+import { depthFor } from '../../src/data/athleteDepth';
+import { compatibility } from '../../src/data/compat';
+import { sessionsTogether, stageWith, usePlans } from '../../src/data/plans';
+import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { useMe } from '../../src/data/session';
 import { ATHLETE_ACTION_PHOTOS } from '../../src/data/photos';
-import { blockAthlete } from '../../src/data/social';
+import { blockAthlete, useSocial } from '../../src/data/social';
 import { useColors } from '../../src/theme/appearance';
 import { formatLabel, shadow } from '../../src/theme/tokens';
 
@@ -21,6 +34,8 @@ export default function AthleteDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const athlete = athleteById(Number(id));
   const me = useMe();
+  const plansState = usePlans();
+  const { matches } = useSocial();
 
   if (!athlete) {
     return (
@@ -32,9 +47,14 @@ export default function AthleteDetailScreen() {
     );
   }
 
-  const mine = rhythmForMe(me.cadence, me.trainingDays);
-  const theirs = rhythmForAthlete(athlete);
-  const sync = syncScore(mine, theirs);
+  const compat = compatibility(me, athlete);
+  const { mine, theirs } = compat;
+  const sync = compat.score;
+  const depth = depthFor(athlete);
+  const goal = raceById(depth.goalRaceId);
+  const matched = matches.includes(athlete.id);
+  const stage = stageWith(plansState, athlete.id, matched);
+  const together = sessionsTogether(plansState, athlete.id);
 
   function confirmBlock() {
     if (!athlete) return;
@@ -167,6 +187,76 @@ export default function AthleteDetailScreen() {
           </XStack>
         </YStack>
 
+        {stage ? (
+          <Section>
+            <DisplayTitle size={26}>{`Your *journey*`}</DisplayTitle>
+            <JourneyLadder stage={stage} sessions={together} />
+          </Section>
+        ) : null}
+
+        <Section>
+          <WhyMatch compat={compat} name={athlete.name} />
+        </Section>
+
+        {goal ? (
+          <YStack mx={16} mt={12}>
+            <GoalCard
+              race={goal}
+              others={athletesTrainingFor(goal.id).length - 1}
+              onPress={() => router.push({ pathname: '/race/[id]', params: { id: goal.id } })}
+            />
+          </YStack>
+        ) : null}
+
+        <Section>
+          <Heatmap rhythm={theirs} seed={athlete.id} />
+        </Section>
+
+        {depth.pbs.length ? (
+          <YStack mx={16} mt={12} gap={10}>
+            <Text fontFamily="$semibold" fontSize={17} color="$text" mx={4}>
+              Personal bests
+            </Text>
+            <PersonalBests pbs={depth.pbs} />
+          </YStack>
+        ) : null}
+
+        {depth.prompts.map((p) => (
+          <YStack key={p.q} mx={16} mt={12}>
+            <PromptCard prompt={p} />
+          </YStack>
+        ))}
+
+        {depth.routes.length ? (
+          <Section>
+            <Text fontFamily="$semibold" fontSize={17} color="$text">
+              Favourite routes
+            </Text>
+            {depth.routes.map((r) => (
+              <XStack key={r.name} items="center" gap={12}>
+                <XStack
+                  width={38}
+                  height={38}
+                  rounded={12}
+                  bg="$surface"
+                  items="center"
+                  justify="center"
+                >
+                  <Icon name="map" size={18} color={colors.accentText} />
+                </XStack>
+                <YStack flex={1}>
+                  <Text fontFamily="$semibold" fontSize={15} color="$text">
+                    {r.name}
+                  </Text>
+                  <Text fontSize={13} color="$muted">
+                    {r.detail}
+                  </Text>
+                </YStack>
+              </XStack>
+            ))}
+          </Section>
+        ) : null}
+
         <YStack
           mx={16}
           mt={12}
@@ -200,30 +290,32 @@ export default function AthleteDetailScreen() {
         bg="$card"
         style={{ paddingBottom: insets.bottom + 12 }}
       >
+        {matched ? (
+          <Button
+            variant="secondary"
+            icon="message-circle"
+            style={{ paddingHorizontal: 18 }}
+            onPress={() =>
+              router.replace({
+                pathname: '/thread/[athleteId]',
+                params: { athleteId: String(athlete.id) },
+              })
+            }
+          >
+            Chat
+          </Button>
+        ) : null}
         <Button
-          icon="message-circle"
-          style={{ flex: 1 }}
+          icon="send"
+          style={{ flex: 1, paddingHorizontal: 12 }}
           onPress={() =>
-            router.replace({
-              pathname: '/thread/[athleteId]',
+            router.push({
+              pathname: '/invite/[athleteId]',
               params: { athleteId: String(athlete.id) },
             })
           }
         >
-          Message
-        </Button>
-        <Button
-          variant="secondary"
-          icon="calendar"
-          style={{ flex: 1, paddingHorizontal: 12 }}
-          onPress={() =>
-            router.replace({
-              pathname: '/(tabs)/planner',
-              params: { partnerId: String(athlete.id) },
-            })
-          }
-        >
-          Plan session
+          Invite to train
         </Button>
       </XStack>
     </YStack>
@@ -273,3 +365,20 @@ const styles = {
     height: 620,
   },
 };
+
+function Section({ children }: { children: React.ReactNode }) {
+  return (
+    <YStack
+      mx={16}
+      mt={12}
+      p={20}
+      gap={14}
+      rounded={28}
+      bg="$card"
+      borderWidth={1}
+      borderColor="$border"
+    >
+      {children}
+    </YStack>
+  );
+}

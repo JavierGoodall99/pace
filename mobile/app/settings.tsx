@@ -31,6 +31,8 @@ const PREFERENCE_ROWS: SettingsRow[] = [
   },
   { icon: 'bell', label: 'Notifications', route: '/settings-notifications' },
   { icon: 'lock', label: 'Privacy', route: '/settings-privacy' },
+  { icon: 'shield-check', label: 'Safety centre', route: '/safety' },
+  { icon: 'activity', label: 'Race mode', route: '/races' },
   { icon: 'credit-card', label: 'Subscription', value: 'Free', route: '/settings-subscription' },
 ];
 

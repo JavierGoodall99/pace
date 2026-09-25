@@ -427,3 +427,13 @@ export const NOTIFICATIONS: AppNotification[] = [
     unread: false,
   },
 ];
+
+export const SPORT_EMOJI: Record<Discipline, string> = {
+  RUNNING: '🏃',
+  CYCLING: '🚴',
+  TRAIL: '⛰️',
+  SWIMMING: '🏊',
+  CROSSFIT: '🏋️',
+  CLIMBING: '🧗',
+  TRIATHLON: '🏅',
+};

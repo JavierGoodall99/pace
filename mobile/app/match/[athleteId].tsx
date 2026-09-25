@@ -5,9 +5,12 @@ import { Icon } from '../../src/components/Icon';
 import { Aurora, PulseLine } from '../../src/components/Motif';
 import { RhythmStrip, SyncBadge } from '../../src/components/Rhythm';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
-import { Button, DisplayTitle } from '../../src/components/ui';
-import { athleteById } from '../../src/data/mockData';
-import { rhythmForAthlete, rhythmForMe, sharedDaysLabel, syncScore } from '../../src/data/rhythm';
+import { Badge, Button, DisplayTitle } from '../../src/components/ui';
+import { athleteById, SPORT_EMOJI } from '../../src/data/mockData';
+import { rhythmForAthlete, rhythmForMe, sharedDaysLabel } from '../../src/data/rhythm';
+import { compatibility } from '../../src/data/compat';
+import { formatWhen } from '../../src/data/dates';
+import { usePlans } from '../../src/data/plans';
 import { useMe } from '../../src/data/session';
 import { ATHLETE_PHOTOS, ME_AVATAR } from '../../src/data/photos';
 import { useColors } from '../../src/theme/appearance';
@@ -25,7 +28,9 @@ const CONFETTI_PIECES = buildConfettiPieces(
 export default function MatchScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { athleteId } = useLocalSearchParams<{ athleteId: string }>();
+  const { athleteId, planId } = useLocalSearchParams<{ athleteId: string; planId?: string }>();
+  const { plans } = usePlans();
+  const plan = plans.find((p) => p.id === planId);
   const athlete = athleteById(Number(athleteId));
   const me = useMe();
 
@@ -80,7 +85,9 @@ export default function MatchScreen() {
           </DisplayTitle>
         </YStack>
         <Text color="$muted" fontSize={16} lineHeight={24} mt={8} maxW={300} text="center">
-          You and {athlete.name} move to the same beat. Say hi and plan your first session.
+          {plan
+            ? `${athlete.name} said yes to training together. That’s your first session — see you out there.`
+            : `You and ${athlete.name} move to the same beat. Say hi and plan your first session.`}
         </Text>
 
         <YStack
@@ -99,9 +106,25 @@ export default function MatchScreen() {
             <Text fontFamily="$semibold" fontSize={14} color="$text">
               {sharedDaysLabel(mine, theirs)}
             </Text>
-            <SyncBadge pct={syncScore(mine, theirs)} />
+            <SyncBadge pct={compatibility(me, athlete).score} />
           </XStack>
           <RhythmStrip mine={mine} theirs={theirs} height={30} />
+          {plan ? (
+            <XStack items="center" gap={10} p={12} rounded={16} bg="$accentSoft">
+              <Text fontSize={22}>{SPORT_EMOJI[plan.activity]}</Text>
+              <YStack flex={1}>
+                <Text fontFamily="$semibold" fontSize={15} color="$text">
+                  {formatWhen(plan.date)}
+                </Text>
+                <Text fontSize={13} color="$muted" numberOfLines={1}>
+                  {plan.place}
+                </Text>
+              </YStack>
+              <Badge tone="success" icon="check">
+                Confirmed
+              </Badge>
+            </XStack>
+          ) : null}
         </YStack>
 
         <YStack width="100%" gap={10}>
@@ -115,10 +138,14 @@ export default function MatchScreen() {
               })
             }
           >
-            Send a message
+            {`Message ${athlete.name}`}
           </Button>
-          <Button variant="secondary" style={{ width: '100%' }} onPress={() => router.back()}>
-            Keep discovering
+          <Button
+            variant="secondary"
+            style={{ width: '100%' }}
+            onPress={() => (plan ? router.replace('/(tabs)/today') : router.back())}
+          >
+            {plan ? 'See my week' : 'Keep going'}
           </Button>
         </YStack>
       </YStack>

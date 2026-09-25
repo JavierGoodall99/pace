@@ -27,15 +27,12 @@ import { PhotoSlot } from '../src/components/PhotoSlot';
 import { RhythmStrip } from '../src/components/Rhythm';
 import { Badge, Button, Callout, DisplayTitle, IconButton, Input } from '../src/components/ui';
 import { successHaptic } from '../src/lib/haptics';
-import { ATHLETES, DISCIPLINES, Discipline } from '../src/data/mockData';
+import { ATHLETES, DISCIPLINES, Discipline, SPORT_EMOJI } from '../src/data/mockData';
 import { ATHLETE_PHOTOS, HERO_RUNNERS } from '../src/data/photos';
-import {
-  cadenceForDays,
-  Rhythm,
-  rhythmForAthlete,
-  rhythmForMe,
-  syncScore,
-} from '../src/data/rhythm';
+import { cadenceForDays, Rhythm, rhythmForMe } from '../src/data/rhythm';
+import { compatibility } from '../src/data/compat';
+import { LEVELS } from '../src/data/athleteDepth';
+import { athletesTrainingFor, formatRaceDate, raceById, upcomingRaces } from '../src/data/races';
 import { completeOnboarding, Intent, MeProfile, updateMe, useMe } from '../src/data/session';
 import { useColors } from '../src/theme/appearance';
 import { brand, formatLabel, shadow } from '../src/theme/tokens';
@@ -57,6 +54,8 @@ type StepId =
   | 'sports'
   | 'week'
   | 'time'
+  | 'level'
+  | 'goal'
   | 'basics'
   | 'photos'
   | 'sync'
@@ -72,7 +71,9 @@ const STEPS: StepId[] = [
   'intent',
   'sports',
   'week',
+  'level',
   'time',
+  'goal',
   'basics',
   'photos',
   'sync',
@@ -88,7 +89,9 @@ const QUESTIONS: StepId[] = [
   'intent',
   'sports',
   'week',
+  'level',
   'time',
+  'goal',
   'basics',
   'photos',
   'sync',
@@ -100,16 +103,6 @@ const MAX_PHOTOS = 3;
 const BODY_STYLE = { px: 20, pt: 8, pb: 24, flexGrow: 1 };
 const WELCOME_BODY_STYLE = { pb: 0, flexGrow: 1 };
 const NO_DAYS = [false, false, false, false, false, false, false];
-
-const SPORT_EMOJI: Record<Discipline, string> = {
-  RUNNING: '🏃',
-  CYCLING: '🚴',
-  TRAIL: '⛰️',
-  SWIMMING: '🏊',
-  CROSSFIT: '🏋️',
-  CLIMBING: '🧗',
-  TRIATHLON: '🏅',
-};
 
 const INTENTS: { id: Intent; emoji: string; title: string; subtitle: string; reply: string }[] = [
   {
@@ -183,6 +176,10 @@ function answered(step: StepId, me: MeProfile): boolean {
       return !!me.trainingDays?.some(Boolean);
     case 'time':
       return me.times.length > 0;
+    case 'level':
+      return me.level != null;
+    case 'goal':
+      return me.goalRaceId !== null;
     case 'basics':
       return Number(me.age) >= 18 && me.city.trim().length > 0;
     case 'photos':
@@ -245,6 +242,38 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
       if (done)
         return { text: 'Got it — we’ll match you with people on the same clock.', mood: 'happy' };
       return { text: 'When do you like to train?', mood: 'happy' };
+    case 'level': {
+      const l = LEVELS.find((x) => x.id === me.level);
+      if (!l)
+        return {
+          text: 'How hard do you go? We match effort so sessions actually work.',
+          mood: 'happy',
+        };
+      if (l.id === 4)
+        return { text: 'Racing mode! We’ll find people who can hang. 🔥', mood: 'excited' };
+      if (l.id === 1)
+        return { text: 'Chatty pace is the best pace. Great for first sessions. 🐢', mood: 'wink' };
+      return {
+        text: `${l.label} it is — we’ll keep your matches within reach. 💪`,
+        mood: 'excited',
+      };
+    }
+    case 'goal': {
+      if (me.goalRaceId === null)
+        return {
+          text: 'Training for something? Meet people on the same start line.',
+          mood: 'happy',
+        };
+      const race = raceById(me.goalRaceId);
+      if (!race) return { text: 'No race? No problem — training is the point. 🌱', mood: 'happy' };
+      const n = athletesTrainingFor(race.id).length;
+      return {
+        text: n
+          ? `${race.name}! ${n} pacer${n === 1 ? ' is' : 's are'} training for it too. 🏁`
+          : `${race.name} — let’s find you training partners. 🏁`,
+        mood: 'excited',
+      };
+    }
     case 'basics':
       if (me.age && Number(me.age) < 18)
         return { text: 'Pace is for adults only — you need to be 18+.', mood: 'thinking' };
@@ -462,6 +491,46 @@ export default function OnboardingScreen() {
                 </YStack>
               )}
 
+              {step === 'level' && (
+                <YStack gap={12}>
+                  {LEVELS.map((l) => (
+                    <OptionCard
+                      key={l.id}
+                      emoji={l.emoji}
+                      title={l.label}
+                      subtitle={l.detail}
+                      selected={me.level === l.id}
+                      onPress={() => updateMe({ level: l.id })}
+                    />
+                  ))}
+                </YStack>
+              )}
+
+              {step === 'goal' && (
+                <YStack gap={12}>
+                  {upcomingRaces().map((r) => {
+                    const n = athletesTrainingFor(r.id).length;
+                    return (
+                      <OptionCard
+                        key={r.id}
+                        emoji={r.emoji}
+                        title={r.name}
+                        subtitle={`${formatRaceDate(r.date)} · ${r.city}${n ? ` · ${n} pacer${n === 1 ? '' : 's'}` : ''}`}
+                        selected={me.goalRaceId === r.id}
+                        onPress={() => updateMe({ goalRaceId: r.id })}
+                      />
+                    );
+                  })}
+                  <OptionCard
+                    emoji="🌱"
+                    title="Nothing specific right now"
+                    subtitle="Just training for the love of it"
+                    selected={me.goalRaceId === ''}
+                    onPress={() => updateMe({ goalRaceId: '' })}
+                  />
+                </YStack>
+              )}
+
               {step === 'time' && (
                 <YStack gap={12}>
                   {TIMES.map((t) => (
@@ -588,7 +657,7 @@ export default function OnboardingScreen() {
                 if (step === 'launch') {
                   successHaptic();
                   await completeOnboarding();
-                  router.replace('/(tabs)/discover');
+                  router.replace('/(tabs)/today');
                 } else {
                   next();
                 }
@@ -638,7 +707,7 @@ function MeetStep({ text }: { text: string }) {
         </YStack>
       </YStack>
       <Text fontSize={14} color="$muted" text="center">
-        9 quick questions · about 2 minutes
+        {QUESTIONS.length} quick questions · about 2 minutes
       </Text>
     </YStack>
   );
@@ -778,12 +847,12 @@ function RevealStep({ me, rhythm }: { me: MeProfile; rhythm: Rhythm }) {
   const ranked = useMemo(
     () =>
       ATHLETES.filter((a) => a.name !== me.name.trim().split(' ')[0])
-        .map((a) => ({ a, sync: syncScore(rhythm, rhythmForAthlete(a)) }))
+        .map((a) => ({ a, sync: compatibility(me, a).score }))
         .sort((x, y) => y.sync - x.sync),
-    [rhythm, me.name]
+    [me]
   );
   const top = ranked.slice(0, 3);
-  const inSync = ranked.filter((r) => r.sync >= 65).length || ranked.length;
+  const inSync = ranked.filter((r) => r.sync >= 60).length || ranked.length;
   const city = me.city.trim() || 'you';
 
   const count = useRef(new Animated.Value(0)).current;

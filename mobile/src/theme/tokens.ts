@@ -31,7 +31,7 @@ const lightPalette = {
   // Photo scrim and floating controls over images
   scrim: 'rgba(28,25,23,0.55)',
   glass: 'rgba(255,255,255,0.88)',
-  tabBar: 'rgba(255,255,255,0.98)',
+  tabBar: '#FFFFFF',
   raised: '#FFFFFF', // selected segment / thumb sitting on a surface
 
   // Celebration / aurora accents
@@ -65,7 +65,7 @@ const darkPalette: Palette = {
 
   scrim: 'rgba(0,0,0,0.6)',
   glass: 'rgba(29,26,27,0.82)',
-  tabBar: 'rgba(33,29,30,0.98)',
+  tabBar: '#211D1E',
   raised: '#3D3738',
 
   peach: '#FF9E70',

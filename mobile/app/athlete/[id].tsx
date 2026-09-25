@@ -32,7 +32,7 @@ export default function AthleteDetailScreen() {
     );
   }
 
-  const mine = rhythmForMe(me.cadence);
+  const mine = rhythmForMe(me.cadence, me.trainingDays);
   const theirs = rhythmForAthlete(athlete);
   const sync = syncScore(mine, theirs);
 

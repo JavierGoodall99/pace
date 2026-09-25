@@ -1,42 +1,151 @@
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Image as RNImage, useWindowDimensions } from 'react-native';
+import {
+  Animated,
+  Easing,
+  Image as RNImage,
+  KeyboardAvoidingView,
+  Platform,
+  useWindowDimensions,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { Image, ScrollView, Text, XStack, YStack } from 'tamagui';
 import { buildConfettiPieces, Confetti } from '../src/components/Confetti';
 import { Icon } from '../src/components/Icon';
+import { Mascot, Mood, SpeechBubble } from '../src/components/Mascot';
 import { Aurora, PulseLine } from '../src/components/Motif';
-import { RhythmStrip } from '../src/components/Rhythm';
 import {
-  Badge,
-  Button,
-  Chip,
-  Callout,
-  DisplayTitle,
-  IconButton,
-  Input,
-  ProgressBar,
-  SectionTitle,
-  SegmentedControl,
-} from '../src/components/ui';
-import { DISCIPLINES, Discipline } from '../src/data/mockData';
-import { HERO_RUNNERS } from '../src/data/photos';
-import { completeOnboarding, updateMe, useMe } from '../src/data/session';
+  OnboardingProgress,
+  OptionCard,
+  SportTile,
+  StepEnter,
+  WeekBuilder,
+} from '../src/components/OnboardingKit';
+import { PhotoSlot } from '../src/components/PhotoSlot';
+import { RhythmStrip } from '../src/components/Rhythm';
+import { Badge, Button, Callout, DisplayTitle, IconButton, Input } from '../src/components/ui';
+import { successHaptic } from '../src/lib/haptics';
+import { ATHLETES, DISCIPLINES, Discipline } from '../src/data/mockData';
+import { ATHLETE_PHOTOS, HERO_RUNNERS } from '../src/data/photos';
+import {
+  cadenceForDays,
+  Rhythm,
+  rhythmForAthlete,
+  rhythmForMe,
+  syncScore,
+} from '../src/data/rhythm';
+import { completeOnboarding, Intent, MeProfile, updateMe, useMe } from '../src/data/session';
 import { useColors } from '../src/theme/appearance';
-import { brand, shadow } from '../src/theme/tokens';
+import { brand, formatLabel, shadow } from '../src/theme/tokens';
 
-// Ported from `../Pace Onboarding.dc.html` — an 8-step flow (0-7):
-// Welcome, Basics, Disciplines, Cadence, Photos, Activity Sync, Verify,
-// Launch. Header/progress bar only show for steps 1-6. Also ports the
-// "+N% profile strength" toast on each step advance, and the
-// confetti + badge-pop celebration on Launch. Steps write straight into
-// the session profile (`updateMe`), the same store Profile reads from.
+// Onboarding, Duolingo-style: Pip (the mascot) asks one question per
+// screen and reacts to every answer, a chunky progress bar fills as the
+// profile gets stronger, and the flow ends with a "building your
+// matches" moment and a reveal of who already moves like you — so by
+// the time the card is built, the user has something to lose.
+//
+// Every answer writes straight into the session profile (`updateMe`),
+// the same store Profile and Discover read from.
+
+type StepId =
+  | 'welcome'
+  | 'meet'
+  | 'name'
+  | 'intent'
+  | 'sports'
+  | 'week'
+  | 'time'
+  | 'basics'
+  | 'photos'
+  | 'sync'
+  | 'verify'
+  | 'building'
+  | 'reveal'
+  | 'launch';
+
+const STEPS: StepId[] = [
+  'welcome',
+  'meet',
+  'name',
+  'intent',
+  'sports',
+  'week',
+  'time',
+  'basics',
+  'photos',
+  'sync',
+  'verify',
+  'building',
+  'reveal',
+  'launch',
+];
+
+// Steps that count toward the progress bar.
+const QUESTIONS: StepId[] = [
+  'name',
+  'intent',
+  'sports',
+  'week',
+  'time',
+  'basics',
+  'photos',
+  'sync',
+  'verify',
+];
+
 const MAX_PHOTOS = 3;
 
-const CADENCE_OPTIONS = ['2-3X/WK', '4-5X/WK', '6+X/WK'];
-const TIME_OPTIONS = ['EARLY MORNING', 'EVENING', 'WEEKENDS'];
-const STEP_WEIGHT = 100 / 6;
+const BODY_STYLE = { px: 20, pt: 8, pb: 24, flexGrow: 1 };
+const WELCOME_BODY_STYLE = { pb: 0, flexGrow: 1 };
+const NO_DAYS = [false, false, false, false, false, false, false];
+
+const SPORT_EMOJI: Record<Discipline, string> = {
+  RUNNING: '🏃',
+  CYCLING: '🚴',
+  TRAIL: '⛰️',
+  SWIMMING: '🏊',
+  CROSSFIT: '🏋️',
+  CLIMBING: '🧗',
+  TRIATHLON: '🏅',
+};
+
+const INTENTS: { id: Intent; emoji: string; title: string; subtitle: string; reply: string }[] = [
+  {
+    id: 'love',
+    emoji: '💕',
+    title: 'Love',
+    subtitle: 'Someone to date who shares my drive',
+    reply: 'Someone who gets your 5am alarm? Love that. 💕',
+  },
+  {
+    id: 'partner',
+    emoji: '🤝',
+    title: 'A training partner',
+    subtitle: 'Someone to train with — maybe more',
+    reply: 'Accountability buddy it is. Who knows where it leads! 😉',
+  },
+  {
+    id: 'both',
+    emoji: '✨',
+    title: 'Open to both',
+    subtitle: 'Let’s see where the miles take us',
+    reply: 'Why choose? Best of both worlds. ✨',
+  },
+];
+
+const TIMES: { id: string; emoji: string; title: string; subtitle: string }[] = [
+  {
+    id: 'EARLY MORNING',
+    emoji: '🌅',
+    title: 'Early morning',
+    subtitle: 'Before the world wakes up',
+  },
+  { id: 'MIDDAY', emoji: '☀️', title: 'Midday', subtitle: 'Lunch-break sessions' },
+  { id: 'EVENING', emoji: '🌙', title: 'Evening', subtitle: 'After work, under the lights' },
+  { id: 'WEEKENDS', emoji: '🗓️', title: 'Weekends', subtitle: 'Long runs and big rides' },
+];
 
 const CONFETTI_COLORS = [
   brand.accent,
@@ -51,18 +160,7 @@ const CONFETTI_COLORS = [
   brand.peach,
 ];
 
-const NEXT_LABEL: Record<number, string> = {
-  1: 'Continue',
-  2: 'Continue',
-  3: 'Continue',
-  4: 'Continue',
-  6: 'Continue',
-};
-
-const BODY_STYLE = { px: 20, pt: 4, pb: 24, flexGrow: 1 };
-const WELCOME_BODY_STYLE = { pb: 0, flexGrow: 1 };
-
-// Soft glow behind the primary CTA — same recipe as the onboarding toast.
+// Soft glow behind the primary CTA.
 const CTA_STYLE = {
   width: '100%',
   height: 56,
@@ -73,50 +171,141 @@ const CTA_STYLE = {
   elevation: 6,
 } as const;
 
+function answered(step: StepId, me: MeProfile): boolean {
+  switch (step) {
+    case 'name':
+      return me.name.trim().length > 0;
+    case 'intent':
+      return !!me.intent;
+    case 'sports':
+      return me.disciplines.length > 0;
+    case 'week':
+      return !!me.trainingDays?.some(Boolean);
+    case 'time':
+      return me.times.length > 0;
+    case 'basics':
+      return Number(me.age) >= 18 && me.city.trim().length > 0;
+    case 'photos':
+      return me.photos.length > 0;
+    case 'sync':
+      return me.stravaConnected || me.garminConnected;
+    case 'verify':
+      return me.verified;
+    default:
+      return true;
+  }
+}
+
+// What Pip says on each step — a prompt until answered, then a reaction.
+function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
+  const first = me.name.trim().split(' ')[0];
+  const done = answered(step, me);
+  switch (step) {
+    case 'meet':
+      return {
+        text: 'Hey, I’m Pip! 👋 I help athletes find people who move like them. Ready to build your card?',
+        mood: 'excited',
+      };
+    case 'name':
+      return done
+        ? { text: `Nice to meet you, ${first}! 🙌`, mood: 'excited' }
+        : { text: 'First things first — what should I call you?', mood: 'happy' };
+    case 'intent': {
+      const pick = INTENTS.find((i) => i.id === me.intent);
+      return pick
+        ? { text: pick.reply, mood: 'wink' }
+        : { text: 'What brings you to Pace?', mood: 'happy' };
+    }
+    case 'sports': {
+      const n = me.disciplines.length;
+      if (n === 0) return { text: 'What do you train? Pick as many as you like.', mood: 'happy' };
+      if (n === 1)
+        return {
+          text: `A ${formatLabel(me.disciplines[0])} specialist. Respect. 💪`,
+          mood: 'excited',
+        };
+      return { text: `${n} sports — a true all-rounder! 🏅`, mood: 'excited' };
+    }
+    case 'week': {
+      const n = me.trainingDays?.filter(Boolean).length ?? 0;
+      if (n === 0)
+        return { text: 'Now the fun part: tap the days you usually train.', mood: 'happy' };
+      if (n <= 2)
+        return {
+          text: `${n} day${n === 1 ? '' : 's'} a week — every session counts!`,
+          mood: 'happy',
+        };
+      if (n <= 4) return { text: `${n} days a week — that’s a solid rhythm! 🔥`, mood: 'excited' };
+      if (n <= 6) return { text: `${n} days?! Serious dedication. 🔥`, mood: 'excited' };
+      return { text: 'Every. Single. Day. Absolute legend. 🏆', mood: 'excited' };
+    }
+    case 'time':
+      if (me.times.includes('EARLY MORNING'))
+        return { text: 'An early bird! We’ll find you other early birds. 🌅', mood: 'excited' };
+      if (done)
+        return { text: 'Got it — we’ll match you with people on the same clock.', mood: 'happy' };
+      return { text: 'When do you like to train?', mood: 'happy' };
+    case 'basics':
+      if (me.age && Number(me.age) < 18)
+        return { text: 'Pace is for adults only — you need to be 18+.', mood: 'thinking' };
+      if (done)
+        return {
+          text: `${me.city.trim()}! Plenty of athletes training there. 📍`,
+          mood: 'excited',
+        };
+      return { text: 'Almost there. How old are you, and where do you train?', mood: 'happy' };
+    case 'photos':
+      return done
+        ? { text: 'Looking strong! 💪 Action shots get 3× more likes.', mood: 'excited' }
+        : { text: 'Show off your training! One good action shot beats a long bio.', mood: 'happy' };
+    case 'sync':
+      return done
+        ? { text: 'Synced! Your stats now carry a verified badge. ✅', mood: 'excited' }
+        : { text: 'Connect Strava or Garmin — matches trust real numbers.', mood: 'happy' };
+    case 'verify':
+      return done
+        ? { text: 'Verified! You just unlocked Gold. 🥇', mood: 'excited' }
+        : { text: 'Last one: a quick selfie check so everyone knows you’re real.', mood: 'happy' };
+    case 'building':
+      return { text: 'Hold tight — finding people who move like you…', mood: 'thinking' };
+    default:
+      return { text: '', mood: 'happy' };
+  }
+}
+
 export default function OnboardingScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
 
-  const [step, setStep] = useState(0);
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [index, setIndex] = useState(0);
+  const step = STEPS[index];
 
-  const toastAnim = useRef(new Animated.Value(0)).current;
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const questionIndex = QUESTIONS.indexOf(step);
+  const doneCount = QUESTIONS.filter((q) => answered(q, me)).length;
+  const profileStrength = Math.round((doneCount / QUESTIONS.length) * 100);
+  const progressPct =
+    questionIndex >= 0
+      ? ((questionIndex + (answered(step, me) ? 1 : 0.35)) / QUESTIONS.length) * 100
+      : 0;
 
-  const stepsDone = {
-    basics: me.name.trim().length > 0,
-    disciplines: me.disciplines.length > 0,
-    cadence: !!me.cadence,
-    photos: me.photos.length > 0,
-    sync: me.stravaConnected || me.garminConnected,
-    verify: me.verified,
-  };
+  const myRhythm = rhythmForMe(me.cadence, me.trainingDays);
+  const pip = pipLine(step, me);
 
-  const profileStrength = useMemo(() => {
-    const completedCount = Object.values(stepsDone).filter(Boolean).length;
-    return Math.round(completedCount * STEP_WEIGHT);
-  }, [stepsDone]);
-
-  const badgeTierLabel = stepsDone.verify
+  const badgeTierLabel = me.verified
     ? 'Gold · Verified'
-    : stepsDone.sync
+    : me.stravaConnected || me.garminConnected
       ? 'Silver'
-      : stepsDone.basics && stepsDone.disciplines && stepsDone.cadence && stepsDone.photos
-        ? 'Bronze'
-        : 'Unverified';
+      : 'Bronze';
 
-  const nextDisabledMap: Record<number, boolean> = {
-    1: !stepsDone.basics,
-    2: !stepsDone.disciplines,
-    3: !stepsDone.cadence,
-    4: !stepsDone.photos,
-    5: false,
-    6: !stepsDone.verify,
-  };
-  const nextLabel =
-    step === 5 ? (stepsDone.sync ? 'Continue' : 'Skip for now') : (NEXT_LABEL[step] ?? 'Continue');
+  function next() {
+    if (QUESTIONS.includes(step) && answered(step, me)) successHaptic();
+    setIndex((i) => Math.min(i + 1, STEPS.length - 1));
+  }
+  function back() {
+    setIndex((i) => Math.max(i - 1, 0));
+  }
 
   function toggleDiscipline(d: Discipline) {
     updateMe({
@@ -126,11 +315,14 @@ export default function OnboardingScreen() {
     });
   }
   function toggleTime(t: string) {
-    updateMe({
-      times: me.times.includes(t) ? me.times.filter((x) => x !== t) : [...me.times, t],
-    });
+    updateMe({ times: me.times.includes(t) ? me.times.filter((x) => x !== t) : [...me.times, t] });
   }
-
+  function toggleDay(i: number) {
+    const days = [...(me.trainingDays ?? NO_DAYS)];
+    days[i] = !days[i];
+    const count = days.filter(Boolean).length;
+    updateMe({ trainingDays: days, cadence: count ? cadenceForDays(count) : null });
+  }
   async function pickPhotos() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
@@ -142,382 +334,505 @@ export default function OnboardingScreen() {
     const merged = [...me.photos, ...result.assets.map((a) => a.uri)].slice(0, MAX_PHOTOS);
     await updateMe({ photos: merged });
   }
-  function showToast(msg: string) {
-    setToastMsg(msg);
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastAnim.setValue(0);
-    Animated.sequence([
-      Animated.timing(toastAnim, {
-        toValue: 1,
-        duration: 200,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.delay(1400),
-      Animated.timing(toastAnim, {
-        toValue: 0,
-        duration: 200,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
-    toastTimer.current = setTimeout(() => setToastMsg(null), 1800);
-  }
-  function goNext() {
-    const midStep = step >= 1 && step <= 6;
-    if (midStep) showToast(`+${Math.round(STEP_WEIGHT)}% profile strength`);
-    setStep((s) => Math.min(s + 1, 7));
-  }
-  function goBack() {
-    setStep((s) => Math.max(s - 1, 0));
-  }
 
-  useEffect(() => {
-    return () => {
-      if (toastTimer.current) clearTimeout(toastTimer.current);
-    };
-  }, []);
+  // Footer CTA per step.
+  const skippable = step === 'sync' || step === 'verify';
+  const canContinue = !QUESTIONS.includes(step) || answered(step, me) || skippable;
+  const ctaLabel =
+    step === 'welcome'
+      ? 'Get started'
+      : step === 'meet'
+        ? 'Let’s go!'
+        : step === 'reveal'
+          ? 'See my card'
+          : step === 'launch'
+            ? 'Start exploring'
+            : skippable && !answered(step, me)
+              ? 'Maybe later'
+              : 'Continue';
 
-  const showHeader = step >= 1 && step <= 6;
-  const showSkip = step === 5 && !stepsDone.sync;
+  const showHeader = QUESTIONS.includes(step);
 
   return (
-    <YStack flex={1} bg="$canvas">
-      {toastMsg ? (
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            TOAST_STYLE,
-            {
-              top: insets.top + 60,
-              opacity: toastAnim,
-              transform: [
-                {
-                  translateY: toastAnim.interpolate({ inputRange: [0, 1], outputRange: [-8, 0] }),
-                },
-              ],
-            },
-          ]}
-        >
-          <Text fontFamily="$semibold" fontSize={14} color="$onAccent">
-            {toastMsg}
-          </Text>
-        </Animated.View>
-      ) : null}
-
-      {showHeader ? (
-        <YStack px={20} pb={12} gap={12} pt={insets.top + 8}>
-          <XStack items="center" justify="space-between">
-            <IconButton size={40} onPress={goBack} accessibilityLabel="Back">
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <YStack flex={1} bg="$canvas">
+        {step === 'meet' || step === 'building' || step === 'reveal' ? (
+          <Aurora height={620} />
+        ) : null}
+        {showHeader ? (
+          <XStack px={20} pb={10} gap={12} items="center" pt={insets.top + 8}>
+            <IconButton size={40} onPress={back} accessibilityLabel="Back">
               <Icon name="chevron-left" size={20} color={colors.text} />
             </IconButton>
-            <Text fontFamily="$medium" fontSize={14} color="$muted">
-              Step {step} of 6
-            </Text>
-            <YStack
-              onPress={goNext}
-              hitSlop={8}
-              opacity={showSkip ? 1 : 0}
-              minW={40}
-              items="flex-end"
+            <OnboardingProgress pct={progressPct} />
+            <XStack
+              items="center"
+              gap={3}
+              accessibilityLabel={`Profile strength ${profileStrength}%`}
             >
-              <Text fontFamily="$semibold" fontSize={15} color="$muted">
-                Skip
+              <Icon name="zap" size={18} color={colors.accentText} filled />
+              <Text fontFamily="$bold" fontSize={15} color="$accentText">
+                {profileStrength}%
               </Text>
-            </YStack>
+            </XStack>
           </XStack>
-          <ProgressBar pct={(step / 6) * 100} />
-        </YStack>
-      ) : step === 0 ? null : (
-        <YStack height={insets.top + 12} />
-      )}
-
-      <ScrollView flex={1} contentContainerStyle={step === 0 ? WELCOME_BODY_STYLE : BODY_STYLE}>
-        {step === 0 && <WelcomeStep />}
-
-        {step === 1 && (
-          <YStack>
-            <YStack mt={12}>
-              <DisplayTitle size={40}>Say *hello*.</DisplayTitle>
-            </YStack>
-            <Text color="$muted" fontSize={16} lineHeight={24} mt={8} mb={24}>
-              Just enough for a warm introduction.
-            </Text>
-            <YStack gap={14}>
-              <Input
-                placeholder="First name"
-                value={me.name}
-                onChangeText={(v) => updateMe({ name: v })}
-              />
-              <Input
-                placeholder="Age"
-                value={me.age}
-                onChangeText={(v) => updateMe({ age: v })}
-                keyboardType="numeric"
-              />
-              <Input
-                placeholder="City"
-                value={me.city}
-                onChangeText={(v) => updateMe({ city: v })}
-              />
-            </YStack>
-          </YStack>
+        ) : step === 'welcome' ? null : (
+          <YStack height={insets.top + 12} />
         )}
 
-        {step === 2 && (
-          <YStack>
-            <YStack mt={12}>
-              <DisplayTitle size={40}>Your *sports*.</DisplayTitle>
-            </YStack>
-            <Text color="$muted" fontSize={16} lineHeight={24} mt={8} mb={24}>
-              Pick what you train. This is what we match on.
-            </Text>
-            <XStack flexWrap="wrap" gap={10}>
-              {DISCIPLINES.map((d) => (
-                <Chip
-                  key={d}
-                  label={d}
-                  selected={me.disciplines.includes(d)}
-                  onPress={() => toggleDiscipline(d)}
+        <ScrollView
+          flex={1}
+          contentContainerStyle={step === 'welcome' ? WELCOME_BODY_STYLE : BODY_STYLE}
+          keyboardShouldPersistTaps="handled"
+        >
+          {step === 'welcome' ? (
+            <WelcomeStep />
+          ) : (
+            <StepEnter key={step}>
+              {showHeader ? (
+                <XStack items="flex-start" gap={14} mb={24}>
+                  <Mascot size={76} mood={pip.mood} reactKey={pip.text} />
+                  <YStack flex={1} pt={6}>
+                    <SpeechBubble text={pip.text} />
+                  </YStack>
+                </XStack>
+              ) : null}
+
+              {step === 'meet' && <MeetStep text={pip.text} />}
+
+              {step === 'name' && (
+                <Input
+                  placeholder="Your first name"
+                  value={me.name}
+                  onChangeText={(v) => updateMe({ name: v })}
+                  autoCapitalize="words"
+                  autoComplete="name"
+                  returnKeyType="next"
+                  onSubmitEditing={() => answered('name', me) && next()}
                 />
-              ))}
-            </XStack>
-          </YStack>
-        )}
+              )}
 
-        {step === 3 && (
-          <YStack>
-            <YStack mt={12}>
-              <DisplayTitle size={40}>Your *rhythm*.</DisplayTitle>
-            </YStack>
-            <Text color="$muted" fontSize={16} lineHeight={24} mt={8} mb={24}>
-              How often, and when you actually train.
-            </Text>
-            <SectionTitle>How often do you train?</SectionTitle>
-            <YStack>
-              <SegmentedControl
-                options={CADENCE_OPTIONS}
-                value={me.cadence}
-                onChange={(v) => updateMe({ cadence: v })}
-              />
-            </YStack>
-            <SectionTitle mt={28}>When do you like to train?</SectionTitle>
-            <XStack flexWrap="wrap" gap={10}>
-              {TIME_OPTIONS.map((t) => (
-                <Chip
-                  key={t}
-                  label={t}
-                  selected={me.times.includes(t)}
-                  onPress={() => toggleTime(t)}
-                />
-              ))}
-            </XStack>
-          </YStack>
-        )}
+              {step === 'intent' && (
+                <YStack gap={12}>
+                  {INTENTS.map((i) => (
+                    <OptionCard
+                      key={i.id}
+                      emoji={i.emoji}
+                      title={i.title}
+                      subtitle={i.subtitle}
+                      selected={me.intent === i.id}
+                      onPress={() => updateMe({ intent: i.id })}
+                    />
+                  ))}
+                </YStack>
+              )}
 
-        {step === 4 && (
-          <YStack>
-            <YStack mt={12}>
-              <DisplayTitle size={40}>Put a *face* to it.</DisplayTitle>
-            </YStack>
-            <Text color="$muted" fontSize={16} lineHeight={24} mt={8} mb={24}>
-              One good photo beats a paragraph of bio. Pick up to three from your library.
-            </Text>
-            <XStack gap={10} height={260}>
-              {[0, 1, 2].map((i) => {
-                const uri = me.photos[i];
-                const main = i === 0;
-                return (
+              {step === 'sports' && (
+                <XStack flexWrap="wrap" justify="space-between" rowGap={12}>
+                  {DISCIPLINES.map((d) => (
+                    <SportTile
+                      key={d}
+                      emoji={SPORT_EMOJI[d]}
+                      label={formatLabel(d)}
+                      selected={me.disciplines.includes(d)}
+                      onPress={() => toggleDiscipline(d)}
+                    />
+                  ))}
+                </XStack>
+              )}
+
+              {step === 'week' && (
+                <YStack gap={20}>
+                  <XStack items="baseline" gap={8}>
+                    <Text fontFamily="$display" fontSize={64} lineHeight={66} color="$accentText">
+                      {me.trainingDays?.filter(Boolean).length ?? 0}
+                    </Text>
+                    <Text fontFamily="$semibold" fontSize={17} color="$muted">
+                      days a week
+                    </Text>
+                  </XStack>
+                  <WeekBuilder days={me.trainingDays ?? NO_DAYS} onToggle={toggleDay} />
+                  <Callout icon="activity">
+                    This is your rhythm. We match you with people who train on the same days — so
+                    plans actually happen.
+                  </Callout>
+                </YStack>
+              )}
+
+              {step === 'time' && (
+                <YStack gap={12}>
+                  {TIMES.map((t) => (
+                    <OptionCard
+                      key={t.id}
+                      emoji={t.emoji}
+                      title={t.title}
+                      subtitle={t.subtitle}
+                      selected={me.times.includes(t.id)}
+                      onPress={() => toggleTime(t.id)}
+                    />
+                  ))}
+                </YStack>
+              )}
+
+              {step === 'basics' && (
+                <YStack gap={12}>
+                  <Input
+                    placeholder="Age"
+                    value={me.age}
+                    onChangeText={(v) => updateMe({ age: v.replace(/[^0-9]/g, '').slice(0, 2) })}
+                    keyboardType="numeric"
+                  />
+                  <Input
+                    placeholder="City"
+                    value={me.city}
+                    onChangeText={(v) => updateMe({ city: v })}
+                    autoCapitalize="words"
+                  />
+                </YStack>
+              )}
+
+              {step === 'photos' && <PhotosStep photos={me.photos} onPick={pickPhotos} />}
+
+              {step === 'sync' && (
+                <YStack gap={12}>
+                  <SyncRow
+                    icon="activity"
+                    label="Strava"
+                    connected={me.stravaConnected}
+                    onPress={() => router.push('/connect/strava')}
+                  />
+                  <SyncRow
+                    icon="repeat"
+                    label="Garmin"
+                    connected={me.garminConnected}
+                    onPress={() => router.push('/connect/garmin')}
+                  />
+                  <YStack mt={6}>
+                    <Callout icon="sparkles" title="Unlocks Silver tier">
+                      A wider match radius and a verified-stats badge on your card.
+                    </Callout>
+                  </YStack>
+                </YStack>
+              )}
+
+              {step === 'verify' && (
+                <YStack items="center" gap={18} py={10}>
                   <YStack
-                    key={i}
-                    onPress={pickPhotos}
-                    flex={main ? 1.4 : 1}
-                    rounded={20}
-                    bg={uri ? '$card' : '$surface'}
-                    borderWidth={uri ? 0 : 1.5}
-                    borderColor="$borderStrong"
-                    borderStyle="dashed"
-                    overflow="hidden"
+                    width={150}
+                    height={150}
+                    rounded={75}
+                    borderWidth={3}
+                    bg={me.verified ? '$successSoft' : '$surface'}
+                    borderColor={me.verified ? '$success' : '$accentBorder'}
                     items="center"
                     justify="center"
                   >
-                    {uri ? (
-                      <Image
-                        source={{ uri }}
-                        style={{ width: '100%', height: '100%' }}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <YStack items="center" gap={8}>
-                        <XStack
-                          width={36}
-                          height={36}
-                          rounded={18}
-                          bg="$accent"
-                          items="center"
-                          justify="center"
-                        >
-                          <Icon name="plus" size={20} color={colors.onAccent} strokeWidth={2.2} />
-                        </XStack>
-                        {main ? (
-                          <Text fontFamily="$medium" fontSize={13} color="$muted">
-                            Main photo
-                          </Text>
-                        ) : null}
-                      </YStack>
-                    )}
+                    <Icon
+                      name="shield-check"
+                      size={56}
+                      color={me.verified ? colors.success : colors.muted}
+                      strokeWidth={1.6}
+                    />
                   </YStack>
-                );
-              })}
-            </XStack>
-            <XStack onPress={pickPhotos} items="center" gap={8} mt={16}>
-              <Icon
-                name={me.photos.length > 0 ? 'check' : 'camera'}
-                size={16}
-                color={me.photos.length > 0 ? colors.success : colors.muted}
-              />
-              <Text
-                fontFamily="$medium"
-                fontSize={14}
-                color={me.photos.length > 0 ? '$success' : '$muted'}
-              >
-                {me.photos.length > 0
-                  ? `${me.photos.length} photo${me.photos.length === 1 ? '' : 's'} added · tap a tile to change`
-                  : 'Tap a tile to add photos'}
-              </Text>
-            </XStack>
-          </YStack>
-        )}
+                  <Button
+                    variant={me.verified ? 'secondary' : 'primary'}
+                    icon={me.verified ? 'check' : 'camera'}
+                    onPress={() => router.push('/verify')}
+                    style={{ width: '100%' }}
+                    disabled={me.verified}
+                  >
+                    {me.verified ? 'Verified' : 'Start selfie check'}
+                  </Button>
+                  <Text fontSize={13} color="$muted" text="center">
+                    Takes 10 seconds. Verified profiles get twice the matches.
+                  </Text>
+                </YStack>
+              )}
 
-        {step === 5 && (
-          <YStack>
-            <YStack mt={12}>
-              <DisplayTitle size={40}>Share your *training*.</DisplayTitle>
-            </YStack>
-            <Text color="$muted" fontSize={16} lineHeight={24} mt={8} mb={24}>
-              Connect your data so your matches see the real, verified you.
-            </Text>
-            <YStack gap={10}>
-              <SyncRow
-                icon="activity"
-                label="Strava"
-                connected={me.stravaConnected}
-                onPress={() => router.push('/connect/strava')}
-              />
-              <SyncRow
-                icon="repeat"
-                label="Garmin"
-                connected={me.garminConnected}
-                onPress={() => router.push('/connect/garmin')}
-              />
-            </YStack>
-            <YStack mt={18}>
-              <Callout icon="sparkles" title="Unlocks Silver tier">
-                A wider match radius and a verified-stats badge on your card.
-              </Callout>
-            </YStack>
-          </YStack>
-        )}
+              {step === 'building' && <BuildingStep text={pip.text} onDone={next} />}
 
-        {step === 6 && (
-          <YStack>
-            <YStack mt={12}>
-              <DisplayTitle size={40}>Prove it’s *you*.</DisplayTitle>
-            </YStack>
-            <Text color="$muted" fontSize={16} lineHeight={24} mt={8} mb={24}>
-              A quick liveness check — matched against your photo. Ten seconds, no document needed.
-            </Text>
-            <YStack items="center" gap={18} py={10}>
-              <YStack
-                width={140}
-                height={140}
-                rounded={70}
-                borderWidth={3}
-                bg={me.verified ? '$accentSoft' : '$surface'}
-                borderColor={me.verified ? '$accent' : '$border'}
-                items="center"
-                justify="center"
-              >
-                <Icon
-                  name="shield-check"
-                  size={44}
-                  color={me.verified ? colors.accentText : colors.muted}
+              {step === 'reveal' && <RevealStep me={me} rhythm={myRhythm} />}
+
+              {step === 'launch' && (
+                <LaunchStep
+                  profileStrength={profileStrength}
+                  badgeTierLabel={badgeTierLabel}
+                  name={me.name}
+                  age={me.age}
+                  city={me.city}
+                  disciplines={me.disciplines}
+                  rhythm={myRhythm}
+                  photo={me.photos[0]}
                 />
-              </YStack>
-              <Button
-                onPress={() => router.push('/verify')}
-                style={{ width: '100%' }}
-                disabled={me.verified}
-              >
-                {me.verified ? 'Verified' : 'Verify me'}
-              </Button>
-              {me.verified ? (
-                <XStack items="center" gap={8}>
-                  <Icon name="shield-check" size={16} color={colors.success} strokeWidth={2} />
-                  <Text fontFamily="$semibold" fontSize={14} color="$success">
-                    Gold tier unlocked
+              )}
+            </StepEnter>
+          )}
+        </ScrollView>
+
+        {step === 'building' ? null : (
+          <YStack
+            px={20}
+            pt={14}
+            bg="$canvas"
+            borderTopWidth={step === 'welcome' ? 0 : 1}
+            borderTopColor="$border"
+            style={{ paddingBottom: insets.bottom + 16 }}
+          >
+            <Button
+              style={CTA_STYLE}
+              disabled={!canContinue}
+              onPress={async () => {
+                if (step === 'launch') {
+                  successHaptic();
+                  await completeOnboarding();
+                  router.replace('/(tabs)/discover');
+                } else {
+                  next();
+                }
+              }}
+            >
+              {ctaLabel}
+            </Button>
+            {step === 'welcome' ? (
+              <YStack gap={10} mt={12}>
+                <XStack justify="center" gap={4} py={4} onPress={() => router.push('/sign-in')}>
+                  <Text fontSize={15} color="$muted">
+                    Already have an account?
+                  </Text>
+                  <Text fontFamily="$semibold" fontSize={15} color="$accentText">
+                    Log in
                   </Text>
                 </XStack>
-              ) : null}
-            </YStack>
+                <Text fontSize={12} lineHeight={17} color="$muted" text="center">
+                  By continuing, you agree to Pace&apos;s Terms &amp; Community Code.
+                </Text>
+              </YStack>
+            ) : null}
           </YStack>
-        )}
-
-        {step === 7 && (
-          <LaunchStep
-            profileStrength={profileStrength}
-            badgeTierLabel={badgeTierLabel}
-            name={me.name}
-            age={me.age}
-            city={me.city}
-            disciplines={me.disciplines}
-          />
-        )}
-      </ScrollView>
-
-      <YStack
-        px={20}
-        pt={16}
-        borderTopWidth={step === 0 ? 0 : 1}
-        borderTopColor="$border"
-        bg="$canvas"
-        style={{ paddingBottom: insets.bottom + 20 }}
-      >
-        {step === 7 && (
-          <Button
-            style={{ width: '100%' }}
-            onPress={async () => {
-              await completeOnboarding();
-              router.replace('/(tabs)/discover');
-            }}
-          >
-            Start exploring
-          </Button>
-        )}
-        {step === 0 && (
-          <YStack gap={12}>
-            <Button style={CTA_STYLE} onPress={goNext}>
-              Get started
-            </Button>
-            <XStack justify="center" gap={4} py={6} onPress={() => router.push('/sign-in')}>
-              <Text fontSize={15} color="$muted">
-                Already have an account?
-              </Text>
-              <Text fontFamily="$semibold" fontSize={15} color="$accentText">
-                Log in
-              </Text>
-            </XStack>
-            <Text fontSize={12} lineHeight={17} color="$muted" text="center">
-              By continuing, you agree to Pace&apos;s Terms &amp; Community Code.
-            </Text>
-          </YStack>
-        )}
-        {step >= 1 && step <= 6 && (
-          <Button style={{ width: '100%' }} onPress={goNext} disabled={nextDisabledMap[step]}>
-            {nextLabel}
-          </Button>
         )}
       </YStack>
+    </KeyboardAvoidingView>
+  );
+}
+
+function MeetStep({ text }: { text: string }) {
+  return (
+    <YStack flex={1} items="center" justify="center" gap={28} py={20}>
+      <Mascot size={180} mood="excited" reactKey="meet" />
+      <YStack width="100%" items="center" px={8}>
+        <YStack
+          bg="$card"
+          borderWidth={1.5}
+          borderColor="$border"
+          rounded={24}
+          px={20}
+          py={18}
+          style={shadow.card}
+        >
+          <Text fontFamily="$semibold" fontSize={19} lineHeight={27} color="$text" text="center">
+            {text}
+          </Text>
+        </YStack>
+      </YStack>
+      <Text fontSize={14} color="$muted" text="center">
+        9 quick questions · about 2 minutes
+      </Text>
+    </YStack>
+  );
+}
+
+function PhotosStep({ photos, onPick }: { photos: string[]; onPick: () => void }) {
+  const colors = useColors();
+  return (
+    <YStack gap={14}>
+      <XStack gap={10} height={270}>
+        {[0, 1, 2].map((i) => {
+          const uri = photos[i];
+          const main = i === 0;
+          return (
+            <YStack
+              key={i}
+              onPress={onPick}
+              flex={main ? 1.4 : 1}
+              rounded={22}
+              bg={uri ? '$card' : '$surface'}
+              borderWidth={uri ? 0 : 2}
+              borderColor="$borderStrong"
+              borderStyle="dashed"
+              overflow="hidden"
+              items="center"
+              justify="center"
+            >
+              {uri ? (
+                <Image
+                  source={{ uri }}
+                  style={{ width: '100%', height: '100%' }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <YStack items="center" gap={8}>
+                  <XStack
+                    width={40}
+                    height={40}
+                    rounded={20}
+                    bg="$accent"
+                    items="center"
+                    justify="center"
+                  >
+                    <Icon name="plus" size={22} color={colors.onAccent} strokeWidth={2.4} />
+                  </XStack>
+                  {main ? (
+                    <Text fontFamily="$semibold" fontSize={13} color="$muted">
+                      Main photo
+                    </Text>
+                  ) : null}
+                </YStack>
+              )}
+            </YStack>
+          );
+        })}
+      </XStack>
+      <Text fontSize={14} color="$muted" text="center">
+        {photos.length > 0
+          ? `${photos.length} of ${MAX_PHOTOS} added · tap a tile to change`
+          : 'Tap a tile to add up to 3 photos'}
+      </Text>
+    </YStack>
+  );
+}
+
+// "Building your matches" — a short, satisfying checklist that ticks
+// through, then hands off to the reveal on its own.
+const BUILD_STEPS = [
+  'Reading your weekly rhythm',
+  'Finding athletes nearby',
+  'Calculating sync scores',
+];
+
+function BuildingStep({ text, onDone }: { text: string; onDone: () => void }) {
+  const [done, setDone] = useState(0);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+
+  useEffect(() => {
+    const timers = BUILD_STEPS.map((_, i) => setTimeout(() => setDone(i + 1), 900 * (i + 1)));
+    const finish = setTimeout(
+      () => {
+        successHaptic();
+        onDoneRef.current();
+      },
+      900 * BUILD_STEPS.length + 700
+    );
+    return () => {
+      timers.forEach(clearTimeout);
+      clearTimeout(finish);
+    };
+  }, []);
+
+  return (
+    <YStack flex={1} items="center" justify="center" gap={24} py={20}>
+      <Mascot size={150} mood="thinking" />
+      <DisplayTitle size={36} center>
+        Building your *matches*
+      </DisplayTitle>
+      <YStack width={220}>
+        <PulseLine width={220} height={36} />
+      </YStack>
+      <YStack width="100%" gap={12} px={8}>
+        {BUILD_STEPS.map((label, i) => {
+          const complete = i < done;
+          const active = i === done;
+          return (
+            <XStack key={label} items="center" gap={12} opacity={complete || active ? 1 : 0.4}>
+              <XStack
+                width={28}
+                height={28}
+                rounded={14}
+                items="center"
+                justify="center"
+                bg={complete ? '$success' : '$surface'}
+              >
+                {complete ? <Icon name="check" size={16} color="#FFFFFF" strokeWidth={3} /> : null}
+              </XStack>
+              <Text fontFamily={active ? '$semibold' : '$medium'} fontSize={16} color="$text">
+                {label}
+                {active ? '…' : ''}
+              </Text>
+            </XStack>
+          );
+        })}
+      </YStack>
+      <Text fontSize={14} color="$muted" text="center">
+        {text}
+      </Text>
+    </YStack>
+  );
+}
+
+// The payoff: people who already move like you, before the card is even
+// finished.
+function RevealStep({ me, rhythm }: { me: MeProfile; rhythm: Rhythm }) {
+  const ranked = useMemo(
+    () =>
+      ATHLETES.filter((a) => a.name !== me.name.trim().split(' ')[0])
+        .map((a) => ({ a, sync: syncScore(rhythm, rhythmForAthlete(a)) }))
+        .sort((x, y) => y.sync - x.sync),
+    [rhythm, me.name]
+  );
+  const top = ranked.slice(0, 3);
+  const inSync = ranked.filter((r) => r.sync >= 65).length || ranked.length;
+  const city = me.city.trim() || 'you';
+
+  const count = useRef(new Animated.Value(0)).current;
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    const id = count.addListener(({ value }) => setShown(Math.round(value)));
+    Animated.timing(count, {
+      toValue: inSync,
+      duration: 1100,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+    return () => count.removeListener(id);
+  }, [count, inSync]);
+
+  return (
+    <YStack flex={1} items="center" justify="center" gap={18} py={16}>
+      <Mascot size={110} mood="excited" reactKey="reveal" />
+      <YStack items="center">
+        <Text fontFamily="$display" fontSize={96} lineHeight={98} color="$accentText">
+          {shown}
+        </Text>
+        <DisplayTitle size={30} center>
+          {`athletes near ${city}`}
+        </DisplayTitle>
+        <DisplayTitle size={30} center>
+          *move like you*
+        </DisplayTitle>
+      </YStack>
+
+      <XStack mt={8}>
+        {top.map(({ a }, i) => (
+          <YStack key={a.id} ml={i === 0 ? 0 : -18} z={3 - i} p={3} rounded={40} bg="$canvas">
+            <PhotoSlot
+              label={a.name}
+              shape="circle"
+              source={ATHLETE_PHOTOS[a.slotId]}
+              style={{ width: 72, height: 72 }}
+            />
+          </YStack>
+        ))}
+      </XStack>
+      <Text fontSize={15} color="$muted" text="center" maxW={300}>
+        {top.map((t) => t.a.name).join(', ')} and more train on your days. Your best match is{' '}
+        <Text fontFamily="$bold" color="$accentText">
+          {top[0]?.sync ?? 0}% in sync
+        </Text>
+        .
+      </Text>
     </YStack>
   );
 }
@@ -716,6 +1031,8 @@ function LaunchStep({
   age,
   city,
   disciplines,
+  rhythm,
+  photo,
 }: {
   profileStrength: number;
   badgeTierLabel: string;
@@ -723,6 +1040,8 @@ function LaunchStep({
   age: string;
   city: string;
   disciplines: Discipline[];
+  rhythm: Rhythm;
+  photo?: string;
 }) {
   const colors = useColors();
   const badgeAnim = useRef(new Animated.Value(0)).current;
@@ -762,7 +1081,27 @@ function LaunchStep({
         bg="$card"
         style={shadow.raised}
       >
-        <YStack height={240} bg="$accentSoft" justify="space-between" p={16}>
+        <YStack height={300} bg="$accentSoft" justify="space-between" p={16} overflow="hidden">
+          {photo ? (
+            <>
+              <RNImage
+                source={{ uri: photo }}
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                resizeMode="cover"
+              />
+              <YStack position="absolute" l={0} r={0} b={0} height={220} pointerEvents="none">
+                <Svg width="100%" height="100%">
+                  <Defs>
+                    <LinearGradient id="launchFade" x1="0" y1="0" x2="0" y2="1">
+                      <Stop offset="0" stopColor="#140F10" stopOpacity={0} />
+                      <Stop offset="1" stopColor="#140F10" stopOpacity={0.85} />
+                    </LinearGradient>
+                  </Defs>
+                  <Rect width="100%" height="100%" fill="url(#launchFade)" />
+                </Svg>
+              </YStack>
+            </>
+          ) : null}
           <Animated.View
             style={{
               alignSelf: 'flex-end',
@@ -782,15 +1121,23 @@ function LaunchStep({
             </Badge>
           </Animated.View>
           <YStack>
-            <Text fontFamily="$bold" fontSize={24} lineHeight={30} color="$text">
-              {name || 'You'}, {age || '—'}
-            </Text>
+            <DisplayTitle size={36} color={photo ? '$onPhoto' : '$text'}>
+              {`${name || 'You'} *${age || '—'}*`}
+            </DisplayTitle>
             <XStack items="center" gap={5} mt={2}>
-              <Icon name="map-pin" size={14} color={colors.muted} />
-              <Text fontFamily="$medium" fontSize={14} color="$muted">
+              <Icon name="map-pin" size={14} color={photo ? colors.onPhoto : colors.muted} />
+              <Text fontFamily="$medium" fontSize={14} color={photo ? '$onPhoto' : '$muted'}>
                 {city || 'South Africa'}
               </Text>
             </XStack>
+            <YStack mt={14}>
+              <RhythmStrip
+                mine={rhythm}
+                theirs={rhythm}
+                height={30}
+                variant={photo ? 'photo' : 'card'}
+              />
+            </YStack>
           </YStack>
         </YStack>
         <XStack p={14} gap={8} flexWrap="wrap">
@@ -805,23 +1152,3 @@ function LaunchStep({
     </YStack>
   );
 }
-
-// Static frame styles used by the Animated wrappers — plain values
-// because RN's Animated API consumes them directly.
-const TOAST_STYLE = {
-  position: 'absolute' as const,
-  left: '50%' as const,
-  marginLeft: -110,
-  width: 220,
-  zIndex: 40,
-  backgroundColor: brand.accent,
-  borderRadius: 999,
-  paddingVertical: 10,
-  paddingHorizontal: 18,
-  alignItems: 'center' as const,
-  shadowColor: brand.accent,
-  shadowOpacity: 0.3,
-  shadowRadius: 24,
-  shadowOffset: { width: 0, height: 8 },
-  elevation: 8,
-};

@@ -62,7 +62,10 @@ export default function DiscoverScreen() {
   const router = useRouter();
   const disc = useFilters();
   const me = useMe();
-  const myRhythm = useMemo(() => rhythmForMe(me.cadence), [me.cadence]);
+  const myRhythm = useMemo(
+    () => rhythmForMe(me.cadence, me.trainingDays),
+    [me.cadence, me.trainingDays]
+  );
   const { blocked } = useSocial();
 
   const [filters, setFilters] = useState<Discipline[]>([]);

@@ -33,8 +33,16 @@ export function rhythmForAthlete(a: Pick<Athlete, 'id' | 'weekly'>): Rhythm {
 
 const CADENCE_COUNT: Record<string, number> = { '2-3X/WK': 3, '4-5X/WK': 5, '6+X/WK': 6 };
 
-export function rhythmForMe(cadence: string | null): Rhythm {
+// Your week: the days you picked in onboarding when set, otherwise a
+// pattern sized to your cadence.
+export function rhythmForMe(cadence: string | null, trainingDays?: boolean[] | null): Rhythm {
+  if (trainingDays && trainingDays.length === 7 && trainingDays.some(Boolean)) return trainingDays;
   return fill(PATTERNS[0], cadence ? (CADENCE_COUNT[cadence] ?? 4) : 4);
+}
+
+// Stored cadence bucket for a picked number of training days.
+export function cadenceForDays(count: number): string {
+  return count >= 6 ? '6+X/WK' : count >= 4 ? '4-5X/WK' : '2-3X/WK';
 }
 
 export function sharedDays(a: Rhythm, b: Rhythm): number[] {

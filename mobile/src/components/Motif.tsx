@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing } from 'react-native';
-import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { YStack } from 'tamagui';
 import { useColors } from '../theme/appearance';
 
@@ -80,7 +80,7 @@ export function PulseLine({
 
 // Three blurred color pools behind hero content. Sits absolutely at the
 // top of its parent and never takes touches.
-export function Aurora({ height = 420 }: { height?: number }) {
+export function Aurora({ height = 420, bleed = 0 }: { height?: number; bleed?: number }) {
   const c = useColors();
   const pools = [
     { id: 'a1', cx: '18%', cy: '22%', r: '55%', color: c.accent },
@@ -88,7 +88,14 @@ export function Aurora({ height = 420 }: { height?: number }) {
     { id: 'a3', cx: '65%', cy: '70%', r: '45%', color: c.peach },
   ];
   return (
-    <YStack position="absolute" t={0} l={0} r={0} height={height} pointerEvents="none">
+    <YStack
+      position="absolute"
+      t={-bleed}
+      l={-bleed}
+      r={-bleed}
+      height={height + bleed}
+      pointerEvents="none"
+    >
       <Svg width="100%" height="100%">
         <Defs>
           {pools.map((p) => (
@@ -97,10 +104,16 @@ export function Aurora({ height = 420 }: { height?: number }) {
               <Stop offset="1" stopColor={p.color} stopOpacity={0} />
             </RadialGradient>
           ))}
+          {/* Dissolve into the canvas so the glow never ends in a hard edge. */}
+          <LinearGradient id="auroraFade" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0.55" stopColor={c.canvas} stopOpacity={0} />
+            <Stop offset="1" stopColor={c.canvas} stopOpacity={1} />
+          </LinearGradient>
         </Defs>
         {pools.map((p) => (
           <Rect key={p.id} x="0" y="0" width="100%" height="100%" fill={`url(#${p.id})`} />
         ))}
+        <Rect x="0" y="0" width="100%" height="100%" fill="url(#auroraFade)" />
       </Svg>
     </YStack>
   );

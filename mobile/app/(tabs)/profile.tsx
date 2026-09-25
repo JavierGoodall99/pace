@@ -29,7 +29,7 @@ export default function ProfileScreen() {
 
   const avatar = me.photos[0] ? { uri: me.photos[0] } : ME_AVATAR;
   const primary = me.disciplines[0] ?? 'ATHLETE';
-  const myRhythm = rhythmForMe(me.cadence);
+  const myRhythm = rhythmForMe(me.cadence, me.trainingDays);
   const myDays = myRhythm.map((on, i) => (on ? WEEK_DAY_NAMES[i] : null)).filter(Boolean);
   const photoTiles: (string | null)[] = [
     me.photos[0] ?? null,

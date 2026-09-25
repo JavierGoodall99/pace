@@ -39,7 +39,7 @@ export default function MatchScreen() {
     );
   }
 
-  const mine = rhythmForMe(me.cadence);
+  const mine = rhythmForMe(me.cadence, me.trainingDays);
   const theirs = rhythmForAthlete(athlete);
 
   return (

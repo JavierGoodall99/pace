@@ -1,4 +1,11 @@
-import { rhythmForAthlete, rhythmForMe, sharedDays, sharedDaysLabel, syncScore } from './rhythm';
+import {
+  cadenceForDays,
+  rhythmForAthlete,
+  rhythmForMe,
+  sharedDays,
+  sharedDaysLabel,
+  syncScore,
+} from './rhythm';
 
 test('rhythm has one day per weekly session, capped at 7', () => {
   expect(rhythmForAthlete({ id: 1, weekly: 3 }).filter(Boolean)).toHaveLength(3);
@@ -18,4 +25,18 @@ test('shared days label reads naturally', () => {
   const b = [false, true, false, false, false, true, true];
   expect(sharedDays(a, b)).toEqual([1, 5]);
   expect(sharedDaysLabel(a, b)).toBe('You both train Tue & Sat');
+});
+
+test('your picked days win over the cadence pattern', () => {
+  const picked = [true, false, true, false, false, false, false];
+  expect(rhythmForMe('6+X/WK', picked)).toEqual(picked);
+  expect(
+    rhythmForMe('2-3X/WK', [false, false, false, false, false, false, false]).filter(Boolean)
+  ).toHaveLength(3);
+});
+
+test('cadence buckets follow the number of picked days', () => {
+  expect(cadenceForDays(2)).toBe('2-3X/WK');
+  expect(cadenceForDays(5)).toBe('4-5X/WK');
+  expect(cadenceForDays(7)).toBe('6+X/WK');
 });

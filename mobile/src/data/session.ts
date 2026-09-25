@@ -19,7 +19,14 @@ export interface MeProfile {
   stravaConnected: boolean;
   garminConnected: boolean;
   verified: boolean;
+  // What they're here for — set in onboarding.
+  intent: Intent | null;
+  // The days they train, Monday first. Drives rhythm matching; null
+  // until onboarding's "build your week" step.
+  trainingDays: boolean[] | null;
 }
+
+export type Intent = 'love' | 'partner' | 'both';
 
 export interface StoredAccount {
   email: string;
@@ -48,6 +55,8 @@ const DEFAULT_ME: MeProfile = {
   stravaConnected: false,
   garminConnected: false,
   verified: true,
+  intent: 'both',
+  trainingDays: null,
 };
 
 const DEFAULT_STATE: SessionState = {
@@ -129,6 +138,8 @@ export function freshMe(name: string, email: string): MeProfile {
     stravaConnected: false,
     garminConnected: false,
     verified: false,
+    intent: null,
+    trainingDays: null,
   };
 }
 
@@ -142,7 +153,11 @@ export async function signUp(name: string, email: string, password: string): Pro
   }
   if (password.length < 6) return { ok: false, error: 'Password must be at least 6 characters.' };
   if (state.account) return { ok: false, error: 'You are already signed in.' };
-  setState({ account: { email: trimmedEmail, password }, me: freshMe(name.trim(), trimmedEmail), onboarded: false });
+  setState({
+    account: { email: trimmedEmail, password },
+    me: freshMe(name.trim(), trimmedEmail),
+    onboarded: false,
+  });
   await persist();
   return { ok: true };
 }

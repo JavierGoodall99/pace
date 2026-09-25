@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
+import { showPip } from '../../src/components/PipKit';
 import { isPublicSpot, SafetyPanel } from '../../src/components/Sessions';
 import { Badge, Button, Callout, DisplayTitle, ScreenHeader } from '../../src/components/ui';
 import { levelLabel } from '../../src/data/athleteDepth';
@@ -56,7 +57,11 @@ export default function SessionDetailScreen() {
 
           <YStack p={16} gap={12} rounded={22} bg="$card" borderWidth={1} borderColor="$border">
             <Row icon="clock" text={formatWhen(s.date)} />
-            <Row icon="map-pin" text={`${s.place}, ${s.city}`} badge={isPublicSpot(s.place) ? 'Public spot' : undefined} />
+            <Row
+              icon="map-pin"
+              text={`${s.place}, ${s.city}`}
+              badge={isPublicSpot(s.place) ? 'Public spot' : undefined}
+            />
             <Row icon="activity" text={s.distance} />
           </YStack>
 
@@ -82,12 +87,25 @@ export default function SessionDetailScreen() {
                     key={`${String(who)}-${i}`}
                     items="center"
                     gap={4}
-                    onPress={a ? () => router.push({ pathname: '/athlete/[id]', params: { id: String(a.id) } }) : undefined}
+                    onPress={
+                      a
+                        ? () =>
+                            router.push({ pathname: '/athlete/[id]', params: { id: String(a.id) } })
+                        : undefined
+                    }
                   >
                     <PhotoSlot
                       label={name}
                       shape="circle"
-                      source={who === 'me' ? (me.photos[0] ? { uri: me.photos[0] } : ME_AVATAR) : a ? ATHLETE_PHOTOS[a.slotId] : undefined}
+                      source={
+                        who === 'me'
+                          ? me.photos[0]
+                            ? { uri: me.photos[0] }
+                            : ME_AVATAR
+                          : a
+                            ? ATHLETE_PHOTOS[a.slotId]
+                            : undefined
+                      }
                       style={{ width: 56, height: 56 }}
                     />
                     <Text fontSize={12} color="$muted">
@@ -98,7 +116,16 @@ export default function SessionDetailScreen() {
               })}
               {Array.from({ length: Math.max(0, s.spots - s.joined.length) }).map((_, i) => (
                 <YStack key={`open-${i}`} items="center" gap={4}>
-                  <XStack width={56} height={56} rounded={28} borderWidth={2} borderStyle="dashed" borderColor="$borderStrong" items="center" justify="center">
+                  <XStack
+                    width={56}
+                    height={56}
+                    rounded={28}
+                    borderWidth={2}
+                    borderStyle="dashed"
+                    borderColor="$borderStrong"
+                    items="center"
+                    justify="center"
+                  >
                     <Icon name="plus" size={18} color={colors.muted} />
                   </XStack>
                   <Text fontSize={12} color="$muted">
@@ -118,21 +145,42 @@ export default function SessionDetailScreen() {
           />
           {s.spots > 1 ? (
             <Callout icon="users" title="A great first meet">
-              Group sessions keep things easy — meet someone new with others around, then plan a 1-on-1 if it clicks.
+              Group sessions keep things easy — meet someone new with others around, then plan a
+              1-on-1 if it clicks.
             </Callout>
           ) : null}
         </YStack>
       </ScrollView>
 
       {hosting ? null : (
-        <XStack px={20} pt={12} gap={10} bg="$card" borderTopWidth={1} borderTopColor="$border" style={{ paddingBottom: insets.bottom + 12 }}>
+        <XStack
+          px={20}
+          pt={12}
+          gap={10}
+          bg="$card"
+          borderTopWidth={1}
+          borderTopColor="$border"
+          style={{ paddingBottom: insets.bottom + 12 }}
+        >
           {going ? (
             <Button variant="secondary" onPress={() => leaveOpen(s.id)} style={{ flex: 1 }}>
               Leave session
             </Button>
           ) : (
-            <Button icon={full ? undefined : 'check'} disabled={full} onPress={() => joinOpen(s.id)} style={{ flex: 1 }}>
-              {full ? 'Session full' : s.spots > 1 ? 'Join session' : `Ask to join ${host?.name ?? ''}`}
+            <Button
+              icon={full ? undefined : 'check'}
+              disabled={full}
+              onPress={() => {
+                joinOpen(s.id);
+                showPip(`You’re in! See you at ${s.place}. 🙌`);
+              }}
+              style={{ flex: 1 }}
+            >
+              {full
+                ? 'Session full'
+                : s.spots > 1
+                  ? 'Join session'
+                  : `Ask to join ${host?.name ?? ''}`}
             </Button>
           )}
         </XStack>
@@ -141,7 +189,15 @@ export default function SessionDetailScreen() {
   );
 }
 
-function Row({ icon, text, badge }: { icon: 'clock' | 'map-pin' | 'activity'; text: string; badge?: string }) {
+function Row({
+  icon,
+  text,
+  badge,
+}: {
+  icon: 'clock' | 'map-pin' | 'activity';
+  text: string;
+  badge?: string;
+}) {
   const colors = useColors();
   return (
     <XStack items="center" gap={10}>

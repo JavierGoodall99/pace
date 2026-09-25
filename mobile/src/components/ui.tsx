@@ -3,6 +3,7 @@ import { StyleSheet, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Input as TInput, Text, XStack, YStack } from 'tamagui';
 import { Icon, IconName } from './Icon';
+import { Mascot, Mood } from './Mascot';
 import { useColors } from '../theme/appearance';
 import { formatLabel, shadow } from '../theme/tokens';
 
@@ -551,31 +552,24 @@ export function Callout({
   );
 }
 
+// Empty states are Pip's: an empty screen is a moment to guide, not a
+// dead end.
 export function EmptyState({
-  icon,
+  mood = 'thinking',
   title,
   body,
   action,
 }: {
-  icon: IconName;
+  mood?: Mood;
   title: string;
   body: string;
   action?: React.ReactNode;
 }) {
-  const colors = useColors();
   return (
     <YStack items="center" px={32} gap={8}>
-      <XStack
-        width={64}
-        height={64}
-        rounded={32}
-        bg="$accentSoft"
-        items="center"
-        justify="center"
-        mb={8}
-      >
-        <Icon name={icon} size={28} color={colors.accentText} />
-      </XStack>
+      <YStack mb={6}>
+        <Mascot size={110} mood={mood} />
+      </YStack>
       <Text fontFamily="$bold" fontSize={20} lineHeight={26} color="$text" text="center">
         {title}
       </Text>

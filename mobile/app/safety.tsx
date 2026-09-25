@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon, IconName } from '../src/components/Icon';
+import { PipTip } from '../src/components/PipKit';
 import { Callout, ScreenHeader } from '../src/components/ui';
 import { useColors } from '../src/theme/appearance';
 
@@ -53,6 +54,14 @@ export default function SafetyScreen() {
         onBack={() => router.back()}
       />
       <YStack px={20} gap={12} mt={16}>
+        <PipTip
+          dismissible={false}
+          line={{
+            key: 'safety-intro',
+            mood: 'happy',
+            text: 'Training first is safer than a first drink. Here’s how I look out for you. 💪',
+          }}
+        />
         {TIPS.map((t) => (
           <XStack
             key={t.title}

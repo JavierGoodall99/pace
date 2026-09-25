@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Aurora } from '../../src/components/Motif';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
+import { showPip } from '../../src/components/PipKit';
 import { SyncBadge } from '../../src/components/Rhythm';
 import { Button, Callout, DisplayTitle, ScreenHeader } from '../../src/components/ui';
 import { compatibility } from '../../src/data/compat';
@@ -51,6 +52,7 @@ export default function RaceScreen() {
       note: `For everyone racing ${race.name}. All paces welcome.`,
     });
     successHaptic();
+    showPip('Meetup posted! Everyone racing will see it. 🏁');
     router.push({ pathname: '/session/[id]', params: { id: s.id } });
   }
 
@@ -84,7 +86,9 @@ export default function RaceScreen() {
               return (
                 <XStack
                   key={a.id}
-                  onPress={() => router.push({ pathname: '/athlete/[id]', params: { id: String(a.id) } })}
+                  onPress={() =>
+                    router.push({ pathname: '/athlete/[id]', params: { id: String(a.id) } })
+                  }
                   items="center"
                   gap={12}
                   p={12}
@@ -93,7 +97,12 @@ export default function RaceScreen() {
                   borderWidth={1}
                   borderColor="$border"
                 >
-                  <PhotoSlot label={a.name} shape="circle" source={ATHLETE_PHOTOS[a.slotId]} style={{ width: 52, height: 52 }} />
+                  <PhotoSlot
+                    label={a.name}
+                    shape="circle"
+                    source={ATHLETE_PHOTOS[a.slotId]}
+                    style={{ width: 52, height: 52 }}
+                  />
                   <YStack flex={1}>
                     <Text fontFamily="$semibold" fontSize={16} color="$text">
                       {a.name}, {a.age}
@@ -113,9 +122,25 @@ export default function RaceScreen() {
           </Callout>
         </YStack>
       </ScrollView>
-      <YStack px={20} pt={12} gap={10} bg="$card" borderTopWidth={1} borderTopColor="$border" style={{ paddingBottom: insets.bottom + 12 }}>
+      <YStack
+        px={20}
+        pt={12}
+        gap={10}
+        bg="$card"
+        borderTopWidth={1}
+        borderTopColor="$border"
+        style={{ paddingBottom: insets.bottom + 12 }}
+      >
         {mine ? null : (
-          <Button variant="secondary" icon="check" onPress={() => updateMe({ goalRaceId: race.id })} style={{ width: '100%' }}>
+          <Button
+            variant="secondary"
+            icon="check"
+            onPress={() => {
+              updateMe({ goalRaceId: race.id });
+              showPip(`Locked in! ${days} days to ${race.name}. Let’s find you pacers. 🏁`);
+            }}
+            style={{ width: '100%' }}
+          >
             I’m training for this
           </Button>
         )}

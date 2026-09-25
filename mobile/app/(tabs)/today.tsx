@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
+import { PipTip, showPip } from '../../src/components/PipKit';
 import { GoalCard } from '../../src/components/Proof';
 import { CheckInCard, SessionCard } from '../../src/components/Sessions';
 import { useTabBarSpace } from '../../src/components/TabBar';
@@ -13,9 +14,13 @@ import {
   checkIn,
   checkInOutcome,
   effectiveStatus,
+  dropActions,
   respondToInvite,
   usePlans,
 } from '../../src/data/plans';
+import { weeklyPacers } from '../../src/data/pacers';
+import { todayLine } from '../../src/data/pip';
+import { useSocial } from '../../src/data/social';
 import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { rhythmForMe, WEEK_DAY_NAMES } from '../../src/data/rhythm';
 import { useMe } from '../../src/data/session';
@@ -71,6 +76,9 @@ export default function TodayScreen() {
   });
 
   const goal = raceById(me.goalRaceId);
+  const { blocked } = useSocial();
+  const actions = dropActions(state, now);
+  const pacersLeft = weeklyPacers(me, blocked, now).filter((p) => !actions[p.athlete.id]).length;
 
   return (
     <ScrollView
@@ -149,7 +157,11 @@ export default function TodayScreen() {
         <Legend dotBg="$borderStrong" label="Your training day" />
       </XStack>
 
-      <YStack px={20} gap={14} mt={24}>
+      <YStack px={20} mt={20}>
+        <PipTip line={todayLine(me, state.plans, pacersLeft, now)} />
+      </YStack>
+
+      <YStack px={20} gap={14} mt={20}>
         {toCheckIn.map((p) => (
           <CheckInCard
             key={p.id}
@@ -188,7 +200,10 @@ export default function TodayScreen() {
                 </Button>
                 <Button
                   icon="check"
-                  onPress={() => respondToInvite(p.id, true)}
+                  onPress={() => {
+                    respondToInvite(p.id, true);
+                    showPip(`It’s on! ${a?.name ?? 'Your session'} is in your week. ✅`);
+                  }}
                   style={{ flex: 1, height: 44 }}
                 >
                   I’m in

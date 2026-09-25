@@ -2,8 +2,15 @@ import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Slider, Text, XStack, YStack } from 'tamagui';
-import { Icon } from '../src/components/Icon';
-import { Chip, IconButton, ToggleRow } from '../src/components/ui';
+import {
+  Button,
+  Card,
+  Chip,
+  ScreenHeader,
+  SectionTitle,
+  TextAction,
+  ToggleRow,
+} from '../src/components/ui';
 import {
   AGE_RANGE,
   AVAILABILITY_OPTIONS,
@@ -12,7 +19,6 @@ import {
   setFilters,
   useFilters,
 } from '../src/data/filters';
-import { colors } from '../src/theme/tokens';
 
 export default function DiscoverFiltersScreen() {
   const insets = useSafeAreaInsets();
@@ -38,125 +44,124 @@ export default function DiscoverFiltersScreen() {
   }
 
   return (
-    <YStack flex={1} bg="$ink">
-      <XStack items="center" gap={12} px={20} pb={12} pt={insets.top + 8} borderBottomWidth={1} borderBottomColor="$line">
-        <IconButton size={40} onPress={() => router.back()}>
-          <Icon name="chevron-left" size={14} color={colors.bone} />
-        </IconButton>
-        <Text flex={1} fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30}>
-          Filters
-        </Text>
-        <XStack onPress={resetFilters} py={4} px={4} hitSlop={8}>
-          <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$ember" textTransform="uppercase">
-            Reset
-          </Text>
-        </XStack>
-      </XStack>
+    <YStack flex={1} bg="$canvas">
+      <ScreenHeader
+        title="Refine your *search*"
+        onBack={() => router.back()}
+        action={<TextAction onPress={resetFilters}>Reset</TextAction>}
+      />
 
-      <ScrollView flex={1} contentContainerStyle={{ p: 20, gap: 28, pb: insets.bottom + 24 }} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        flex={1}
+        contentContainerStyle={{ p: 20, gap: 28, pb: insets.bottom + 24 }}
+        keyboardShouldPersistTaps="handled"
+      >
         <YStack>
-          <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone" mb={10}>
-            AGE RANGE
-          </Text>
-          <YStack gap={4}>
-            <XStack justify="space-between">
-              <Text fontFamily="$mono" fontSize={10} letterSpacing={1} color="$fog">
-                MIN {f.ageMin}
-              </Text>
-              <Text fontFamily="$mono" fontSize={10} letterSpacing={1} color="$fog">
-                MAX {f.ageMax}
-              </Text>
-            </XStack>
-            <Slider
-              value={ageMinValue}
-              min={AGE_RANGE.min}
-              max={AGE_RANGE.max}
-              step={1}
-              onValueChange={([v]) => setAgeMin(v)}
-            >
-              <Slider.Track>
-                <Slider.TrackActive />
-              </Slider.Track>
-              <Slider.Thumb index={0} />
-            </Slider>
-            <Slider
-              value={ageMaxValue}
-              min={AGE_RANGE.min}
-              max={AGE_RANGE.max}
-              step={1}
-              onValueChange={([v]) => setAgeMax(v)}
-            >
-              <Slider.Track>
-                <Slider.TrackActive />
-              </Slider.Track>
-              <Slider.Thumb index={0} />
-            </Slider>
-          </YStack>
+          <XStack items="baseline" justify="space-between">
+            <SectionTitle>Age range</SectionTitle>
+            <Text fontFamily="$semibold" fontSize={15} color="$accentText">
+              {f.ageMin} – {f.ageMax}
+            </Text>
+          </XStack>
+          <Card py={14}>
+            <YStack gap={14}>
+              <AgeSlider label="Youngest" value={ageMinValue} onChange={setAgeMin} />
+              <AgeSlider label="Oldest" value={ageMaxValue} onChange={setAgeMax} />
+            </YStack>
+          </Card>
         </YStack>
 
         <YStack>
-          <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone" mb={10}>
-            MATCH RADIUS
-          </Text>
+          <SectionTitle hint="Simulated from your city until real location data lands.">
+            Distance
+          </SectionTitle>
           <XStack flexWrap="wrap" gap={8}>
-            <Chip label="ANYWHERE" selected={f.radiusKm == null} onPress={() => setFilters({ radiusKm: null })} />
+            <Chip
+              label="Anywhere"
+              selected={f.radiusKm == null}
+              onPress={() => setFilters({ radiusKm: null })}
+            />
             {RADIUS_OPTIONS.map((o) => (
               <Chip
                 key={o.km}
-                label={o.label}
+                label={`Within ${o.km} km`}
                 selected={f.radiusKm === o.km}
                 onPress={() => setFilters({ radiusKm: o.km })}
               />
             ))}
           </XStack>
-          <Text fontSize={11} color="$fog" opacity={0.8} mt={8} lineHeight={16}>
-            Demo map: radius is simulated from your city until real location data lands.
-          </Text>
         </YStack>
 
         <YStack>
-          <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$bone" mb={10}>
-            AVAILABILITY
-          </Text>
+          <SectionTitle>Availability</SectionTitle>
           <XStack flexWrap="wrap" gap={8}>
             {AVAILABILITY_OPTIONS.map((t) => (
-              <Chip key={t} label={t} selected={f.times.includes(t)} onPress={() => toggleTime(t)} />
+              <Chip
+                key={t}
+                label={t}
+                selected={f.times.includes(t)}
+                onPress={() => toggleTime(t)}
+              />
             ))}
           </XStack>
         </YStack>
 
-        <YStack rounded={16} borderWidth={1} borderColor="$line" bg="$ash" px={16} overflow="hidden">
+        <Card>
           <ToggleRow
             label="Verified only"
-            hint="Only show cards with the verified badge"
+            hint="Only show people with the verified badge"
+            last
             value={f.verifiedOnly}
             onChange={(v) => setFilters({ verifiedOnly: v })}
           />
-        </YStack>
+        </Card>
 
-        <ButtonRow onPress={() => router.back()} />
+        <Button icon="check" onPress={() => router.back()} style={{ width: '100%' }}>
+          Show results
+        </Button>
       </ScrollView>
     </YStack>
   );
 }
 
-function ButtonRow({ onPress }: { onPress: () => void }) {
+function AgeSlider({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number[];
+  onChange: (v: number) => void;
+}) {
   return (
-    <XStack
-      onPress={onPress}
-      height={52}
-      rounded="$full"
-      items="center"
-      justify="center"
-      bg="$ember"
-      pressStyle={{ opacity: 0.85 }}
-    >
-      <XStack items="center" gap={8}>
-        <Icon name="check" size={14} color={colors.ink} />
-        <Text fontFamily="$mono" fontSize={12} letterSpacing={2} color="$ink" textTransform="uppercase" fontWeight="700">
-          Apply Filters
+    <YStack gap={10}>
+      <XStack justify="space-between">
+        <Text fontFamily="$medium" fontSize={14} color="$muted">
+          {label}
+        </Text>
+        <Text fontFamily="$semibold" fontSize={14} color="$text">
+          {value[0]}
         </Text>
       </XStack>
-    </XStack>
+      <Slider
+        value={value}
+        min={AGE_RANGE.min}
+        max={AGE_RANGE.max}
+        step={1}
+        onValueChange={([v]) => onChange(v)}
+      >
+        <Slider.Track bg="$surface" height={6}>
+          <Slider.TrackActive bg="$accent" />
+        </Slider.Track>
+        <Slider.Thumb
+          index={0}
+          size="$1.5"
+          circular
+          bg="$card"
+          borderWidth={2}
+          borderColor="$accent"
+        />
+      </Slider>
+    </YStack>
   );
 }

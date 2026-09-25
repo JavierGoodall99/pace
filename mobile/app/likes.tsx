@@ -1,13 +1,12 @@
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
-import { Icon } from '../src/components/Icon';
 import { PhotoSlot } from '../src/components/PhotoSlot';
-import { IconButton } from '../src/components/ui';
+import { Button, EmptyState, ScreenHeader } from '../src/components/ui';
 import { athleteById } from '../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../src/data/photos';
 import { likeBack, passOn, useSocial } from '../src/data/social';
-import { colors } from '../src/theme/tokens';
+import { formatLabel, shadow } from '../src/theme/tokens';
 
 export default function LikesScreen() {
   const insets = useSafeAreaInsets();
@@ -27,29 +26,25 @@ export default function LikesScreen() {
   }
 
   return (
-    <YStack flex={1} bg="$ink">
-      <XStack items="center" gap={12} px={20} pb={12} pt={insets.top + 8} borderBottomWidth={1} borderBottomColor="$line">
-        <IconButton size={40} onPress={() => router.back()}>
-          <Icon name="chevron-left" size={14} color={colors.bone} />
-        </IconButton>
-        <Text flex={1} fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30}>
-          Likes
-        </Text>
-        <Text fontFamily="$mono" fontSize={10} letterSpacing={1} color="$fog">
-          {likes.length} PENDING
-        </Text>
-      </XStack>
+    <YStack flex={1} bg="$canvas">
+      <ScreenHeader
+        title="Who *likes* you"
+        subtitle={
+          likes.length > 0
+            ? `${likes.length} ${likes.length === 1 ? 'person likes' : 'people like'} you`
+            : undefined
+        }
+        onBack={() => router.back()}
+      />
 
-      <ScrollView flex={1} contentContainerStyle={{ p: 20, gap: 10, pb: insets.bottom + 24 }}>
+      <ScrollView flex={1} contentContainerStyle={{ p: 20, gap: 12, pb: insets.bottom + 24 }}>
         {likes.length === 0 ? (
-          <YStack items="center" px={40} gap={10} mt={80}>
-            <Icon name="bell" size={28} color={colors.ember} />
-            <Text fontFamily="$display" fontSize={22} color="$bone" textTransform="uppercase" mt={8} text="center">
-              All caught up
-            </Text>
-            <Text color="$fog" fontSize={13} lineHeight={20} text="center">
-              Nobody new has liked you. Keep training — your next admirer is one session away.
-            </Text>
+          <YStack mt={60}>
+            <EmptyState
+              icon="heart"
+              title="You're all caught up"
+              body="Nobody new has liked you yet. Keep training — your next match is one session away."
+            />
           </YStack>
         ) : null}
 
@@ -60,52 +55,45 @@ export default function LikesScreen() {
             <YStack
               key={id}
               p={14}
-              rounded={16}
+              rounded={24}
               borderWidth={1}
-              borderColor="$line"
-              bg="$ash"
-              gap={12}
+              borderColor="$border"
+              bg="$card"
+              gap={14}
+              style={shadow.card}
             >
-              <XStack items="center" gap={12}>
-                <PhotoSlot label={a.name} shape="circle" source={ATHLETE_PHOTOS[a.slotId]} style={{ width: 56, height: 56 }} />
+              <XStack items="center" gap={14}>
+                <PhotoSlot
+                  label={a.name}
+                  shape="circle"
+                  source={ATHLETE_PHOTOS[a.slotId]}
+                  style={{ width: 60, height: 60 }}
+                />
                 <YStack flex={1} minW={0}>
-                  <Text fontFamily="$mono" fontSize={12} letterSpacing={0.5} color="$bone" textTransform="uppercase">
+                  <Text fontFamily="$semibold" fontSize={17} color="$text">
                     {a.name}, {a.age}
                   </Text>
-                  <Text fontFamily="$mono" fontSize={9} letterSpacing={1} color="$fog" mt={3}>
-                    {a.discipline} · {a.city}
+                  <Text fontSize={14} color="$muted" mt={2} numberOfLines={1}>
+                    {formatLabel(a.discipline)} · {a.city}
                   </Text>
                 </YStack>
               </XStack>
-              <XStack gap={8}>
-                <XStack
-                  flex={1}
-                  height={40}
-                  rounded="$full"
-                  borderWidth={1}
-                  items="center"
-                  justify="center"
-                  bg="$coal"
-                  borderColor="$line"
+              <XStack gap={10}>
+                <Button
+                  variant="secondary"
+                  icon="x"
                   onPress={() => respond(a.id, false)}
+                  style={{ flex: 1, height: 46 }}
                 >
-                  <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} fontWeight="700" color="$fog">
-                    PASS
-                  </Text>
-                </XStack>
-                <XStack
-                  flex={1}
-                  height={40}
-                  rounded="$full"
-                  items="center"
-                  justify="center"
-                  bg="$ember"
+                  Pass
+                </Button>
+                <Button
+                  icon="heart"
                   onPress={() => respond(a.id, true)}
+                  style={{ flex: 1, height: 46 }}
                 >
-                  <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} fontWeight="700" color="$ink">
-                    LIKE BACK
-                  </Text>
-                </XStack>
+                  Like back
+                </Button>
               </XStack>
             </YStack>
           );

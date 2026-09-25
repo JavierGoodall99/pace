@@ -1,43 +1,62 @@
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
-import { Icon } from '../../src/components/Icon';
+import { Icon, IconName } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
-import { Badge } from '../../src/components/ui';
+import { GoalCard, Heatmap, PersonalBests, PromptCard } from '../../src/components/Proof';
+import { RhythmStrip } from '../../src/components/Rhythm';
+import { useTabBarSpace } from '../../src/components/TabBar';
+import { Badge, Button, DisplayTitle } from '../../src/components/ui';
+import { rhythmForMe, WEEK_DAY_NAMES } from '../../src/data/rhythm';
+import { levelLabel } from '../../src/data/athleteDepth';
+import { effectiveStatus, usePlans } from '../../src/data/plans';
+import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { ME_AVATAR, ME_COVER, TRAINING_PHOTOS } from '../../src/data/photos';
 import { useMe } from '../../src/data/session';
 import { useSocial } from '../../src/data/social';
-import { colors } from '../../src/theme/tokens';
-
-const STATS = [
-  { value: '42KM', label: 'WEEKLY VOL.' },
-  { value: '5', label: 'SESSIONS/WK' },
-  { value: '94%', label: 'PROFILE MATCH' },
-];
+import { useColors } from '../../src/theme/appearance';
+import { shadow } from '../../src/theme/tokens';
 
 export default function ProfileScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
+  const tabBarSpace = useTabBarSpace();
   const router = useRouter();
   const me = useMe();
   const { matches, likes } = useSocial();
 
   const avatar = me.photos[0] ? { uri: me.photos[0] } : ME_AVATAR;
   const primary = me.disciplines[0] ?? 'ATHLETE';
-  const photoTiles: (string | null)[] = [me.photos[0] ?? null, me.photos[1] ?? null, me.photos[2] ?? null];
+  const myRhythm = rhythmForMe(me.cadence, me.trainingDays);
+  const myDays = myRhythm.map((on, i) => (on ? WEEK_DAY_NAMES[i] : null)).filter(Boolean);
+  const plansState = usePlans();
+  const sessionsDone = plansState.plans.filter((p) => effectiveStatus(p) === 'done').length;
+  const STATS = [
+    { value: String(myDays.length), label: 'Days / week' },
+    { value: me.level ? levelLabel(me.level).split(' ')[0] : '—', label: 'Effort' },
+    { value: String(sessionsDone), label: 'Sessions' },
+  ];
+  const goal = raceById(me.goalRaceId);
+  const photoTiles: (string | null)[] = [
+    me.photos[0] ?? null,
+    me.photos[1] ?? null,
+    me.photos[2] ?? null,
+  ];
 
   return (
-    <ScrollView flex={1} bg="$ink" contentContainerStyle={{ pb: 24 }}>
+    <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: tabBarSpace + 16 }}>
       <YStack>
         <PhotoSlot
           label="Cover photo"
           shape="rect"
           source={ME_COVER}
-          style={{ width: '100%', height: 160, marginTop: insets.top }}
+          style={{ width: '100%', height: 180 + insets.top }}
         />
         <XStack
           accessibilityRole="button"
           accessibilityLabel="Settings"
           onPress={() => router.push('/settings')}
+          pressStyle={{ opacity: 0.8 }}
           position="absolute"
           t={insets.top + 12}
           r={16}
@@ -46,141 +65,252 @@ export default function ProfileScreen() {
           rounded={20}
           items="center"
           justify="center"
-          bg="rgba(10,10,13,0.55)"
-          borderWidth={1}
-          borderColor="$lineHover"
+          bg="$glass"
         >
-          <Icon name="settings" size={18} color={colors.bone} />
+          <Icon name="settings" size={20} color={colors.text} />
         </XStack>
       </YStack>
 
-      <YStack px={20} mt={-40}>
-        <PhotoSlot
-          label={me.name}
-          shape="circle"
-          source={avatar}
-          style={{ width: 84, height: 84, borderWidth: 3, borderColor: colors.ink }}
-        />
-        <Text fontFamily="$display" fontSize={30} color="$bone" textTransform="uppercase" lineHeight={30} mt={14}>
-          {me.name || 'You'}
-        </Text>
-        <XStack items="center" gap={8} mt={8}>
-          {me.verified ? (
-            <>
-              <Icon name="shield-check" size={13} color={colors.ember} />
-              <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$ember" textTransform="uppercase">
-                Verified · {me.city || 'City TBD'}
-              </Text>
-            </>
-          ) : (
-            <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$fog" textTransform="uppercase">
-              {me.city || 'Location'} · Unverified
-            </Text>
-          )}
+      <YStack px={20} mt={-48}>
+        <XStack items="flex-end" justify="space-between">
+          <YStack p={3} rounded={54} bg="$canvas" borderWidth={2} borderColor="$accent">
+            <PhotoSlot
+              label={me.name}
+              shape="circle"
+              source={avatar}
+              style={{ width: 96, height: 96 }}
+            />
+          </YStack>
+          <Button
+            variant="ghost"
+            icon="pencil"
+            onPress={() => router.push('/edit-profile')}
+            style={{ height: 40, paddingHorizontal: 16 }}
+          >
+            Edit profile
+          </Button>
         </XStack>
-        <Text color="$fog" fontSize={13} lineHeight={20} my={14}>
-          {me.bio || 'No bio yet — add one in Edit Profile.'}
+
+        <XStack items="center" gap={8} mt={12}>
+          <DisplayTitle size={44}>{me.name || 'You'}</DisplayTitle>
+          {me.verified ? (
+            <Icon name="shield-check" size={20} color={colors.accentText} strokeWidth={2} />
+          ) : null}
+        </XStack>
+        <XStack items="center" gap={5} mt={4}>
+          <Icon name="map-pin" size={14} color={colors.muted} />
+          <Text fontFamily="$medium" fontSize={14} color="$muted">
+            {me.city || 'Add your city'}
+            {me.verified ? ' · Verified' : ' · Not verified yet'}
+          </Text>
+        </XStack>
+        <Text color="$text" fontSize={15} lineHeight={22} mt={14}>
+          {me.bio || 'No bio yet — add one in Edit profile.'}
         </Text>
-        <XStack gap={8} mb={18}>
+        <XStack gap={8} mt={14} flexWrap="wrap">
           <Badge tone="accent">{primary}</Badge>
           {me.cadence ? <Badge>{me.cadence}</Badge> : null}
         </XStack>
 
-        <XStack gap={10} mb={20}>
-          {STATS.map((s) => (
-            <YStack key={s.label} flex={1} items="center" py={14} px={8} rounded={16} borderWidth={1} borderColor="$line" bg="$ash">
-              <Text fontFamily="$display" fontSize={22} color="$bone">
+        <XStack
+          mt={24}
+          py={16}
+          rounded={20}
+          borderWidth={1}
+          borderColor="$border"
+          bg="$card"
+          style={shadow.card}
+        >
+          {STATS.map((s, i) => (
+            <YStack
+              key={s.label}
+              flex={1}
+              items="center"
+              borderLeftWidth={i === 0 ? 0 : 1}
+              borderLeftColor="$border"
+            >
+              <Text fontFamily="$display" fontSize={32} lineHeight={36} color="$text">
                 {s.value}
               </Text>
-              <Text fontFamily="$mono" fontSize={9} color="$fog" letterSpacing={1} mt={4}>
+              <Text fontSize={13} color="$muted" mt={2}>
                 {s.label}
               </Text>
             </YStack>
           ))}
         </XStack>
 
-        <XStack gap={10} mb={24}>
-          <YStack
-            flex={1}
+        <YStack
+          mt={12}
+          p={16}
+          gap={12}
+          rounded={20}
+          borderWidth={1}
+          borderColor="$border"
+          bg="$card"
+        >
+          <XStack items="baseline" justify="space-between">
+            <DisplayTitle size={26}>Your *week*</DisplayTitle>
+            <Text fontFamily="$medium" fontSize={13} color="$muted">
+              {myDays.length} days
+            </Text>
+          </XStack>
+          <RhythmStrip mine={myRhythm} theirs={myRhythm} height={34} />
+          <Text fontSize={13} color="$muted">
+            We match you with people who train on {myDays.slice(0, 3).join(', ')} and more.
+          </Text>
+        </YStack>
+
+        <YStack mt={12}>
+          {goal ? (
+            <GoalCard
+              race={goal}
+              others={athletesTrainingFor(goal.id).length}
+              mine
+              onPress={() => router.push({ pathname: '/race/[id]', params: { id: goal.id } })}
+            />
+          ) : (
+            <Button
+              variant="ghost"
+              icon="plus"
+              onPress={() => router.push('/races')}
+              style={{ width: '100%' }}
+            >
+              Add a race you’re training for
+            </Button>
+          )}
+        </YStack>
+
+        <YStack mt={12} p={16} rounded={20} borderWidth={1} borderColor="$border" bg="$card">
+          <Heatmap rhythm={myRhythm} seed={3} />
+        </YStack>
+
+        {me.pbs.length ? (
+          <YStack mt={12}>
+            <PersonalBests pbs={me.pbs} />
+          </YStack>
+        ) : null}
+
+        {me.prompts.map((p) => (
+          <YStack key={p.q} mt={12}>
+            <PromptCard prompt={p} />
+          </YStack>
+        ))}
+
+        <XStack gap={10} mt={12}>
+          <QuickLink
+            icon="users"
+            label="Matches"
+            count={matches.length}
             onPress={() => router.push('/matches')}
-            pressStyle={{ opacity: 0.7 }}
-            items="center"
-            gap={6}
-            py={14}
-            rounded={16}
-            borderWidth={1}
-            borderColor="$line"
-            bg="$ash"
-          >
-            <Text fontFamily="$display" fontSize={26} color="$bone">
-              {matches.length}
-            </Text>
-            <Text fontFamily="$mono" fontSize={9} color="$fog" letterSpacing={1.5}>
-              MATCHES
-            </Text>
-          </YStack>
-          <YStack
-            flex={1}
+          />
+          <QuickLink
+            icon="heart"
+            label="Likes"
+            count={likes.length}
+            highlight={likes.length > 0}
             onPress={() => router.push('/likes')}
-            pressStyle={{ opacity: 0.7 }}
-            items="center"
-            gap={6}
-            py={14}
-            rounded={16}
-            borderWidth={1}
-            borderColor={likes.length > 0 ? '$emberBorder' : '$line'}
-            bg={likes.length > 0 ? '$emberSoft' : '$ash'}
-          >
-            <Text fontFamily="$display" fontSize={26} color={likes.length > 0 ? '$ember' : '$bone'}>
-              {likes.length}
-            </Text>
-            <Text fontFamily="$mono" fontSize={9} color={likes.length > 0 ? '$ember' : '$fog'} letterSpacing={1.5}>
-              LIKES
-            </Text>
-          </YStack>
-          <YStack
-            flex={1}
-            onPress={() => router.push('/edit-profile')}
-            pressStyle={{ opacity: 0.7 }}
-            items="center"
-            justify="center"
-            gap={6}
-            py={14}
-            rounded={16}
-            borderWidth={1}
-            borderColor="$line"
-            bg="$ash"
-          >
-            <Icon name="user" size={20} color={colors.fog} />
-            <Text fontFamily="$mono" fontSize={9} color="$fog" letterSpacing={1.5}>
-              EDIT
-            </Text>
-          </YStack>
+          />
         </XStack>
 
-        <Text fontFamily="$mono" fontSize={10} letterSpacing={2} color="$fog">
-          TRAINING PHOTOS
-        </Text>
-        <XStack gap={8} mt={10}>
+        <XStack items="center" justify="space-between" mt={28} mb={12}>
+          <Text fontFamily="$semibold" fontSize={17} color="$text">
+            Training photos
+          </Text>
+          <Text fontFamily="$medium" fontSize={14} color="$muted">
+            {photoTiles.filter(Boolean).length || 3} of 3
+          </Text>
+        </XStack>
+        <XStack gap={8}>
           {photoTiles.map((uri, i) => (
             <PhotoSlot
               key={i}
               label="Photo"
               shape="rounded"
+              radius={16}
               source={uri ? { uri } : TRAINING_PHOTOS[i]}
-              style={{ flex: 1, aspectRatio: 1 }}
+              style={{ flex: 1, aspectRatio: 0.8 }}
             />
           ))}
         </XStack>
 
         {__DEV__ ? (
-          <XStack onPress={() => router.push('/onboarding')} mt={24} py={12} rounded={12} borderWidth={1} borderColor="$line" borderStyle="dashed" items="center">
-            <Text fontFamily="$mono" fontSize={10} letterSpacing={1.5} color="$fog">
-              DEV · VIEW ONBOARDING
+          <XStack
+            onPress={() => router.push('/onboarding')}
+            mt={24}
+            py={12}
+            rounded={14}
+            borderWidth={1}
+            borderColor="$borderStrong"
+            borderStyle="dashed"
+            justify="center"
+          >
+            <Text fontFamily="$medium" fontSize={13} color="$muted">
+              Dev · View onboarding
             </Text>
           </XStack>
         ) : null}
       </YStack>
     </ScrollView>
+  );
+}
+
+function QuickLink({
+  icon,
+  label,
+  count,
+  highlight = false,
+  onPress,
+}: {
+  icon: IconName;
+  label: string;
+  count: number;
+  highlight?: boolean;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  return (
+    <XStack
+      flex={1}
+      accessibilityRole="button"
+      onPress={onPress}
+      pressStyle={{ opacity: 0.8 }}
+      items="center"
+      gap={12}
+      p={14}
+      rounded={20}
+      borderWidth={1}
+      borderColor={highlight ? '$accentBorder' : '$border'}
+      bg={highlight ? '$accentSoft' : '$card'}
+    >
+      <XStack
+        width={40}
+        height={40}
+        rounded={12}
+        items="center"
+        justify="center"
+        bg={highlight ? '$card' : '$surface'}
+      >
+        <Icon
+          name={icon}
+          size={20}
+          color={highlight ? colors.accentText : colors.text}
+          filled={highlight && icon === 'heart'}
+        />
+      </XStack>
+      <YStack flex={1}>
+        <Text
+          fontFamily="$bold"
+          fontSize={18}
+          lineHeight={22}
+          color={highlight ? '$accentText' : '$text'}
+        >
+          {count}
+        </Text>
+        <Text fontSize={13} color="$muted">
+          {label}
+        </Text>
+      </YStack>
+      <Icon name="chevron-right" size={18} color={colors.muted} />
+    </XStack>
   );
 }

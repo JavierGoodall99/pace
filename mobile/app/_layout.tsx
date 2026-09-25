@@ -1,31 +1,39 @@
-import { Anton_400Regular, useFonts as useAnton } from '@expo-google-fonts/anton';
 import {
-  Archivo_400Regular,
-  Archivo_600SemiBold,
-  useFonts as useArchivo,
-} from '@expo-google-fonts/archivo';
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+  useFonts,
+} from '@expo-google-fonts/plus-jakarta-sans';
 import {
-  JetBrainsMono_400Regular,
-  JetBrainsMono_700Bold,
-  useFonts as useJetBrainsMono,
-} from '@expo-google-fonts/jetbrains-mono';
+  InstrumentSerif_400Regular,
+  InstrumentSerif_400Regular_Italic,
+} from '@expo-google-fonts/instrument-serif';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { TamaguiProvider } from 'tamagui';
-import { colors } from '../src/theme/tokens';
+import { TamaguiProvider, Theme } from 'tamagui';
+import { useAppearance } from '../src/theme/appearance';
+import { palettes } from '../src/theme/tokens';
 import tamaguiConfig from '../tamagui.config';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
-  const [antonLoaded] = useAnton({ Anton_400Regular });
-  const [archivoLoaded] = useArchivo({ Archivo_400Regular, Archivo_600SemiBold });
-  const [monoLoaded] = useJetBrainsMono({ JetBrainsMono_400Regular, JetBrainsMono_700Bold });
-
-  const fontsLoaded = antonLoaded && archivoLoaded && monoLoaded;
+  const [fontsLoaded] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
+    InstrumentSerif_400Regular,
+    InstrumentSerif_400Regular_Italic,
+  });
+  const { scheme } = useAppearance();
+  const colors = palettes[scheme];
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -39,34 +47,42 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <TamaguiProvider config={tamaguiConfig} defaultTheme="dark">
-        <StatusBar style="light" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.ink },
-          }}
-        >
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="(auth)/sign-in" />
-          <Stack.Screen name="(auth)/sign-up" />
-          <Stack.Screen name="(auth)/forgot-password" />
-          <Stack.Screen name="athlete/[id]" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="thread/[athleteId]" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="match/[athleteId]" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="edit-profile" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="matches" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="likes" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="connect/[provider]" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="verify" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="discover-filters" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="settings" />
-          <Stack.Screen name="settings-preferences" />
-          <Stack.Screen name="settings-notifications" />
-          <Stack.Screen name="settings-privacy" />
-          <Stack.Screen name="settings-subscription" />
-          <Stack.Screen name="notifications" />
-        </Stack>
+      <TamaguiProvider config={tamaguiConfig} defaultTheme={scheme}>
+        <Theme name={scheme}>
+          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.canvas },
+            }}
+          >
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)/sign-in" />
+            <Stack.Screen name="(auth)/sign-up" />
+            <Stack.Screen name="(auth)/forgot-password" />
+            <Stack.Screen name="athlete/[id]" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="thread/[athleteId]" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="match/[athleteId]" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="edit-profile" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="matches" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="likes" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="connect/[provider]" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="verify" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="discover-filters" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="settings" />
+            <Stack.Screen name="settings-preferences" />
+            <Stack.Screen name="settings-notifications" />
+            <Stack.Screen name="settings-privacy" />
+            <Stack.Screen name="settings-subscription" />
+            <Stack.Screen name="notifications" />
+            <Stack.Screen name="invite/[athleteId]" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="session/[id]" />
+            <Stack.Screen name="session-new" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="races" />
+            <Stack.Screen name="race/[id]" />
+            <Stack.Screen name="safety" />
+          </Stack>
+        </Theme>
       </TamaguiProvider>
     </SafeAreaProvider>
   );

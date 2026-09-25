@@ -1,5 +1,6 @@
 import React from 'react';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import { useColors } from '../theme/appearance';
 
 // Path data ported from `../assets/icons/*.svg` (lucide-style, 24x24 viewBox).
 export type IconName =
@@ -25,22 +26,36 @@ export type IconName =
   | 'user'
   | 'mail'
   | 'upload'
-  | 'ban';
+  | 'ban'
+  | 'sparkles'
+  | 'message-circle'
+  | 'calendar'
+  | 'clock'
+  | 'send'
+  | 'sliders'
+  | 'plus'
+  | 'pencil'
+  | 'camera';
 
 interface IconProps {
   name: IconName;
   size?: number;
   color?: string;
+  strokeWidth?: number;
+  // Solid fill in the stroke color — used for "on" states like a liked heart.
+  filled?: boolean;
 }
 
-export function Icon({ name, size = 20, color = '#8f8d97' }: IconProps) {
+export function Icon({ name, size = 20, color, strokeWidth = 1.8, filled = false }: IconProps) {
+  const colors = useColors();
+  const tint = color ?? colors.muted;
   const common = {
     width: size,
     height: size,
     viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: color,
-    strokeWidth: 2,
+    fill: filled ? tint : 'none',
+    stroke: tint,
+    strokeWidth,
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
   };
@@ -207,6 +222,80 @@ export function Icon({ name, size = 20, color = '#8f8d97' }: IconProps) {
         <Svg {...common}>
           <Circle cx="12" cy="12" r="10" />
           <Path d="m4.9 4.9 14.2 14.2" />
+        </Svg>
+      );
+    case 'sparkles':
+      return (
+        <Svg {...common}>
+          <Path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+          <Path d="M20 3v4" />
+          <Path d="M22 5h-4" />
+          <Path d="M4 17v2" />
+          <Path d="M5 18H3" />
+        </Svg>
+      );
+    case 'message-circle':
+      return (
+        <Svg {...common}>
+          <Path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+        </Svg>
+      );
+    case 'calendar':
+      return (
+        <Svg {...common}>
+          <Rect width="18" height="18" x="3" y="4" rx="2" />
+          <Path d="M8 2v4" />
+          <Path d="M16 2v4" />
+          <Path d="M3 10h18" />
+        </Svg>
+      );
+    case 'clock':
+      return (
+        <Svg {...common}>
+          <Circle cx="12" cy="12" r="10" />
+          <Path d="M12 6v6l4 2" />
+        </Svg>
+      );
+    case 'send':
+      return (
+        <Svg {...common}>
+          <Path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" />
+          <Path d="m21.854 2.147-10.94 10.939" />
+        </Svg>
+      );
+    case 'sliders':
+      return (
+        <Svg {...common}>
+          <Path d="M21 4h-7" />
+          <Path d="M10 4H3" />
+          <Path d="M21 12h-9" />
+          <Path d="M8 12H3" />
+          <Path d="M21 20h-5" />
+          <Path d="M12 20H3" />
+          <Path d="M14 2v4" />
+          <Path d="M8 10v4" />
+          <Path d="M16 18v4" />
+        </Svg>
+      );
+    case 'plus':
+      return (
+        <Svg {...common}>
+          <Path d="M5 12h14" />
+          <Path d="M12 5v14" />
+        </Svg>
+      );
+    case 'pencil':
+      return (
+        <Svg {...common}>
+          <Path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+          <Path d="m15 5 4 4" />
+        </Svg>
+      );
+    case 'camera':
+      return (
+        <Svg {...common}>
+          <Path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+          <Circle cx="12" cy="13" r="3" />
         </Svg>
       );
     default:

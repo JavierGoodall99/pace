@@ -1,149 +1,83 @@
 import { defaultConfig } from '@tamagui/config/v4';
 import { createFont, createTamagui } from 'tamagui';
-import { colors, fonts as fontFamilies, radius as appRadius, spacing } from './src/theme/tokens';
+import {
+  fonts as fontFamilies,
+  Palette,
+  palettes,
+  radius as appRadius,
+  spacing,
+} from './src/theme/tokens';
 
-// Tamagui design tokens, themed onto the app's existing dark design
-// (see `src/theme/tokens.ts`). The v4 config carries colors inside
-// themes rather than tokens, so the brand palette is exposed as theme
-// keys (`$ember`, `$coal`, ...) that any Tamagui component can use.
+// Tamagui design tokens for the app's light and dark themes (see
+// `src/theme/tokens.ts`). The v4 config carries colors inside themes
+// rather than tokens, so the palette is exposed as theme keys
+// (`$accent`, `$card`, `$muted`, ...) that any Tamagui component can use.
 
-const displayFont = createFont({
-  family: fontFamilies.display,
-  size: {
-    1: 24,
-    2: 28,
-    3: 32,
-    4: 40,
-    5: 48,
-    6: 60,
-    7: 72,
-    8: 92,
-    9: 114,
-    true: 32,
-  },
-  lineHeight: {
-    1: 24,
-    2: 28,
-    3: 32,
-    4: 40,
-    5: 48,
-    6: 60,
-    7: 72,
-    8: 92,
-    9: 114,
-    true: 32,
-  },
-  weight: {
-    400: '400',
-  },
-  letterSpacing: {
-    0: 0,
-  },
-  face: {
-    400: { normal: fontFamilies.display },
-  },
-});
+const size = {
+  1: 11,
+  2: 12,
+  3: 13,
+  4: 14,
+  5: 15,
+  6: 16,
+  7: 18,
+  8: 20,
+  9: 24,
+  10: 28,
+  11: 34,
+  true: 15,
+};
 
-const bodyFont = createFont({
-  family: fontFamilies.sans,
-  size: {
-    1: 11,
-    2: 12,
-    3: 13,
-    4: 14,
-    5: 16,
-    6: 18,
-    7: 20,
-    8: 23,
-    9: 30,
-    10: 46,
-    true: 14,
-  },
-  lineHeight: {
-    1: 16,
-    2: 17,
-    3: 18,
-    4: 20,
-    5: 23,
-    6: 26,
-    7: 29,
-    8: 33,
-    9: 42,
-    10: 62,
-    true: 20,
-  },
-  weight: {
-    1: '400',
-    2: '400',
-    3: '400',
-    4: '400',
-    5: '400',
-    6: '400',
-    7: '400',
-    8: '400',
-    9: '400',
-    10: '400',
-    true: '400',
-  },
-  letterSpacing: {
-    0: 0,
-  },
-  face: {
-    400: { normal: fontFamilies.sans },
-    600: { normal: fontFamilies.sansMedium },
-    700: { normal: fontFamilies.sansMedium },
-  },
-});
+const lineHeight = {
+  1: 15,
+  2: 16,
+  3: 18,
+  4: 20,
+  5: 22,
+  6: 24,
+  7: 26,
+  8: 28,
+  9: 30,
+  10: 34,
+  11: 40,
+  true: 22,
+};
 
-const monoFont = createFont({
-  family: fontFamilies.mono,
-  size: {
-    1: 8,
-    2: 9,
-    3: 10,
-    4: 11,
-    5: 12,
-    6: 14,
-    7: 16,
-    8: 18,
-    9: 21,
-    10: 24,
-    true: 11,
-  },
-  lineHeight: {
-    1: 12,
-    2: 14,
-    3: 15,
-    4: 16,
-    5: 18,
-    6: 21,
-    7: 24,
-    8: 27,
-    9: 31,
-    10: 36,
-    true: 16,
-  },
-  weight: {
-    1: '400',
-    2: '400',
-    3: '400',
-    4: '400',
-    5: '400',
-    6: '400',
-    7: '400',
-    8: '400',
-    9: '400',
-    10: '400',
-    true: '400',
-  },
-  letterSpacing: {
-    0: 0,
-  },
-  face: {
-    400: { normal: fontFamilies.mono },
-    700: { normal: fontFamilies.monoBold },
-  },
-});
+// Each weight is its own family token (`$body`, `$medium`, `$semibold`,
+// `$bold`, `$heading`) so screens never rely on synthetic bolding. The
+// `face` map also lets a `fontWeight` prop on `$body` resolve to the
+// right file on native.
+const face = {
+  400: { normal: fontFamilies.regular },
+  500: { normal: fontFamilies.medium },
+  600: { normal: fontFamilies.semibold },
+  700: { normal: fontFamilies.bold },
+  800: { normal: fontFamilies.extrabold },
+};
+
+function jakarta(family: string, weight: string) {
+  return createFont({
+    family,
+    size,
+    lineHeight,
+    weight: { true: weight },
+    letterSpacing: { true: 0 },
+    face,
+  });
+}
+
+// Instrument Serif for editorial display headlines. Single weight; the
+// italic is its own family so `*emphasis*` in titles can switch to it.
+function serif(family: string) {
+  return createFont({
+    family,
+    size: { ...size, 12: 40, 13: 48, 14: 56, true: 40 },
+    lineHeight: { ...lineHeight, 12: 44, 13: 52, 14: 58, true: 44 },
+    weight: { true: '400' },
+    letterSpacing: { true: 0 },
+    face: { 400: { normal: family } },
+  });
+}
 
 const tokens = {
   ...defaultConfig.tokens,
@@ -152,6 +86,7 @@ const tokens = {
     full: appRadius.full,
     '3xl': appRadius['3xl'],
     '2xl': appRadius['2xl'],
+    xl: appRadius.xl,
     lg: appRadius.lg,
   },
   space: {
@@ -161,57 +96,74 @@ const tokens = {
   },
 };
 
-const dark = {
-  ...defaultConfig.themes.dark,
-  // Semantic roles mapped to the app's dark design.
-  background: colors.ink,
-  background0: colors.ink,
-  background02: colors.ink,
-  background04: colors.coal,
-  background06: colors.ash,
-  background08: colors.ash,
-  backgroundHover: colors.ash,
-  backgroundPress: colors.ash,
-  backgroundFocus: colors.coal,
-  borderColor: colors.line,
-  borderColorHover: colors.lineHover,
-  borderColorPress: colors.lineHover,
-  borderColorFocus: colors.lineHover,
-  color: colors.bone,
-  colorHover: colors.bone,
-  colorPress: colors.bone,
-  colorFocus: colors.bone,
-  placeholderColor: colors.fog,
-  outlineColor: colors.lineHover,
-  shadowColor: '#000000',
-  accentBackground: colors.ember,
-  accentColor: colors.bone,
-  // Brand palette, exposed as theme keys for direct use in styles.
-  ink: colors.ink,
-  coal: colors.coal,
-  ash: colors.ash,
-  ember: colors.ember,
-  flare: colors.flare,
-  mint: colors.mint,
-  bone: colors.bone,
-  fog: colors.fog,
-  line: colors.line,
-  lineHover: colors.lineHover,
-  emberSoft: colors.emberSoft,
-  emberBorder: colors.emberBorder,
-};
+function buildTheme(base: typeof defaultConfig.themes.light, c: Palette) {
+  return {
+    ...base,
+    // Semantic roles mapped to the app's palette.
+    background: c.canvas,
+    background0: c.canvas,
+    background02: c.canvas,
+    background04: c.surface,
+    background06: c.card,
+    background08: c.card,
+    backgroundHover: c.surface,
+    backgroundPress: c.surface,
+    backgroundFocus: c.card,
+    borderColor: c.border,
+    borderColorHover: c.borderStrong,
+    borderColorPress: c.borderStrong,
+    borderColorFocus: c.accent,
+    color: c.text,
+    colorHover: c.text,
+    colorPress: c.text,
+    colorFocus: c.text,
+    placeholderColor: c.muted,
+    outlineColor: c.accentBorder,
+    shadowColor: '#000000',
+    accentBackground: c.accent,
+    accentColor: c.onAccent,
+    // Palette, exposed as theme keys for direct use in styles.
+    canvas: c.canvas,
+    card: c.card,
+    surface: c.surface,
+    border: c.border,
+    borderStrong: c.borderStrong,
+    text: c.text,
+    muted: c.muted,
+    onAccent: c.onAccent,
+    onPhoto: c.onPhoto,
+    accent: c.accent,
+    accentText: c.accentText,
+    accentSoft: c.accentSoft,
+    accentBorder: c.accentBorder,
+    success: c.success,
+    successSoft: c.successSoft,
+    scrim: c.scrim,
+    glass: c.glass,
+    tabBar: c.tabBar,
+    raised: c.raised,
+  };
+}
+
+const light = buildTheme(defaultConfig.themes.light, palettes.light);
+const dark = buildTheme(defaultConfig.themes.dark, palettes.dark);
 
 export const config = createTamagui({
   ...defaultConfig,
   tokens,
   fonts: {
     ...defaultConfig.fonts,
-    display: displayFont,
-    body: bodyFont,
-    mono: monoFont,
+    body: jakarta(fontFamilies.regular, '400'),
+    medium: jakarta(fontFamilies.medium, '500'),
+    semibold: jakarta(fontFamilies.semibold, '600'),
+    bold: jakarta(fontFamilies.bold, '700'),
+    heading: jakarta(fontFamilies.extrabold, '800'),
+    display: serif(fontFamilies.display),
+    displayItalic: serif(fontFamilies.displayItalic),
   },
   themes: {
     ...defaultConfig.themes,
+    light,
     dark,
   },
 });

@@ -1,9 +1,13 @@
 import React from 'react';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ScrollView, Text, YStack } from 'tamagui';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Icon } from './Icon';
+import { Aurora, PulseLine } from './Motif';
+import { DisplayTitle } from './ui';
+import { useColors } from '../theme/appearance';
 
-// Shared layout for the pre-auth screens: hero heading + form, centered
+// Shared layout for the pre-auth screens: brand mark, heading and form,
 // with the keyboard kept clear of the inputs.
 
 export function AuthScreen({
@@ -17,27 +21,49 @@ export function AuthScreen({
   subtitle?: string;
   children: React.ReactNode;
 }) {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <ScrollView
         flex={1}
-        bg="$ink"
-        contentContainerStyle={{ grow: 1, justify: 'center', p: 24, pt: insets.top + 40, pb: insets.bottom + 40 }}
+        bg="$canvas"
+        contentContainerStyle={{
+          grow: 1,
+          justify: 'center',
+          p: 24,
+          pt: insets.top + 40,
+          pb: insets.bottom + 40,
+        }}
         keyboardShouldPersistTaps="handled"
       >
-        <YStack gap={22}>
-          <YStack gap={8}>
+        <Aurora height={insets.top + 380} />
+        <YStack gap={28}>
+          <YStack gap={10}>
+            <XStack items="center" gap={10} mb={18}>
+              <XStack
+                width={44}
+                height={44}
+                rounded={14}
+                bg="$accent"
+                items="center"
+                justify="center"
+              >
+                <Icon name="heart" size={20} color={colors.onAccent} filled />
+              </XStack>
+              <PulseLine width={120} height={28} />
+            </XStack>
             {eyebrow ? (
-              <Text fontFamily="$mono" fontSize={10} letterSpacing={4} color="$ember" textTransform="uppercase">
+              <Text fontFamily="$semibold" fontSize={14} color="$accentText">
                 {eyebrow}
               </Text>
             ) : null}
-            <Text fontFamily="$display" fontSize={34} color="$bone" textTransform="uppercase" lineHeight={34}>
-              {title}
-            </Text>
+            <DisplayTitle size={48}>{title}</DisplayTitle>
             {subtitle ? (
-              <Text color="$fog" fontSize={12} lineHeight={18}>
+              <Text color="$muted" fontSize={16} lineHeight={24}>
                 {subtitle}
               </Text>
             ) : null}

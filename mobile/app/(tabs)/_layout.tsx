@@ -1,58 +1,41 @@
-import { Tabs } from 'expo-router';
-import { Text } from 'tamagui';
-import { Icon, IconName } from '../../src/components/Icon';
-import { colors, fonts } from '../../src/theme/tokens';
+import { Tabs, useRouter } from 'expo-router';
+import { useEffect } from 'react';
+import { IconName } from '../../src/components/Icon';
+import { FloatingTabBar } from '../../src/components/TabBar';
+import { clearCelebrate, usePlans } from '../../src/data/plans';
 
-const TABS: { name: string; label: string; icon: IconName }[] = [
-  { name: 'discover', label: 'Discover', icon: 'zap' },
-  { name: 'feed', label: 'Activity', icon: 'activity' },
-  { name: 'chat', label: 'Chat', icon: 'repeat' },
-  { name: 'planner', label: 'Planner', icon: 'map-pin' },
-  { name: 'profile', label: 'Profile', icon: 'users' },
-];
+const TABS: Record<string, { label: string; icon: IconName }> = {
+  today: { label: 'Today', icon: 'calendar' },
+  discover: { label: 'Pacers', icon: 'sparkles' },
+  sessions: { label: 'Sessions', icon: 'map' },
+  chat: { label: 'Chats', icon: 'message-circle' },
+  profile: { label: 'You', icon: 'user' },
+};
 
 export default function TabsLayout() {
+  const router = useRouter();
+  const { celebrate, plans } = usePlans();
+
+  // When someone accepts your invite to train, that's the match — show it.
+  useEffect(() => {
+    if (!celebrate) return;
+    const plan = plans.find((p) => p.id === celebrate);
+    clearCelebrate();
+    if (plan) {
+      router.push({
+        pathname: '/match/[athleteId]',
+        params: { athleteId: String(plan.athleteId), planId: plan.id },
+      });
+    }
+  }, [celebrate, plans, router]);
+
   return (
     <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.ember,
-        tabBarInactiveTintColor: colors.fog,
-        tabBarStyle: {
-          backgroundColor: colors.ink,
-          borderTopColor: colors.line,
-          borderTopWidth: 1,
-          height: 84,
-          paddingTop: 8,
-        },
-        tabBarLabelStyle: {
-          fontFamily: fonts.mono,
-          fontSize: 9,
-          letterSpacing: 1,
-          textTransform: 'uppercase',
-        },
-      }}
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <FloatingTabBar {...(props as any)} tabs={TABS} />}
     >
-      {TABS.map((tab) => (
-        <Tabs.Screen
-          key={tab.name}
-          name={tab.name}
-          options={{
-            title: tab.label,
-            tabBarIcon: ({ color }) => <Icon name={tab.icon} size={20} color={color as any} />,
-            tabBarLabel: ({ color }) => (
-              <Text
-                fontFamily="$mono"
-                fontSize={9}
-                letterSpacing={1}
-                color={color as any}
-                textTransform="uppercase"
-              >
-                {tab.label}
-              </Text>
-            ),
-          }}
-        />
+      {Object.entries(TABS).map(([name, tab]) => (
+        <Tabs.Screen key={name} name={name} options={{ title: tab.label }} />
       ))}
     </Tabs>
   );

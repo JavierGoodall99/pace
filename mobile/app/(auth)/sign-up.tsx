@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 import { AuthScreen } from '../../src/components/AuthScreen';
-import { Button, Input } from '../../src/components/ui';
+import { Button, Input, TextAction } from '../../src/components/ui';
 import { signUp } from '../../src/data/session';
 
 export default function SignUpScreen() {
@@ -27,13 +27,13 @@ export default function SignUpScreen() {
 
   return (
     <AuthScreen
-      eyebrow="JOIN THE COHORT"
-      title="Sign up."
+      eyebrow="Join Pace"
+      title="Find your *pace*"
       subtitle="Create your card in about a minute. Six quick steps, then it's built."
     >
       <YStack gap={14}>
         <Input
-          placeholder="NAME"
+          placeholder="Name"
           value={name}
           onChangeText={(v) => {
             setName(v);
@@ -44,7 +44,7 @@ export default function SignUpScreen() {
           returnKeyType="next"
         />
         <Input
-          placeholder="EMAIL"
+          placeholder="Email"
           value={email}
           onChangeText={(v) => {
             setEmail(v);
@@ -56,7 +56,7 @@ export default function SignUpScreen() {
           returnKeyType="next"
         />
         <Input
-          placeholder="PASSWORD"
+          placeholder="Password"
           value={password}
           onChangeText={(v) => {
             setPassword(v);
@@ -69,23 +69,19 @@ export default function SignUpScreen() {
           onSubmitEditing={submit}
         />
         {error ? (
-          <Text fontFamily="$mono" fontSize={10} letterSpacing={1} color="$ember" lineHeight={16}>
+          <Text fontFamily="$medium" fontSize={14} color="$accentText" lineHeight={20}>
             {error}
           </Text>
         ) : null}
         <Button onPress={submit} disabled={busy} style={{ width: '100%', marginTop: 4 }}>
-          {busy ? 'Creating…' : 'Create Account'}
+          {busy ? 'Creating…' : 'Create account'}
         </Button>
 
-        <XStack items="center" justify="center" gap={6} mt={4}>
-          <Text color="$fog" fontSize={12}>
-            Already a member?
+        <XStack items="center" justify="center" gap={4} mt={4}>
+          <Text color="$muted" fontSize={15}>
+            Already have an account?
           </Text>
-          <XStack onPress={() => router.push('/sign-in')} py={4}>
-            <Text fontFamily="$mono" fontSize={11} letterSpacing={1} color="$ember" textTransform="uppercase" fontWeight="700">
-              Sign In
-            </Text>
-          </XStack>
+          <TextAction onPress={() => router.push('/sign-in')}>Sign in</TextAction>
         </XStack>
       </YStack>
     </AuthScreen>

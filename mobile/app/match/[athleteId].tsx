@@ -2,25 +2,32 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, XStack, YStack } from 'tamagui';
 import { buildConfettiPieces, Confetti } from '../../src/components/Confetti';
 import { Icon } from '../../src/components/Icon';
+import { Aurora, PulseLine } from '../../src/components/Motif';
+import { RhythmStrip, SyncBadge } from '../../src/components/Rhythm';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
-import { Button } from '../../src/components/ui';
+import { Button, DisplayTitle } from '../../src/components/ui';
 import { athleteById } from '../../src/data/mockData';
+import { rhythmForAthlete, rhythmForMe, sharedDaysLabel, syncScore } from '../../src/data/rhythm';
+import { useMe } from '../../src/data/session';
 import { ATHLETE_PHOTOS, ME_AVATAR } from '../../src/data/photos';
-import { colors, shadow } from '../../src/theme/tokens';
+import { useColors } from '../../src/theme/appearance';
+import { brand, shadow } from '../../src/theme/tokens';
 
 // Ported from the "MATCH CELEBRATION OVERLAY" in `../../Pace App.dc.html`
 // — shown when a swipe-right lands on a mutual-interest athlete (see
 // MATCH_IDS in discover.tsx).
-const CONFETTI_COLORS = [colors.accent, colors.peach, colors.lilac, colors.sun];
+const CONFETTI_COLORS = [brand.accent, brand.peach, brand.lilac, brand.sun];
 const CONFETTI_PIECES = buildConfettiPieces(
   Array.from({ length: 12 }, (_, i) => CONFETTI_COLORS[i % CONFETTI_COLORS.length]),
   { leftStep: 31, durationBase: 1.8, durationStep: 0.3, delayStep: 0.1 }
 );
 
 export default function MatchScreen() {
+  const colors = useColors();
   const router = useRouter();
   const { athleteId } = useLocalSearchParams<{ athleteId: string }>();
   const athlete = athleteById(Number(athleteId));
+  const me = useMe();
 
   if (!athlete) {
     return (
@@ -32,93 +39,70 @@ export default function MatchScreen() {
     );
   }
 
+  const mine = rhythmForMe(me.cadence);
+  const theirs = rhythmForAthlete(athlete);
+
   return (
-    <YStack flex={1} bg="$canvas" items="center" justify="center" px={28}>
-      <YStack
-        pointerEvents="none"
-        position="absolute"
-        style={{
-          top: '14%',
-          width: 340,
-          height: 340,
-          borderRadius: 170,
-          backgroundColor: colors.accentSoft,
-        }}
-      />
+    <YStack flex={1} bg="$canvas" items="center" justify="center" px={24}>
+      <Aurora height={560} />
       <Confetti pieces={CONFETTI_PIECES} fallDistance={420} />
 
       <YStack width="100%" items="center" z={1}>
-        <XStack items="center" mb={28}>
-          <YStack
-            mr={-18}
-            z={2}
-            width={116}
-            height={116}
-            rounded={58}
-            bg="$card"
-            p={4}
-            style={shadow.raised}
-          >
-            <PhotoSlot
-              label="You"
-              shape="circle"
-              source={ME_AVATAR}
-              style={{ width: '100%', height: '100%' }}
-            />
-          </YStack>
-          <YStack
-            ml={-18}
-            width={116}
-            height={116}
-            rounded={58}
-            bg="$card"
-            p={4}
-            style={shadow.raised}
-          >
-            <PhotoSlot
-              label={athlete.name}
-              shape="circle"
-              source={ATHLETE_PHOTOS[athlete.slotId]}
-              style={{ width: '100%', height: '100%' }}
-            />
+        <XStack items="center" justify="center" mb={8} height={210}>
+          <Portrait
+            source={me.photos[0] ? { uri: me.photos[0] } : ME_AVATAR}
+            label="You"
+            tilt="-7deg"
+          />
+          <Portrait source={ATHLETE_PHOTOS[athlete.slotId]} label={athlete.name} tilt="7deg" />
+          <YStack position="absolute" l={-24} r={-24} t={86} pointerEvents="none">
+            <PulseLine width="100%" height={44} color={colors.accent} strokeWidth={3} />
           </YStack>
           <XStack
             position="absolute"
-            l="50%"
-            b={-10}
-            ml={-22}
-            z={3}
-            width={44}
-            height={44}
-            rounded={22}
+            b={-6}
+            width={52}
+            height={52}
+            rounded={26}
             bg="$accent"
-            borderWidth={3}
+            borderWidth={4}
             borderColor="$canvas"
             items="center"
             justify="center"
           >
-            <Icon name="heart" size={20} color={colors.onAccent} filled />
+            <Icon name="heart" size={22} color={colors.onAccent} filled />
           </XStack>
         </XStack>
 
-        <Text fontFamily="$semibold" fontSize={15} color="$accent">
-          You both said yes
+        <YStack mt={18}>
+          <DisplayTitle size={60} center>
+            It’s a *match*
+          </DisplayTitle>
+        </YStack>
+        <Text color="$muted" fontSize={16} lineHeight={24} mt={8} maxW={300} text="center">
+          You and {athlete.name} move to the same beat. Say hi and plan your first session.
         </Text>
-        <Text
-          fontFamily="$heading"
-          fontSize={38}
-          lineHeight={44}
-          letterSpacing={-1}
-          color="$text"
-          mt={8}
-          text="center"
+
+        <YStack
+          width="100%"
+          mt={22}
+          mb={24}
+          p={14}
+          gap={12}
+          rounded={22}
+          bg="$card"
+          borderWidth={1}
+          borderColor="$border"
+          style={shadow.card}
         >
-          It&apos;s a match!
-        </Text>
-        <Text color="$muted" fontSize={16} lineHeight={24} mt={12} mb={32} maxW={300} text="center">
-          You and {athlete.name} are both training for something. Say hi and plan your first
-          session.
-        </Text>
+          <XStack items="center" justify="space-between">
+            <Text fontFamily="$semibold" fontSize={14} color="$text">
+              {sharedDaysLabel(mine, theirs)}
+            </Text>
+            <SyncBadge pct={syncScore(mine, theirs)} />
+          </XStack>
+          <RhythmStrip mine={mine} theirs={theirs} height={30} />
+        </YStack>
 
         <YStack width="100%" gap={10}>
           <Button
@@ -138,6 +122,41 @@ export default function MatchScreen() {
           </Button>
         </YStack>
       </YStack>
+    </YStack>
+  );
+}
+
+// Tall arch-framed portrait, tilted, for the match composition.
+function Portrait({ source, label, tilt }: { source: any; label: string; tilt: string }) {
+  return (
+    <YStack
+      mx={-10}
+      width={128}
+      height={176}
+      p={4}
+      bg="$card"
+      rotate={tilt}
+      style={{
+        ...shadow.raised,
+        borderTopLeftRadius: 64,
+        borderTopRightRadius: 64,
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+      }}
+    >
+      <PhotoSlot
+        label={label}
+        shape="rounded"
+        source={source}
+        style={{
+          width: '100%',
+          height: '100%',
+          borderTopLeftRadius: 60,
+          borderTopRightRadius: 60,
+          borderBottomLeftRadius: 20,
+          borderBottomRightRadius: 20,
+        }}
+      />
     </YStack>
   );
 }

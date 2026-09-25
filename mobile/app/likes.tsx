@@ -28,7 +28,7 @@ export default function LikesScreen() {
   return (
     <YStack flex={1} bg="$canvas">
       <ScreenHeader
-        title="Likes"
+        title="Who *likes* you"
         subtitle={
           likes.length > 0
             ? `${likes.length} ${likes.length === 1 ? 'person likes' : 'people like'} you`

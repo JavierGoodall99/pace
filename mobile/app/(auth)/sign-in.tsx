@@ -27,8 +27,8 @@ export default function SignInScreen() {
 
   return (
     <AuthScreen
-      eyebrow="Welcome back"
-      title="Sign in to Pace"
+      eyebrow="Sign in to Pace"
+      title="Welcome *back*"
       subtitle="Your training is waiting. Pick up right where you left off."
     >
       <YStack gap={14}>
@@ -58,7 +58,7 @@ export default function SignInScreen() {
           onSubmitEditing={submit}
         />
         {error ? (
-          <Text fontFamily="$medium" fontSize={14} color="$accent" lineHeight={20}>
+          <Text fontFamily="$medium" fontSize={14} color="$accentText" lineHeight={20}>
             {error}
           </Text>
         ) : null}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import { Text, YStack } from 'tamagui';
-import { colors } from '../theme/tokens';
+import { useColors } from '../theme/appearance';
 
 // Stand-in for the design mockup's <image-slot>. Renders a real photo when
 // a `source` is supplied (see `src/data/photos.ts`), falling back to a
@@ -15,7 +15,6 @@ interface PhotoSlotProps {
 }
 
 const BASE_STYLE = {
-  backgroundColor: colors.surface,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
   overflow: 'hidden' as const,
@@ -37,7 +36,13 @@ export function PhotoSlot({
         : { borderRadius: radius };
   // Flatten so callers can pass style arrays — Tamagui on web can't take
   // nested arrays.
-  const frame = StyleSheet.flatten([BASE_STYLE, shapeStyle, style]);
+  const colors = useColors();
+  const frame = StyleSheet.flatten([
+    BASE_STYLE,
+    { backgroundColor: colors.surface },
+    shapeStyle,
+    style,
+  ]);
 
   if (source) {
     return (

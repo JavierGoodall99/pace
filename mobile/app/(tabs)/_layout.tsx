@@ -1,58 +1,23 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'tamagui';
-import { Icon, IconName } from '../../src/components/Icon';
-import { colors } from '../../src/theme/tokens';
+import { IconName } from '../../src/components/Icon';
+import { FloatingTabBar } from '../../src/components/TabBar';
 
-const TABS: { name: string; label: string; icon: IconName }[] = [
-  { name: 'discover', label: 'Discover', icon: 'sparkles' },
-  { name: 'feed', label: 'Activity', icon: 'activity' },
-  { name: 'chat', label: 'Chats', icon: 'message-circle' },
-  { name: 'planner', label: 'Plans', icon: 'calendar' },
-  { name: 'profile', label: 'Profile', icon: 'user' },
-];
+const TABS: Record<string, { label: string; icon: IconName }> = {
+  discover: { label: 'Discover', icon: 'sparkles' },
+  feed: { label: 'Activity', icon: 'activity' },
+  chat: { label: 'Chats', icon: 'message-circle' },
+  planner: { label: 'Plans', icon: 'calendar' },
+  profile: { label: 'You', icon: 'user' },
+};
 
 export default function TabsLayout() {
   return (
     <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.muted,
-        tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.border,
-          borderTopWidth: 1,
-          height: 84,
-          paddingTop: 8,
-        },
-      }}
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <FloatingTabBar {...(props as any)} tabs={TABS} />}
     >
-      {TABS.map((tab) => (
-        <Tabs.Screen
-          key={tab.name}
-          name={tab.name}
-          options={{
-            title: tab.label,
-            tabBarIcon: ({ color, focused }) => (
-              <Icon
-                name={tab.icon}
-                size={24}
-                color={color as string}
-                strokeWidth={focused ? 2.2 : 1.8}
-              />
-            ),
-            tabBarLabel: ({ color, focused }) => (
-              <Text
-                fontFamily={focused ? '$semibold' : '$medium'}
-                fontSize={11}
-                mt={2}
-                color={color as any}
-              >
-                {tab.label}
-              </Text>
-            ),
-          }}
-        />
+      {Object.entries(TABS).map(([name, tab]) => (
+        <Tabs.Screen key={name} name={name} options={{ title: tab.label }} />
       ))}
     </Tabs>
   );

@@ -1,9 +1,10 @@
-// Design tokens for Pace's light theme: a warm off-white canvas, white
-// cards, soft neutral borders and a single rose accent. Names are
-// semantic (what a color is for), not descriptive, so screens read as
-// `$text on $card` rather than hard-coding a palette.
+// Design tokens for Pace. Two palettes — a warm off-white light theme
+// and a warm near-black dark theme — share the same semantic keys, so
+// screens read as `$text on $card` and switch themes for free. Tamagui
+// styles use the `$key` theme values; JS-side colors (icons, SVG,
+// Animated styles) come from `useColors()` in `./appearance`.
 
-export const colors = {
+const lightPalette = {
   // Surfaces
   canvas: '#FAF8F6', // screen background
   card: '#FFFFFF', // raised cards, sheets, tab bar
@@ -18,7 +19,8 @@ export const colors = {
   onPhoto: '#FFFFFF', // copy sitting on a photo scrim
 
   // Brand
-  accent: '#D6336C', // 4.6:1 against white text
+  accent: '#D6336C', // fills — 4.6:1 against white text
+  accentText: '#D6336C', // accent-colored copy on canvas/card
   accentSoft: '#FCEAF0',
   accentBorder: '#F6C9D8',
 
@@ -29,11 +31,58 @@ export const colors = {
   // Photo scrim and floating controls over images
   scrim: 'rgba(28,25,23,0.55)',
   glass: 'rgba(255,255,255,0.88)',
+  tabBar: 'rgba(255,255,255,0.98)',
+  raised: '#FFFFFF', // selected segment / thumb sitting on a surface
 
-  // Celebration accents (confetti, match screen)
+  // Celebration / aurora accents
   peach: '#FFB38A',
   lilac: '#B9A6F5',
   sun: '#FFD166',
+  auroraOpacity: 0.55,
+};
+
+export type Palette = { [K in keyof typeof lightPalette]: (typeof lightPalette)[K] };
+
+const darkPalette: Palette = {
+  canvas: '#131011',
+  card: '#1D1A1B',
+  surface: '#282425',
+  border: '#2F2A2B',
+  borderStrong: '#443D3E',
+
+  text: '#F5F0EC',
+  muted: '#A8A09B', // 7:1 on canvas
+  onAccent: '#FFFFFF',
+  onPhoto: '#FFFFFF',
+
+  accent: '#D6336C',
+  accentText: '#EC5C86', // 5.8:1 on canvas
+  accentSoft: '#3A1A26',
+  accentBorder: '#5E2740',
+
+  success: '#3CCB8A',
+  successSoft: '#15302A',
+
+  scrim: 'rgba(0,0,0,0.6)',
+  glass: 'rgba(29,26,27,0.82)',
+  tabBar: 'rgba(33,29,30,0.98)',
+  raised: '#3D3738',
+
+  peach: '#FF9E70',
+  lilac: '#9B85F0',
+  sun: '#FFC94D',
+  auroraOpacity: 0.35,
+};
+
+export const palettes = { light: lightPalette, dark: darkPalette } as const;
+
+// Theme-independent brand colors for module-level constants (confetti,
+// glows) that can't read the current theme.
+export const brand = {
+  accent: lightPalette.accent,
+  peach: lightPalette.peach,
+  lilac: lightPalette.lilac,
+  sun: lightPalette.sun,
 } as const;
 
 export const radius = {
@@ -44,10 +93,12 @@ export const radius = {
   lg: 12,
 } as const;
 
-// Plus Jakarta Sans throughout — one friendly, highly legible family,
-// with each weight registered as its own font face so it renders the
-// same on iOS, Android and web.
+// Plus Jakarta Sans for UI — friendly and highly legible, each weight
+// registered as its own face so it renders the same on every platform —
+// paired with Instrument Serif for editorial display headlines.
 export const fonts = {
+  display: 'InstrumentSerif_400Regular',
+  displayItalic: 'InstrumentSerif_400Regular_Italic',
   regular: 'PlusJakartaSans_400Regular',
   medium: 'PlusJakartaSans_500Medium',
   semibold: 'PlusJakartaSans_600SemiBold',

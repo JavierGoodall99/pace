@@ -17,9 +17,10 @@ import {
 import { DISCIPLINES, Discipline } from '../src/data/mockData';
 import { ME_AVATAR } from '../src/data/photos';
 import { updateMe, useMe } from '../src/data/session';
-import { colors } from '../src/theme/tokens';
+import { useColors } from '../src/theme/appearance';
 
 export default function EditProfileScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
@@ -64,7 +65,7 @@ export default function EditProfileScreen() {
   return (
     <YStack flex={1} bg="$canvas">
       <ScreenHeader
-        title="Edit profile"
+        title="Edit *profile*"
         onBack={() => router.back()}
         action={<TextAction onPress={save}>Save</TextAction>}
       />

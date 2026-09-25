@@ -3,11 +3,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon, IconName } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
-import { Badge, Button } from '../../src/components/ui';
+import { RhythmStrip } from '../../src/components/Rhythm';
+import { useTabBarSpace } from '../../src/components/TabBar';
+import { Badge, Button, DisplayTitle } from '../../src/components/ui';
+import { rhythmForMe, WEEK_DAY_NAMES } from '../../src/data/rhythm';
 import { ME_AVATAR, ME_COVER, TRAINING_PHOTOS } from '../../src/data/photos';
 import { useMe } from '../../src/data/session';
 import { useSocial } from '../../src/data/social';
-import { colors, shadow } from '../../src/theme/tokens';
+import { useColors } from '../../src/theme/appearance';
+import { shadow } from '../../src/theme/tokens';
 
 const STATS = [
   { value: '42 km', label: 'This week' },
@@ -16,13 +20,17 @@ const STATS = [
 ];
 
 export default function ProfileScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
+  const tabBarSpace = useTabBarSpace();
   const router = useRouter();
   const me = useMe();
   const { matches, likes } = useSocial();
 
   const avatar = me.photos[0] ? { uri: me.photos[0] } : ME_AVATAR;
   const primary = me.disciplines[0] ?? 'ATHLETE';
+  const myRhythm = rhythmForMe(me.cadence);
+  const myDays = myRhythm.map((on, i) => (on ? WEEK_DAY_NAMES[i] : null)).filter(Boolean);
   const photoTiles: (string | null)[] = [
     me.photos[0] ?? null,
     me.photos[1] ?? null,
@@ -30,7 +38,7 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: 32 }}>
+    <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: tabBarSpace + 16 }}>
       <YStack>
         <PhotoSlot
           label="Cover photo"
@@ -59,7 +67,7 @@ export default function ProfileScreen() {
 
       <YStack px={20} mt={-48}>
         <XStack items="flex-end" justify="space-between">
-          <YStack p={4} rounded={52} bg="$canvas">
+          <YStack p={3} rounded={54} bg="$canvas" borderWidth={2} borderColor="$accent">
             <PhotoSlot
               label={me.name}
               shape="circle"
@@ -78,11 +86,9 @@ export default function ProfileScreen() {
         </XStack>
 
         <XStack items="center" gap={8} mt={12}>
-          <Text fontFamily="$bold" fontSize={26} lineHeight={32} letterSpacing={-0.3} color="$text">
-            {me.name || 'You'}
-          </Text>
+          <DisplayTitle size={44}>{me.name || 'You'}</DisplayTitle>
           {me.verified ? (
-            <Icon name="shield-check" size={20} color={colors.accent} strokeWidth={2} />
+            <Icon name="shield-check" size={20} color={colors.accentText} strokeWidth={2} />
           ) : null}
         </XStack>
         <XStack items="center" gap={5} mt={4}>
@@ -117,7 +123,7 @@ export default function ProfileScreen() {
               borderLeftWidth={i === 0 ? 0 : 1}
               borderLeftColor="$border"
             >
-              <Text fontFamily="$bold" fontSize={20} lineHeight={26} color="$text">
+              <Text fontFamily="$display" fontSize={32} lineHeight={36} color="$text">
                 {s.value}
               </Text>
               <Text fontSize={13} color="$muted" mt={2}>
@@ -126,6 +132,27 @@ export default function ProfileScreen() {
             </YStack>
           ))}
         </XStack>
+
+        <YStack
+          mt={12}
+          p={16}
+          gap={12}
+          rounded={20}
+          borderWidth={1}
+          borderColor="$border"
+          bg="$card"
+        >
+          <XStack items="baseline" justify="space-between">
+            <DisplayTitle size={26}>Your *week*</DisplayTitle>
+            <Text fontFamily="$medium" fontSize={13} color="$muted">
+              {myDays.length} days
+            </Text>
+          </XStack>
+          <RhythmStrip mine={myRhythm} theirs={myRhythm} height={34} />
+          <Text fontSize={13} color="$muted">
+            We match you with people who train on {myDays.slice(0, 3).join(', ')} and more.
+          </Text>
+        </YStack>
 
         <XStack gap={10} mt={12}>
           <QuickLink
@@ -198,6 +225,7 @@ function QuickLink({
   highlight?: boolean;
   onPress: () => void;
 }) {
+  const colors = useColors();
   return (
     <XStack
       flex={1}
@@ -223,7 +251,7 @@ function QuickLink({
         <Icon
           name={icon}
           size={20}
-          color={highlight ? colors.accent : colors.text}
+          color={highlight ? colors.accentText : colors.text}
           filled={highlight && icon === 'heart'}
         />
       </XStack>
@@ -232,7 +260,7 @@ function QuickLink({
           fontFamily="$bold"
           fontSize={18}
           lineHeight={22}
-          color={highlight ? '$accent' : '$text'}
+          color={highlight ? '$accentText' : '$text'}
         >
           {count}
         </Text>

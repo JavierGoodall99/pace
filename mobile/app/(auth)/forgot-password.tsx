@@ -12,7 +12,7 @@ export default function ForgotPasswordScreen() {
   return (
     <AuthScreen
       eyebrow="No sweat"
-      title="Reset your password"
+      title="Reset your *password*"
       subtitle="Enter the email on your account and we'll send you a reset link."
     >
       {sent ? (

@@ -3,31 +3,32 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
-import { IconButton } from '../../src/components/ui';
+import { useTabBarSpace } from '../../src/components/TabBar';
+import { DisplayTitle, IconButton } from '../../src/components/ui';
 import { athleteById, CHAT_THREADS } from '../../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
 import { useSocial } from '../../src/data/social';
-import { colors, formatLabel } from '../../src/theme/tokens';
+import { useColors } from '../../src/theme/appearance';
+import { formatLabel } from '../../src/theme/tokens';
 
 export default function ChatScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
+  const tabBarSpace = useTabBarSpace();
   const router = useRouter();
   const { blocked } = useSocial();
   const threads = CHAT_THREADS.filter((t) => !blocked.includes(t.athleteId));
 
   return (
-    <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pt: insets.top + 12, pb: 24 }}>
+    <ScrollView
+      flex={1}
+      bg="$canvas"
+      contentContainerStyle={{ pt: insets.top + 8, pb: tabBarSpace + 16 }}
+    >
       <XStack items="center" gap={12} px={20} pb={8}>
-        <Text
-          flex={1}
-          fontFamily="$bold"
-          fontSize={28}
-          lineHeight={34}
-          letterSpacing={-0.5}
-          color="$text"
-        >
-          Chats
-        </Text>
+        <YStack flex={1}>
+          <DisplayTitle size={42}>Your *chats*</DisplayTitle>
+        </YStack>
         <IconButton
           size={40}
           onPress={() => router.push('/notifications')}
@@ -68,7 +69,11 @@ export default function ChatScreen() {
                   <Text fontFamily="$semibold" fontSize={16} color="$text" numberOfLines={1}>
                     {a.name}
                   </Text>
-                  <Text fontFamily="$medium" fontSize={13} color={t.unread ? '$accent' : '$muted'}>
+                  <Text
+                    fontFamily="$medium"
+                    fontSize={13}
+                    color={t.unread ? '$accentText' : '$muted'}
+                  >
                     {formatLabel(t.time)}
                   </Text>
                 </XStack>

@@ -6,12 +6,13 @@ import { Text, YStack } from 'tamagui';
 import { Icon } from '../src/components/Icon';
 import { Button, ScreenHeader } from '../src/components/ui';
 import { updateMe, useMe } from '../src/data/session';
-import { colors } from '../src/theme/tokens';
+import { useColors } from '../src/theme/appearance';
 
 // Mock liveness check — a selfie-style scan that "verifies" after a
 // couple of seconds. A real build swaps the timer + state flip for the
 // identity provider's SDK result.
 export default function VerifyScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
@@ -55,7 +56,7 @@ export default function VerifyScreen() {
 
   return (
     <YStack flex={1} bg="$canvas" style={{ paddingBottom: insets.bottom + 20 }}>
-      <ScreenHeader title="Verify it's you" onBack={() => router.back()} />
+      <ScreenHeader title="Verify it’s *you*" onBack={() => router.back()} />
 
       <YStack flex={1} justify="center" items="center" gap={24} px={20}>
         <YStack

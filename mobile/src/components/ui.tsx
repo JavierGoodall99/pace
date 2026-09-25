@@ -3,7 +3,8 @@ import { StyleSheet, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Input as TInput, Text, XStack, YStack } from 'tamagui';
 import { Icon, IconName } from './Icon';
-import { colors, formatLabel, shadow } from '../theme/tokens';
+import { useColors } from '../theme/appearance';
+import { formatLabel, shadow } from '../theme/tokens';
 
 // The app's small design system, built on Tamagui primitives so every
 // screen shares one styling vocabulary. Note: this Tamagui config sets
@@ -28,10 +29,11 @@ export function Badge({
   icon?: IconName;
   style?: ViewStyle;
 }) {
-  const fg = tone === 'accent' ? '$accent' : tone === 'success' ? '$success' : '$text';
+  const colors = useColors();
+  const fg = tone === 'accent' ? '$accentText' : tone === 'success' ? '$success' : '$text';
   const bg = tone === 'accent' ? '$accentSoft' : tone === 'success' ? '$successSoft' : '$surface';
   const iconColor =
-    tone === 'accent' ? colors.accent : tone === 'success' ? colors.success : colors.muted;
+    tone === 'accent' ? colors.accentText : tone === 'success' ? colors.success : colors.muted;
   return (
     <XStack items="center" gap={5} rounded="$full" px={12} py={6} bg={bg} style={style}>
       {icon ? <Icon name={icon} size={13} color={iconColor} strokeWidth={2} /> : null}
@@ -90,6 +92,7 @@ export function Button({
   icon?: IconName;
   style?: ViewStyle;
 }) {
+  const colors = useColors();
   const primary = variant === 'primary';
   const bg = disabled
     ? '$surface'
@@ -241,7 +244,7 @@ export function SegmentedControl({
             items="center"
             justify="center"
             px={8}
-            bg={active ? '$card' : 'transparent'}
+            bg={active ? '$raised' : 'transparent'}
             style={active ? shadow.card : undefined}
           >
             <Text
@@ -334,8 +337,49 @@ export function Toggle({
   );
 }
 
+// Editorial headline in Instrument Serif. Wrap a word in *asterisks* to
+// set it in italic accent — "Your *matches*", "It's a *match*".
+export function DisplayTitle({
+  children,
+  size = 40,
+  center = false,
+  color = '$text',
+}: {
+  children: string;
+  size?: number;
+  center?: boolean;
+  color?: '$text' | '$onPhoto';
+}) {
+  const parts = children.split(/(\*[^*]+\*)/g).filter(Boolean);
+  return (
+    <Text
+      fontFamily="$display"
+      fontSize={size}
+      lineHeight={Math.round(size * 1.08)}
+      letterSpacing={-0.4}
+      color={color}
+      text={center ? 'center' : undefined}
+      accessibilityRole="header"
+    >
+      {parts.map((part, i) =>
+        part.startsWith('*') && part.endsWith('*') ? (
+          <Text
+            key={i}
+            fontFamily="$displayItalic"
+            color={color === '$onPhoto' ? '$onPhoto' : '$accentText'}
+          >
+            {part.slice(1, -1)}
+          </Text>
+        ) : (
+          part
+        )
+      )}
+    </Text>
+  );
+}
+
 // Top of a pushed screen: back button and optional trailing action on
-// one row, then an iOS-style large title with an optional subtitle.
+// one row, then a large editorial title with an optional subtitle.
 export function ScreenHeader({
   title,
   subtitle,
@@ -349,6 +393,7 @@ export function ScreenHeader({
   action?: React.ReactNode;
   bordered?: boolean;
 }) {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   return (
     <YStack
@@ -369,16 +414,9 @@ export function ScreenHeader({
         )}
         {action ?? null}
       </XStack>
-      <Text
-        fontFamily="$bold"
-        fontSize={28}
-        lineHeight={34}
-        letterSpacing={-0.5}
-        color="$text"
-        mt={12}
-      >
-        {title}
-      </Text>
+      <YStack mt={10}>
+        <DisplayTitle size={40}>{title}</DisplayTitle>
+      </YStack>
       {subtitle ? (
         <Text fontSize={15} lineHeight={22} color="$muted" mt={6}>
           {subtitle}
@@ -407,7 +445,11 @@ export function TextAction({
       py={6}
       px={4}
     >
-      <Text fontFamily="$semibold" fontSize={15} color={tone === 'accent' ? '$accent' : '$muted'}>
+      <Text
+        fontFamily="$semibold"
+        fontSize={15}
+        color={tone === 'accent' ? '$accentText' : '$muted'}
+      >
         {children}
       </Text>
     </XStack>
@@ -478,6 +520,7 @@ export function Callout({
   children: React.ReactNode;
   tone?: 'accent' | 'success';
 }) {
+  const colors = useColors();
   const success = tone === 'success';
   return (
     <XStack
@@ -491,7 +534,7 @@ export function Callout({
         <Icon
           name={icon}
           size={20}
-          color={success ? colors.success : colors.accent}
+          color={success ? colors.success : colors.accentText}
           strokeWidth={2}
         />
       </YStack>
@@ -520,6 +563,7 @@ export function EmptyState({
   body: string;
   action?: React.ReactNode;
 }) {
+  const colors = useColors();
   return (
     <YStack items="center" px={32} gap={8}>
       <XStack
@@ -531,7 +575,7 @@ export function EmptyState({
         justify="center"
         mb={8}
       >
-        <Icon name={icon} size={28} color={colors.accent} />
+        <Icon name={icon} size={28} color={colors.accentText} />
       </XStack>
       <Text fontFamily="$bold" fontSize={20} lineHeight={26} color="$text" text="center">
         {title}

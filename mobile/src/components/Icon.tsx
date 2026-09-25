@@ -1,6 +1,6 @@
 import React from 'react';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
-import { colors } from '../theme/tokens';
+import { useColors } from '../theme/appearance';
 
 // Path data ported from `../assets/icons/*.svg` (lucide-style, 24x24 viewBox).
 export type IconName =
@@ -46,19 +46,15 @@ interface IconProps {
   filled?: boolean;
 }
 
-export function Icon({
-  name,
-  size = 20,
-  color = colors.muted,
-  strokeWidth = 1.8,
-  filled = false,
-}: IconProps) {
+export function Icon({ name, size = 20, color, strokeWidth = 1.8, filled = false }: IconProps) {
+  const colors = useColors();
+  const tint = color ?? colors.muted;
   const common = {
     width: size,
     height: size,
     viewBox: '0 0 24 24',
-    fill: filled ? color : 'none',
-    stroke: color,
+    fill: filled ? tint : 'none',
+    stroke: tint,
     strokeWidth,
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,

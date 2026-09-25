@@ -4,7 +4,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { Icon } from '../../src/components/Icon';
-import { Badge, Button, Callout, Chip, Input, SectionTitle } from '../../src/components/ui';
+import { useTabBarSpace } from '../../src/components/TabBar';
+import {
+  Badge,
+  Button,
+  Callout,
+  Chip,
+  DisplayTitle,
+  Input,
+  SectionTitle,
+} from '../../src/components/ui';
 import {
   athleteById,
   DISCIPLINES,
@@ -13,10 +22,13 @@ import {
   SESSIONS,
 } from '../../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
-import { colors, formatLabel, shadow } from '../../src/theme/tokens';
+import { useColors } from '../../src/theme/appearance';
+import { formatLabel, shadow } from '../../src/theme/tokens';
 
 export default function PlannerScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
+  const tabBarSpace = useTabBarSpace();
   const params = useLocalSearchParams<{ partnerId?: string }>();
 
   const [discipline, setDiscipline] = useState<Discipline>('CROSSFIT');
@@ -45,11 +57,13 @@ export default function PlannerScreen() {
   const partner = athleteById(partnerId);
 
   return (
-    <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pt: insets.top + 12, pb: 32 }}>
+    <ScrollView
+      flex={1}
+      bg="$canvas"
+      contentContainerStyle={{ pt: insets.top + 8, pb: tabBarSpace + 16 }}
+    >
       <YStack px={20} pb={20}>
-        <Text fontFamily="$bold" fontSize={28} lineHeight={34} letterSpacing={-0.5} color="$text">
-          Plans
-        </Text>
+        <DisplayTitle size={42}>Make *plans*</DisplayTitle>
         <Text fontSize={15} lineHeight={22} color="$muted" mt={4}>
           Turn a match into a session. Pick a sport, a time and a place.
         </Text>
@@ -126,7 +140,7 @@ export default function PlannerScreen() {
                   <Text
                     fontFamily={active ? '$semibold' : '$medium'}
                     fontSize={13}
-                    color={active ? '$accent' : '$muted'}
+                    color={active ? '$accentText' : '$muted'}
                   >
                     {a.name}
                   </Text>
@@ -175,7 +189,7 @@ export default function PlannerScreen() {
                   items="center"
                   justify="center"
                 >
-                  <Icon name="calendar" size={20} color={colors.accent} />
+                  <Icon name="calendar" size={20} color={colors.accentText} />
                 </XStack>
                 <YStack flex={1} minW={0}>
                   <Text fontFamily="$semibold" fontSize={15} color="$text" numberOfLines={1}>

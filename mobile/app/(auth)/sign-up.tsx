@@ -28,7 +28,7 @@ export default function SignUpScreen() {
   return (
     <AuthScreen
       eyebrow="Join Pace"
-      title="Create your account"
+      title="Find your *pace*"
       subtitle="Create your card in about a minute. Six quick steps, then it's built."
     >
       <YStack gap={14}>
@@ -69,7 +69,7 @@ export default function SignUpScreen() {
           onSubmitEditing={submit}
         />
         {error ? (
-          <Text fontFamily="$medium" fontSize={14} color="$accent" lineHeight={20}>
+          <Text fontFamily="$medium" fontSize={14} color="$accentText" lineHeight={20}>
             {error}
           </Text>
         ) : null}

@@ -7,7 +7,9 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { ActivityPanel } from '../../src/components/ActivityPanel';
 import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
-import { Button, Chip, EmptyState, IconButton } from '../../src/components/ui';
+import { RhythmStrip, SyncBadge } from '../../src/components/Rhythm';
+import { useTabBarSpace } from '../../src/components/TabBar';
+import { Button, Chip, DisplayTitle, EmptyState, IconButton } from '../../src/components/ui';
 import {
   ATHLETES,
   Athlete,
@@ -18,8 +20,17 @@ import {
 } from '../../src/data/mockData';
 import { ATHLETE_ACTION_PHOTOS } from '../../src/data/photos';
 import { cityWithinRadius, useFilters } from '../../src/data/filters';
+import {
+  Rhythm,
+  rhythmForAthlete,
+  rhythmForMe,
+  sharedDaysLabel,
+  syncScore,
+} from '../../src/data/rhythm';
+import { useMe } from '../../src/data/session';
 import { useSocial } from '../../src/data/social';
-import { colors, fonts, formatLabel, shadow } from '../../src/theme/tokens';
+import { useColors } from '../../src/theme/appearance';
+import { fonts, formatLabel, shadow } from '../../src/theme/tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.28;
@@ -34,7 +45,7 @@ const CARD_STYLE: ViewStyle = {
   height: '96%',
   borderRadius: 28,
   overflow: 'hidden',
-  backgroundColor: colors.surface,
+  backgroundColor: '#2A2526', // photo placeholder while loading
   ...shadow.raised,
 };
 const NEXT_CARD_STYLES: Record<1 | 2, ViewStyle> = {
@@ -45,9 +56,13 @@ const NEXT_CARD_STYLES: Record<1 | 2, ViewStyle> = {
 type SwipeDirection = 'like' | 'pass';
 
 export default function DiscoverScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
+  const tabBarSpace = useTabBarSpace();
   const router = useRouter();
   const disc = useFilters();
+  const me = useMe();
+  const myRhythm = useMemo(() => rhythmForMe(me.cadence), [me.cadence]);
   const { blocked } = useSocial();
 
   const [filters, setFilters] = useState<Discipline[]>([]);
@@ -121,20 +136,18 @@ export default function DiscoverScreen() {
 
   return (
     <YStack flex={1} bg="$canvas">
-      <XStack px={20} pb={4} pt={insets.top + 12} items="center" justify="space-between">
-        <YStack>
-          <Text fontFamily="$bold" fontSize={28} lineHeight={34} letterSpacing={-0.5} color="$text">
-            Discover
-          </Text>
-          <Text fontFamily="$medium" fontSize={14} color="$muted" mt={2}>
-            {queue.length} {queue.length === 1 ? 'person' : 'people'} to meet today
+      <XStack px={20} pb={4} pt={insets.top + 8} items="flex-end" justify="space-between">
+        <YStack flex={1}>
+          <DisplayTitle size={42}>Find your *pace*</DisplayTitle>
+          <Text fontFamily="$medium" fontSize={14} color="$muted" mt={4}>
+            {queue.length} {queue.length === 1 ? 'person' : 'people'} nearby who move like you
           </Text>
         </YStack>
         <XStack items="center" gap={8}>
           {streak > 0 ? (
             <XStack items="center" gap={4} height={40} px={12} rounded="$full" bg="$accentSoft">
-              <Icon name="zap" size={15} color={colors.accent} strokeWidth={2} />
-              <Text fontFamily="$semibold" fontSize={14} color="$accent">
+              <Icon name="zap" size={15} color={colors.accentText} strokeWidth={2} />
+              <Text fontFamily="$semibold" fontSize={14} color="$accentText">
                 {streak}
               </Text>
             </XStack>
@@ -175,7 +188,7 @@ export default function DiscoverScreen() {
         ))}
       </ScrollView>
 
-      <YStack flex={1} items="center" justify="center">
+      <YStack flex={1} items="center" justify="center" mb={tabBarSpace - 8}>
         {exhausted ? (
           <EmptyState
             icon="sparkles"
@@ -199,6 +212,7 @@ export default function DiscoverScreen() {
                 onSwiped={(dir) => commitSwipe(current, dir)}
                 onLike={pressLike}
                 onPass={pressPass}
+                myRhythm={myRhythm}
                 onOpenProfile={() => openProfile(current)}
               />
             ) : null}
@@ -215,6 +229,7 @@ function SwipeCard({
   onSwiped,
   onLike,
   onPass,
+  myRhythm,
   onOpenProfile,
 }: {
   athlete: Athlete;
@@ -222,8 +237,12 @@ function SwipeCard({
   onSwiped: (direction: SwipeDirection) => void;
   onLike: () => void;
   onPass: () => void;
+  myRhythm: Rhythm;
   onOpenProfile: () => void;
 }) {
+  const colors = useColors();
+  const theirRhythm = rhythmForAthlete(athlete);
+  const sync = syncScore(myRhythm, theirRhythm);
   const pan = useRef(new Animated.ValueXY()).current;
   const enter = useRef(new Animated.Value(0)).current;
 
@@ -321,54 +340,67 @@ function SwipeCard({
         pointerEvents="none"
         style={[styles.stamp, styles.passStamp, { opacity: passOpacity }]}
       >
-        <Text style={[styles.stampText, { color: colors.text, borderColor: colors.text }]}>
-          Nope
-        </Text>
+        <Text style={[styles.stampText, { color: '#1C1917', borderColor: '#1C1917' }]}>Nope</Text>
       </Animated.View>
 
+      <YStack position="absolute" t={16} l={16} pointerEvents="none">
+        <SyncBadge pct={sync} variant="photo" />
+      </YStack>
+
       {/* Bottom scrim so white type stays readable on any photo. */}
-      <YStack pointerEvents="none" position="absolute" l={0} r={0} b={0} height={260}>
+      <YStack pointerEvents="none" position="absolute" l={0} r={0} b={0} height={380}>
         <Svg width="100%" height="100%">
           <Defs>
             <LinearGradient id="photoFade" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor="#1C1917" stopOpacity={0} />
-              <Stop offset="0.5" stopColor="#1C1917" stopOpacity={0.45} />
-              <Stop offset="1" stopColor="#1C1917" stopOpacity={0.8} />
+              <Stop offset="0" stopColor="#140F10" stopOpacity={0} />
+              <Stop offset="0.45" stopColor="#140F10" stopOpacity={0.55} />
+              <Stop offset="1" stopColor="#140F10" stopOpacity={0.92} />
             </LinearGradient>
           </Defs>
           <Rect width="100%" height="100%" fill="url(#photoFade)" />
         </Svg>
       </YStack>
 
-      <YStack position="absolute" l={0} r={0} b={0} px={18} pt={12} pb={18}>
-        <YStack mb={14}>
+      <YStack position="absolute" l={0} r={0} b={0} px={18} pt={12} pb={18} gap={14}>
+        <YStack>
           <XStack items="center" gap={8}>
-            <Text
-              fontFamily="$bold"
-              fontSize={26}
-              lineHeight={32}
-              letterSpacing={-0.3}
+            <DisplayTitle
+              size={40}
               color="$onPhoto"
-            >
-              {athlete.name}, {athlete.age}
-            </Text>
+            >{`${athlete.name} *${athlete.age}*`}</DisplayTitle>
             {athlete.verified ? (
-              <Icon name="shield-check" size={20} color={colors.onPhoto} strokeWidth={2} />
+              <Icon name="shield-check" size={22} color={colors.onPhoto} strokeWidth={2} />
             ) : null}
           </XStack>
-          <XStack items="center" gap={5} mt={4}>
+          <XStack items="center" gap={5} mt={2}>
             <Icon name="map-pin" size={14} color="rgba(255,255,255,0.85)" />
             <Text fontFamily="$medium" fontSize={14} color="rgba(255,255,255,0.85)">
               {athlete.city} · {formatLabel(athlete.pace)}
             </Text>
           </XStack>
         </YStack>
+
+        <YStack
+          p={12}
+          gap={10}
+          rounded={20}
+          bg="rgba(255,255,255,0.1)"
+          borderWidth={1}
+          borderColor="rgba(255,255,255,0.16)"
+        >
+          <Text fontFamily="$semibold" fontSize={13} color="$onPhoto">
+            {sharedDaysLabel(myRhythm, theirRhythm)}
+          </Text>
+          <RhythmStrip mine={myRhythm} theirs={theirRhythm} variant="photo" height={36} />
+        </YStack>
+
         <ActivityPanel
           tags={tagsForDiscipline(athlete.discipline)}
           onLike={onLike}
           likeLabel={`Like ${athlete.name}`}
           onPass={onPass}
           passLabel={`Pass on ${athlete.name}`}
+          variant="photo"
         />
       </YStack>
     </Animated.View>
@@ -408,18 +440,19 @@ function NextCard({
 const styles = {
   stamp: {
     position: 'absolute' as const,
-    top: 28,
+    top: 72,
     padding: 8,
   },
   likeStamp: { left: 20 },
   passStamp: { right: 20 },
   stampText: {
-    fontFamily: fonts.extrabold,
-    fontSize: 22,
+    fontFamily: fonts.displayItalic,
+    fontSize: 44,
+    lineHeight: 52,
     borderWidth: 3,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 2,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 0,
     overflow: 'hidden' as const,
     backgroundColor: 'rgba(255,255,255,0.9)',
     transform: [{ rotate: '-12deg' }],

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 import { Icon } from './Icon';
-import { colors, formatLabel } from '../theme/tokens';
+import { useColors } from '../theme/appearance';
+import { formatLabel } from '../theme/tokens';
 
 // The footer row shared by Discover cards and Activity feed cards:
 // sport tags on the left, a like control on the right. On feed cards
@@ -21,6 +22,9 @@ interface ActivityPanelProps {
   // Discover only: a secondary "pass" button beside the like button.
   onPass?: () => void;
   passLabel?: string;
+  // 'photo' when the panel sits on a photo scrim: controls stay light
+  // whatever the app theme.
+  variant?: 'card' | 'photo';
 }
 
 export function ActivityPanel({
@@ -32,7 +36,10 @@ export function ActivityPanel({
   likeLabel = 'Like',
   onPass,
   passLabel = 'Pass',
+  variant = 'card',
 }: ActivityPanelProps) {
+  const onPhoto = variant === 'photo';
+  const colors = useColors();
   const hasStat = statValue != null;
   return (
     <XStack items="center" gap={10}>
@@ -47,9 +54,21 @@ export function ActivityPanel({
               rounded="$full"
               items="center"
               justify="center"
-              bg={accent ? '$accentSoft' : '$surface'}
+              bg={
+                onPhoto
+                  ? accent
+                    ? '$accent'
+                    : 'rgba(255,255,255,0.18)'
+                  : accent
+                    ? '$accentSoft'
+                    : '$surface'
+              }
             >
-              <Text fontFamily="$semibold" fontSize={13} color={accent ? '$accent' : '$text'}>
+              <Text
+                fontFamily="$semibold"
+                fontSize={13}
+                color={onPhoto ? '$onPhoto' : accent ? '$accentText' : '$text'}
+              >
                 {formatLabel(t)}
               </Text>
             </YStack>
@@ -75,11 +94,11 @@ export function ActivityPanel({
           <Icon
             name="heart"
             size={16}
-            color={liked ? colors.accent : colors.text}
+            color={liked ? colors.accentText : colors.text}
             filled={liked}
             strokeWidth={2}
           />
-          <Text fontFamily="$semibold" fontSize={14} color={liked ? '$accent' : '$text'}>
+          <Text fontFamily="$semibold" fontSize={14} color={liked ? '$accentText' : '$text'}>
             {statValue}
           </Text>
           {statLabel ? (
@@ -100,11 +119,16 @@ export function ActivityPanel({
               width={44}
               height={44}
               rounded={22}
-              bg="$card"
+              bg={onPhoto ? 'rgba(255,255,255,0.94)' : '$card'}
               items="center"
               justify="center"
             >
-              <Icon name="x" size={20} color={colors.text} strokeWidth={2.2} />
+              <Icon
+                name="x"
+                size={20}
+                color={onPhoto ? '#1C1917' : colors.text}
+                strokeWidth={2.2}
+              />
             </XStack>
           ) : null}
           <XStack
@@ -119,7 +143,7 @@ export function ActivityPanel({
             bg="$accent"
             items="center"
             justify="center"
-            shadowColor={colors.accent}
+            shadowColor="$accent"
             shadowOpacity={0.35}
             shadowRadius={12}
             shadowOffset={{ width: 0, height: 6 }}

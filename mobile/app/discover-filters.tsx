@@ -46,7 +46,7 @@ export default function DiscoverFiltersScreen() {
   return (
     <YStack flex={1} bg="$canvas">
       <ScreenHeader
-        title="Filters"
+        title="Refine your *search*"
         onBack={() => router.back()}
         action={<TextAction onPress={resetFilters}>Reset</TextAction>}
       />
@@ -59,7 +59,7 @@ export default function DiscoverFiltersScreen() {
         <YStack>
           <XStack items="baseline" justify="space-between">
             <SectionTitle>Age range</SectionTitle>
-            <Text fontFamily="$semibold" fontSize={15} color="$accent">
+            <Text fontFamily="$semibold" fontSize={15} color="$accentText">
               {f.ageMin} – {f.ageMax}
             </Text>
           </XStack>

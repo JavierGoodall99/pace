@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { ActivityPanel } from '../../src/components/ActivityPanel';
+import { useTabBarSpace } from '../../src/components/TabBar';
+import { DisplayTitle } from '../../src/components/ui';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { athleteById, Discipline, FEED_ITEMS, tagsForDiscipline } from '../../src/data/mockData';
 import { ACTIVITY_PHOTO, ATHLETE_PHOTOS, ME_AVATAR } from '../../src/data/photos';
@@ -18,6 +20,7 @@ const TYPE_DISCIPLINE: Record<string, Discipline> = {
 
 export default function FeedScreen() {
   const insets = useSafeAreaInsets();
+  const tabBarSpace = useTabBarSpace();
   const [liked, setLiked] = useState<Record<number, boolean>>({});
 
   function toggleLike(id: number) {
@@ -25,11 +28,13 @@ export default function FeedScreen() {
   }
 
   return (
-    <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pt: insets.top + 12, pb: 32 }}>
+    <ScrollView
+      flex={1}
+      bg="$canvas"
+      contentContainerStyle={{ pt: insets.top + 8, pb: tabBarSpace + 16 }}
+    >
       <YStack px={20} pb={16}>
-        <Text fontFamily="$bold" fontSize={28} lineHeight={34} letterSpacing={-0.5} color="$text">
-          Activity
-        </Text>
+        <DisplayTitle size={42}>The *feed*</DisplayTitle>
         <Text fontSize={15} lineHeight={22} color="$muted" mt={4}>
           Your training and your matches&apos;, all in one place.
         </Text>
@@ -78,7 +83,7 @@ export default function FeedScreen() {
                 />
               </YStack>
               <YStack px={16} pt={12} pb={14} gap={12}>
-                <Text fontFamily="$medium" fontSize={15} color="$text">
+                <Text fontFamily="$display" fontSize={26} lineHeight={30} color="$text">
                   {f.stat}
                 </Text>
                 <ActivityPanel

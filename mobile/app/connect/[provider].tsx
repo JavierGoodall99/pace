@@ -5,7 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
 import { Button, Callout, ScreenHeader } from '../../src/components/ui';
 import { updateMe, useMe } from '../../src/data/session';
-import { colors } from '../../src/theme/tokens';
+import { useColors } from '../../src/theme/appearance';
 
 const PROVIDERS: Record<
   'strava' | 'garmin',
@@ -24,6 +24,7 @@ const PROVIDERS: Record<
 };
 
 export default function ConnectScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
@@ -48,7 +49,7 @@ export default function ConnectScreen() {
 
   return (
     <YStack flex={1} bg="$canvas" style={{ paddingBottom: insets.bottom + 20 }}>
-      <ScreenHeader title="Connect" onBack={() => router.back()} />
+      <ScreenHeader title="Connect *data*" onBack={() => router.back()} />
 
       <YStack flex={1} justify="center" gap={20} px={20}>
         <XStack
@@ -61,7 +62,7 @@ export default function ConnectScreen() {
           items="center"
           justify="center"
         >
-          <Icon name={p.icon} size={34} color={connected ? colors.accent : colors.text} />
+          <Icon name={p.icon} size={34} color={connected ? colors.accentText : colors.text} />
         </XStack>
 
         <YStack gap={8}>

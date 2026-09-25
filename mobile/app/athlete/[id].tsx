@@ -4,17 +4,23 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
-import { Badge, Button } from '../../src/components/ui';
+import { RhythmLegend, RhythmStrip, SyncBadge } from '../../src/components/Rhythm';
+import { Badge, Button, DisplayTitle } from '../../src/components/ui';
 import { athleteById } from '../../src/data/mockData';
+import { rhythmForAthlete, rhythmForMe, sharedDaysLabel, syncScore } from '../../src/data/rhythm';
+import { useMe } from '../../src/data/session';
 import { ATHLETE_ACTION_PHOTOS } from '../../src/data/photos';
 import { blockAthlete } from '../../src/data/social';
-import { colors, formatLabel, shadow } from '../../src/theme/tokens';
+import { useColors } from '../../src/theme/appearance';
+import { formatLabel, shadow } from '../../src/theme/tokens';
 
 export default function AthleteDetailScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const athlete = athleteById(Number(id));
+  const me = useMe();
 
   if (!athlete) {
     return (
@@ -25,6 +31,10 @@ export default function AthleteDetailScreen() {
       </YStack>
     );
   }
+
+  const mine = rhythmForMe(me.cadence);
+  const theirs = rhythmForAthlete(athlete);
+  const sync = syncScore(mine, theirs);
 
   function confirmBlock() {
     if (!athlete) return;
@@ -129,17 +139,9 @@ export default function AthleteDetailScreen() {
           style={shadow.raised}
         >
           <XStack items="center" gap={8}>
-            <Text
-              fontFamily="$bold"
-              fontSize={28}
-              lineHeight={34}
-              letterSpacing={-0.5}
-              color="$text"
-            >
-              {athlete.name}, {athlete.age}
-            </Text>
+            <DisplayTitle size={44}>{`${athlete.name} *${athlete.age}*`}</DisplayTitle>
             {athlete.verified ? (
-              <Icon name="shield-check" size={22} color={colors.accent} strokeWidth={2} />
+              <Icon name="shield-check" size={22} color={colors.accentText} strokeWidth={2} />
             ) : null}
           </XStack>
           <XStack items="center" gap={5} mt={4}>
@@ -161,8 +163,31 @@ export default function AthleteDetailScreen() {
           <XStack mt={20} pt={18} borderTopWidth={1} borderTopColor="$border">
             <StatCard value={String(athlete.weekly)} label="Sessions / wk" />
             <StatCard value={formatLabel(athlete.pace)} label="Avg pace" divider />
-            <StatCard value="94%" label="Profile match" divider />
+            <StatCard value={`${sync}%`} label="In sync" divider />
           </XStack>
+        </YStack>
+
+        <YStack
+          mx={16}
+          mt={12}
+          p={20}
+          gap={14}
+          rounded={28}
+          bg="$card"
+          borderWidth={1}
+          borderColor="$border"
+        >
+          <XStack items="flex-start" justify="space-between" gap={12}>
+            <YStack flex={1}>
+              <DisplayTitle size={28}>Your week, *together*</DisplayTitle>
+              <Text fontSize={14} color="$muted" mt={4}>
+                {sharedDaysLabel(mine, theirs)}
+              </Text>
+            </YStack>
+            <SyncBadge pct={sync} />
+          </XStack>
+          <RhythmStrip mine={mine} theirs={theirs} height={40} />
+          <RhythmLegend />
         </YStack>
       </ScrollView>
 

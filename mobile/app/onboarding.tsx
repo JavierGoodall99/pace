@@ -1,17 +1,19 @@
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, useWindowDimensions } from 'react-native';
+import { Animated, Easing, Image as RNImage, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { Image, ScrollView, Text, XStack, YStack } from 'tamagui';
 import { buildConfettiPieces, Confetti } from '../src/components/Confetti';
 import { Icon } from '../src/components/Icon';
+import { Aurora, PulseLine } from '../src/components/Motif';
+import { RhythmStrip } from '../src/components/Rhythm';
 import {
   Badge,
   Button,
   Chip,
   Callout,
+  DisplayTitle,
   IconButton,
   Input,
   ProgressBar,
@@ -21,7 +23,8 @@ import {
 import { DISCIPLINES, Discipline } from '../src/data/mockData';
 import { HERO_RUNNERS } from '../src/data/photos';
 import { completeOnboarding, updateMe, useMe } from '../src/data/session';
-import { colors, shadow } from '../src/theme/tokens';
+import { useColors } from '../src/theme/appearance';
+import { brand, shadow } from '../src/theme/tokens';
 
 // Ported from `../Pace Onboarding.dc.html` — an 8-step flow (0-7):
 // Welcome, Basics, Disciplines, Cadence, Photos, Activity Sync, Verify,
@@ -36,16 +39,16 @@ const TIME_OPTIONS = ['EARLY MORNING', 'EVENING', 'WEEKENDS'];
 const STEP_WEIGHT = 100 / 6;
 
 const CONFETTI_COLORS = [
-  colors.accent,
-  colors.peach,
-  colors.lilac,
-  colors.sun,
-  colors.accent,
-  colors.peach,
-  colors.lilac,
-  colors.accent,
-  colors.sun,
-  colors.peach,
+  brand.accent,
+  brand.peach,
+  brand.lilac,
+  brand.sun,
+  brand.accent,
+  brand.peach,
+  brand.lilac,
+  brand.accent,
+  brand.sun,
+  brand.peach,
 ];
 
 const NEXT_LABEL: Record<number, string> = {
@@ -63,7 +66,7 @@ const WELCOME_BODY_STYLE = { pb: 0, flexGrow: 1 };
 const CTA_STYLE = {
   width: '100%',
   height: 56,
-  shadowColor: colors.accent,
+  shadowColor: brand.accent,
   shadowOpacity: 0.3,
   shadowRadius: 18,
   shadowOffset: { width: 0, height: 6 },
@@ -71,6 +74,7 @@ const CTA_STYLE = {
 } as const;
 
 export default function OnboardingScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
@@ -233,16 +237,9 @@ export default function OnboardingScreen() {
 
         {step === 1 && (
           <YStack>
-            <Text
-              fontFamily="$bold"
-              fontSize={28}
-              lineHeight={34}
-              letterSpacing={-0.5}
-              color="$text"
-              mt={12}
-            >
-              Say hello.
-            </Text>
+            <YStack mt={12}>
+              <DisplayTitle size={40}>Say *hello*.</DisplayTitle>
+            </YStack>
             <Text color="$muted" fontSize={16} lineHeight={24} mt={8} mb={24}>
               Just enough for a warm introduction.
             </Text>
@@ -269,16 +266,9 @@ export default function OnboardingScreen() {
 
         {step === 2 && (
           <YStack>
-            <Text
-              fontFamily="$bold"
-              fontSize={28}
-              lineHeight={34}
-              letterSpacing={-0.5}
-              color="$text"
-              mt={12}
-            >
-              Your sports.
-            </Text>
+            <YStack mt={12}>
+              <DisplayTitle size={40}>Your *sports*.</DisplayTitle>
+            </YStack>
             <Text color="$muted" fontSize={16} lineHeight={24} mt={8} mb={24}>
               Pick what you train. This is what we match on.
             </Text>
@@ -297,16 +287,9 @@ export default function OnboardingScreen() {
 
         {step === 3 && (
           <YStack>
-            <Text
-              fontFamily="$bold"
-              fontSize={28}
-              lineHeight={34}
-              letterSpacing={-0.5}
-              color="$text"
-              mt={12}
-            >
-              Your rhythm.
-            </Text>
+            <YStack mt={12}>
+              <DisplayTitle size={40}>Your *rhythm*.</DisplayTitle>
+            </YStack>
             <Text color="$muted" fontSize={16} lineHeight={24} mt={8} mb={24}>
               How often, and when you actually train.
             </Text>
@@ -334,16 +317,9 @@ export default function OnboardingScreen() {
 
         {step === 4 && (
           <YStack>
-            <Text
-              fontFamily="$bold"
-              fontSize={28}
-              lineHeight={34}
-              letterSpacing={-0.5}
-              color="$text"
-              mt={12}
-            >
-              Put a face to it.
-            </Text>
+            <YStack mt={12}>
+              <DisplayTitle size={40}>Put a *face* to it.</DisplayTitle>
+            </YStack>
             <Text color="$muted" fontSize={16} lineHeight={24} mt={8} mb={24}>
               One good photo beats a paragraph of bio. Pick up to three from your library.
             </Text>
@@ -415,16 +391,9 @@ export default function OnboardingScreen() {
 
         {step === 5 && (
           <YStack>
-            <Text
-              fontFamily="$bold"
-              fontSize={28}
-              lineHeight={34}
-              letterSpacing={-0.5}
-              color="$text"
-              mt={12}
-            >
-              Share your training.
-            </Text>
+            <YStack mt={12}>
+              <DisplayTitle size={40}>Share your *training*.</DisplayTitle>
+            </YStack>
             <Text color="$muted" fontSize={16} lineHeight={24} mt={8} mb={24}>
               Connect your data so your matches see the real, verified you.
             </Text>
@@ -452,16 +421,9 @@ export default function OnboardingScreen() {
 
         {step === 6 && (
           <YStack>
-            <Text
-              fontFamily="$bold"
-              fontSize={28}
-              lineHeight={34}
-              letterSpacing={-0.5}
-              color="$text"
-              mt={12}
-            >
-              You are you.
-            </Text>
+            <YStack mt={12}>
+              <DisplayTitle size={40}>Prove it’s *you*.</DisplayTitle>
+            </YStack>
             <Text color="$muted" fontSize={16} lineHeight={24} mt={8} mb={24}>
               A quick liveness check — matched against your photo. Ten seconds, no document needed.
             </Text>
@@ -479,7 +441,7 @@ export default function OnboardingScreen() {
                 <Icon
                   name="shield-check"
                   size={44}
-                  color={me.verified ? colors.accent : colors.muted}
+                  color={me.verified ? colors.accentText : colors.muted}
                 />
               </YStack>
               <Button
@@ -541,7 +503,7 @@ export default function OnboardingScreen() {
               <Text fontSize={15} color="$muted">
                 Already have an account?
               </Text>
-              <Text fontFamily="$semibold" fontSize={15} color="$accent">
+              <Text fontFamily="$semibold" fontSize={15} color="$accentText">
                 Log in
               </Text>
             </XStack>
@@ -566,6 +528,7 @@ export default function OnboardingScreen() {
 const HERO_ASPECT_RATIO = 1536 / 1024;
 
 function WelcomeStep() {
+  const colors = useColors();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   // Full-width, aspect-correct height: `cover` then has nothing to crop.
@@ -599,25 +562,78 @@ function WelcomeStep() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const archWidth = width - 56;
+  const archHeight = Math.min(heroHeight + 40, Math.round(height * 0.44));
+
   return (
     <YStack flex={1}>
+      <Aurora height={archHeight + insets.top + 120} />
       <Animated.View style={{ opacity: heroOpacity }}>
-        <YStack mt={insets.top + 12}>
-          <Image
-            source={HERO_RUNNERS}
-            style={{ width: '100%', height: heroHeight }}
-            resizeMode="cover"
-          />
-          <YStack position="absolute" t={0} l={0} r={0} height={heroHeight} pointerEvents="none">
-            <Svg width="100%" height="100%">
-              <Defs>
-                <LinearGradient id="gatewayFade" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor={colors.canvas} stopOpacity={0} />
-                  <Stop offset="1" stopColor={colors.canvas} stopOpacity={1} />
-                </LinearGradient>
-              </Defs>
-              <Rect width="100%" height="100%" fill="url(#gatewayFade)" />
-            </Svg>
+        <YStack mt={insets.top + 20} items="center">
+          {/* Arch-framed hero — the rounded top reads like a finish-line
+              gate. Floating product chips hint at what's inside. */}
+          <YStack
+            width={archWidth}
+            height={archHeight}
+            overflow="hidden"
+            bg="$surface"
+            style={{
+              borderTopLeftRadius: archWidth / 2,
+              borderTopRightRadius: archWidth / 2,
+              borderBottomLeftRadius: 28,
+              borderBottomRightRadius: 28,
+            }}
+          >
+            <RNImage
+              source={HERO_RUNNERS}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            />
+          </YStack>
+          <YStack
+            position="absolute"
+            t={archHeight * 0.52}
+            l={8}
+            style={{ transform: [{ rotate: '-4deg' }] }}
+          >
+            <XStack
+              items="center"
+              gap={8}
+              px={14}
+              height={44}
+              rounded="$full"
+              bg="$card"
+              borderWidth={1}
+              borderColor="$border"
+              style={shadow.raised}
+            >
+              <Icon name="activity" size={18} color={colors.accentText} strokeWidth={2.2} />
+              <Text fontFamily="$bold" fontSize={15} color="$text">
+                94% in sync
+              </Text>
+            </XStack>
+          </YStack>
+          <YStack
+            position="absolute"
+            t={archHeight - 56}
+            r={8}
+            p={12}
+            gap={8}
+            rounded={20}
+            bg="$card"
+            borderWidth={1}
+            borderColor="$border"
+            width={176}
+            style={{ ...shadow.raised, transform: [{ rotate: '3deg' }] }}
+          >
+            <Text fontFamily="$semibold" fontSize={12} color="$muted">
+              You both train Tue & Sat
+            </Text>
+            <RhythmStrip
+              mine={[false, true, false, true, false, true, true]}
+              theirs={[true, true, false, false, false, true, false]}
+              height={24}
+            />
           </YStack>
         </YStack>
       </Animated.View>
@@ -625,30 +641,13 @@ function WelcomeStep() {
       <Animated.View
         style={{ flex: 1, opacity: bodyOpacity, transform: [{ translateY: bodyTranslate }] }}
       >
-        <YStack flex={1} px={24} pt={20} justify="center">
-          <YStack accessibilityRole="header">
-            <Text
-              fontFamily="$heading"
-              fontSize={44}
-              lineHeight={50}
-              letterSpacing={-1.2}
-              color="$text"
-            >
-              Match. Train.
-            </Text>
-            <Text
-              fontFamily="$heading"
-              fontSize={44}
-              lineHeight={50}
-              letterSpacing={-1.2}
-              color="$accent"
-            >
-              Date.
-            </Text>
+        <YStack flex={1} px={24} pt={36} justify="center">
+          <DisplayTitle size={50}>Date someone who *moves* like you.</DisplayTitle>
+          <YStack mt={14} mb={6} width={180}>
+            <PulseLine width={180} height={30} />
           </YStack>
-
-          <Text fontSize={17} lineHeight={26} color="$muted" maxW={340} mt={16}>
-            Meet people who share your love of moving — and actually keep up with you.
+          <Text fontSize={17} lineHeight={26} color="$muted" maxW={340}>
+            Pace matches you on the rhythm of your week — not just your photos.
           </Text>
         </YStack>
       </Animated.View>
@@ -667,7 +666,8 @@ function SyncRow({
   connected: boolean;
   onPress: () => void;
 }) {
-  const tint = connected ? colors.accent : colors.text;
+  const colors = useColors();
+  const tint = connected ? colors.accentText : colors.text;
   return (
     <XStack
       onPress={onPress}
@@ -699,7 +699,7 @@ function SyncRow({
           Connected
         </Badge>
       ) : (
-        <Text fontFamily="$semibold" fontSize={15} color="$accent">
+        <Text fontFamily="$semibold" fontSize={15} color="$accentText">
           Connect
         </Text>
       )}
@@ -724,6 +724,7 @@ function LaunchStep({
   city: string;
   disciplines: Discipline[];
 }) {
+  const colors = useColors();
   const badgeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -743,18 +744,11 @@ function LaunchStep({
   return (
     <YStack items="center" pt={20}>
       <Badge tone="accent" icon="zap">{`Profile strength ${profileStrength}%`}</Badge>
-      <Text
-        fontFamily="$bold"
-        fontSize={28}
-        lineHeight={34}
-        letterSpacing={-0.5}
-        color="$text"
-        mt={14}
-        mb={4}
-        text="center"
-      >
-        Welcome to Pace
-      </Text>
+      <YStack mt={14} mb={4}>
+        <DisplayTitle size={42} center>
+          Welcome to *Pace*
+        </DisplayTitle>
+      </YStack>
 
       <Confetti pieces={CONFETTI_PIECES} />
 
@@ -820,12 +814,12 @@ const TOAST_STYLE = {
   marginLeft: -110,
   width: 220,
   zIndex: 40,
-  backgroundColor: colors.accent,
+  backgroundColor: brand.accent,
   borderRadius: 999,
   paddingVertical: 10,
   paddingHorizontal: 18,
   alignItems: 'center' as const,
-  shadowColor: colors.accent,
+  shadowColor: brand.accent,
   shadowOpacity: 0.3,
   shadowRadius: 24,
   shadowOffset: { width: 0, height: 8 },

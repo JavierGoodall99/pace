@@ -35,7 +35,7 @@ export default function SettingsPrivacyScreen() {
   return (
     <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
       <ScreenHeader
-        title="Privacy"
+        title="Your *privacy*"
         subtitle="You decide who sees what."
         onBack={() => router.back()}
       />

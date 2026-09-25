@@ -7,7 +7,8 @@ import { PhotoSlot } from '../src/components/PhotoSlot';
 import { Card, ScreenHeader, SectionTitle, TextAction } from '../src/components/ui';
 import { athleteById, AppNotification, NOTIFICATIONS } from '../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../src/data/photos';
-import { colors, formatLabel } from '../src/theme/tokens';
+import { useColors } from '../src/theme/appearance';
+import { formatLabel } from '../src/theme/tokens';
 
 const GROUPS: AppNotification['group'][] = ['TODAY', 'EARLIER'];
 
@@ -31,6 +32,7 @@ function routeFor(n: AppNotification): Href {
 }
 
 export default function NotificationsScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [unread, setUnread] = useState<Record<number, boolean>>(
@@ -42,7 +44,7 @@ export default function NotificationsScreen() {
   return (
     <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
       <ScreenHeader
-        title="Notifications"
+        title="What’s *new*"
         subtitle={
           unreadCount > 0
             ? `${unreadCount} new update${unreadCount === 1 ? '' : 's'}`

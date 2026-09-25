@@ -4,10 +4,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon, IconName } from '../src/components/Icon';
 import { PhotoSlot } from '../src/components/PhotoSlot';
-import { Badge, Card, ScreenHeader } from '../src/components/ui';
+import { Badge, Card, ScreenHeader, SegmentedControl } from '../src/components/ui';
 import { ME_AVATAR } from '../src/data/photos';
 import { signOut, useMe } from '../src/data/session';
-import { colors, shadow } from '../src/theme/tokens';
+import {
+  AppearancePreference,
+  setAppearance,
+  useAppearance,
+  useColors,
+} from '../src/theme/appearance';
+import { shadow } from '../src/theme/tokens';
 
 interface SettingsRow {
   icon: IconName;
@@ -28,10 +34,17 @@ const PREFERENCE_ROWS: SettingsRow[] = [
   { icon: 'credit-card', label: 'Subscription', value: 'Free', route: '/settings-subscription' },
 ];
 
+const APPEARANCE_LABEL: Record<AppearancePreference, string> = {
+  system: 'System',
+  light: 'Light',
+  dark: 'Dark',
+};
+
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
+  const { preference } = useAppearance();
 
   const avatar = me.photos[0] ? { uri: me.photos[0] } : ME_AVATAR;
 
@@ -62,7 +75,7 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
-      <ScreenHeader title="Settings" onBack={() => router.back()} />
+      <ScreenHeader title="*Settings*" onBack={() => router.back()} />
 
       <XStack
         items="center"
@@ -97,6 +110,15 @@ export default function SettingsScreen() {
           {me.verified ? 'Verified' : 'Unverified'}
         </Badge>
       </XStack>
+
+      <GroupLabel>Appearance</GroupLabel>
+      <YStack mx={20}>
+        <SegmentedControl
+          options={['System', 'Light', 'Dark']}
+          value={APPEARANCE_LABEL[preference]}
+          onChange={(v) => setAppearance(v.toLowerCase() as AppearancePreference)}
+        />
+      </YStack>
 
       <GroupLabel>Preferences</GroupLabel>
       <YStack mx={20}>
@@ -148,6 +170,7 @@ function Row({
   danger?: boolean;
   last?: boolean;
 }) {
+  const colors = useColors();
   return (
     <XStack
       accessibilityRole="button"
@@ -167,9 +190,9 @@ function Row({
         justify="center"
         bg={danger ? '$accentSoft' : '$surface'}
       >
-        <Icon name={icon} size={18} color={danger ? colors.accent : colors.text} />
+        <Icon name={icon} size={18} color={danger ? colors.accentText : colors.text} />
       </XStack>
-      <Text flex={1} fontFamily="$medium" fontSize={16} color={danger ? '$accent' : '$text'}>
+      <Text flex={1} fontFamily="$medium" fontSize={16} color={danger ? '$accentText' : '$text'}>
         {label}
       </Text>
       {value ? (

@@ -32,7 +32,7 @@ export default function SettingsNotificationsScreen() {
   return (
     <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
       <ScreenHeader
-        title="Notifications"
+        title="Stay in the *loop*"
         subtitle="Choose what pings you, and where."
         onBack={() => router.back()}
       />

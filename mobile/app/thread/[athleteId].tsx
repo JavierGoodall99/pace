@@ -18,7 +18,8 @@ import {
   updateSessionStatus,
 } from '../../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
-import { colors, formatLabel, shadow } from '../../src/theme/tokens';
+import { useColors } from '../../src/theme/appearance';
+import { formatLabel, shadow } from '../../src/theme/tokens';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -38,6 +39,7 @@ function upcomingDates(count: number): { key: string; label: string }[] {
 }
 
 export default function ThreadScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { athleteId } = useLocalSearchParams<{ athleteId: string }>();
@@ -380,7 +382,7 @@ export default function ThreadScreen() {
               onPress={() => setPlanning(true)}
               accessibilityLabel="Plan a session"
             >
-              <Icon name="calendar" size={20} color={colors.accent} />
+              <Icon name="calendar" size={20} color={colors.accentText} />
             </IconButton>
             <YStack flex={1}>
               <Input
@@ -403,7 +405,11 @@ export default function ThreadScreen() {
               onPress={sendText}
               accessibilityLabel="Send"
             >
-              <Icon name="send" size={18} color={note.trim() ? colors.onAccent : colors.accent} />
+              <Icon
+                name="send"
+                size={18}
+                color={note.trim() ? colors.onAccent : colors.accentText}
+              />
             </IconButton>
           </XStack>
         )}

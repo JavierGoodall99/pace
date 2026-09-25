@@ -7,9 +7,11 @@ import { EmptyState, IconButton, ScreenHeader } from '../src/components/ui';
 import { athleteById } from '../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../src/data/photos';
 import { useSocial } from '../src/data/social';
-import { colors, formatLabel } from '../src/theme/tokens';
+import { useColors } from '../src/theme/appearance';
+import { formatLabel } from '../src/theme/tokens';
 
 export default function MatchesScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { matches } = useSocial();
@@ -17,7 +19,7 @@ export default function MatchesScreen() {
   return (
     <YStack flex={1} bg="$canvas">
       <ScreenHeader
-        title="Matches"
+        title="Your *matches*"
         subtitle={
           matches.length > 0
             ? `${matches.length} ${matches.length === 1 ? 'person' : 'people'} to train with`
@@ -70,7 +72,7 @@ export default function MatchesScreen() {
                 </Text>
               </YStack>
               <IconButton size={40} tone="accent" accessibilityLabel={`Message ${a.name}`}>
-                <Icon name="message-circle" size={18} color={colors.accent} />
+                <Icon name="message-circle" size={18} color={colors.accentText} />
               </IconButton>
             </XStack>
           );

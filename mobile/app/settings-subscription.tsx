@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../src/components/Icon';
 import { Badge, Button, Card, ScreenHeader } from '../src/components/ui';
-import { colors } from '../src/theme/tokens';
+import { useColors } from '../src/theme/appearance';
 
 const PRO_FEATURES = [
   'Unlimited likes',
@@ -14,12 +14,13 @@ const PRO_FEATURES = [
 ];
 
 export default function SettingsSubscriptionScreen() {
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
   return (
     <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
-      <ScreenHeader title="Subscription" onBack={() => router.back()} />
+      <ScreenHeader title="Your *plan*" onBack={() => router.back()} />
 
       <YStack px={20} pt={20} gap={16}>
         <Card px={18} py={18}>
@@ -79,7 +80,7 @@ export default function SettingsSubscriptionScreen() {
               </Text>
             </YStack>
             <XStack items="baseline" mt={40}>
-              <Text fontFamily="$bold" fontSize={28} color="$accent">
+              <Text fontFamily="$bold" fontSize={28} color="$accentText">
                 R79
               </Text>
               <Text fontFamily="$medium" fontSize={14} color="$muted">

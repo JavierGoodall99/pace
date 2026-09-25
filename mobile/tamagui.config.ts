@@ -1,8 +1,14 @@
 import { defaultConfig } from '@tamagui/config/v4';
 import { createFont, createTamagui } from 'tamagui';
-import { colors, fonts as fontFamilies, radius as appRadius, spacing } from './src/theme/tokens';
+import {
+  fonts as fontFamilies,
+  Palette,
+  palettes,
+  radius as appRadius,
+  spacing,
+} from './src/theme/tokens';
 
-// Tamagui design tokens for the app's light theme (see
+// Tamagui design tokens for the app's light and dark themes (see
 // `src/theme/tokens.ts`). The v4 config carries colors inside themes
 // rather than tokens, so the palette is exposed as theme keys
 // (`$accent`, `$card`, `$muted`, ...) that any Tamagui component can use.
@@ -60,6 +66,19 @@ function jakarta(family: string, weight: string) {
   });
 }
 
+// Instrument Serif for editorial display headlines. Single weight; the
+// italic is its own family so `*emphasis*` in titles can switch to it.
+function serif(family: string) {
+  return createFont({
+    family,
+    size: { ...size, 12: 40, 13: 48, 14: 56, true: 40 },
+    lineHeight: { ...lineHeight, 12: 44, 13: 52, 14: 58, true: 44 },
+    weight: { true: '400' },
+    letterSpacing: { true: 0 },
+    face: { 400: { normal: family } },
+  });
+}
+
 const tokens = {
   ...defaultConfig.tokens,
   radius: {
@@ -77,49 +96,57 @@ const tokens = {
   },
 };
 
-const light = {
-  ...defaultConfig.themes.light,
-  // Semantic roles mapped to the app's palette.
-  background: colors.canvas,
-  background0: colors.canvas,
-  background02: colors.canvas,
-  background04: colors.surface,
-  background06: colors.card,
-  background08: colors.card,
-  backgroundHover: colors.surface,
-  backgroundPress: colors.surface,
-  backgroundFocus: colors.card,
-  borderColor: colors.border,
-  borderColorHover: colors.borderStrong,
-  borderColorPress: colors.borderStrong,
-  borderColorFocus: colors.accent,
-  color: colors.text,
-  colorHover: colors.text,
-  colorPress: colors.text,
-  colorFocus: colors.text,
-  placeholderColor: colors.muted,
-  outlineColor: colors.accentBorder,
-  shadowColor: colors.text,
-  accentBackground: colors.accent,
-  accentColor: colors.onAccent,
-  // Palette, exposed as theme keys for direct use in styles.
-  canvas: colors.canvas,
-  card: colors.card,
-  surface: colors.surface,
-  border: colors.border,
-  borderStrong: colors.borderStrong,
-  text: colors.text,
-  muted: colors.muted,
-  onAccent: colors.onAccent,
-  onPhoto: colors.onPhoto,
-  accent: colors.accent,
-  accentSoft: colors.accentSoft,
-  accentBorder: colors.accentBorder,
-  success: colors.success,
-  successSoft: colors.successSoft,
-  scrim: colors.scrim,
-  glass: colors.glass,
-};
+function buildTheme(base: typeof defaultConfig.themes.light, c: Palette) {
+  return {
+    ...base,
+    // Semantic roles mapped to the app's palette.
+    background: c.canvas,
+    background0: c.canvas,
+    background02: c.canvas,
+    background04: c.surface,
+    background06: c.card,
+    background08: c.card,
+    backgroundHover: c.surface,
+    backgroundPress: c.surface,
+    backgroundFocus: c.card,
+    borderColor: c.border,
+    borderColorHover: c.borderStrong,
+    borderColorPress: c.borderStrong,
+    borderColorFocus: c.accent,
+    color: c.text,
+    colorHover: c.text,
+    colorPress: c.text,
+    colorFocus: c.text,
+    placeholderColor: c.muted,
+    outlineColor: c.accentBorder,
+    shadowColor: '#000000',
+    accentBackground: c.accent,
+    accentColor: c.onAccent,
+    // Palette, exposed as theme keys for direct use in styles.
+    canvas: c.canvas,
+    card: c.card,
+    surface: c.surface,
+    border: c.border,
+    borderStrong: c.borderStrong,
+    text: c.text,
+    muted: c.muted,
+    onAccent: c.onAccent,
+    onPhoto: c.onPhoto,
+    accent: c.accent,
+    accentText: c.accentText,
+    accentSoft: c.accentSoft,
+    accentBorder: c.accentBorder,
+    success: c.success,
+    successSoft: c.successSoft,
+    scrim: c.scrim,
+    glass: c.glass,
+    tabBar: c.tabBar,
+    raised: c.raised,
+  };
+}
+
+const light = buildTheme(defaultConfig.themes.light, palettes.light);
+const dark = buildTheme(defaultConfig.themes.dark, palettes.dark);
 
 export const config = createTamagui({
   ...defaultConfig,
@@ -131,10 +158,13 @@ export const config = createTamagui({
     semibold: jakarta(fontFamilies.semibold, '600'),
     bold: jakarta(fontFamilies.bold, '700'),
     heading: jakarta(fontFamilies.extrabold, '800'),
+    display: serif(fontFamilies.display),
+    displayItalic: serif(fontFamilies.displayItalic),
   },
   themes: {
     ...defaultConfig.themes,
     light,
+    dark,
   },
 });
 

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { Image, ScrollView, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { buildConfettiPieces, Confetti } from '../src/components/Confetti';
 import { Icon } from '../src/components/Icon';
 import { Mascot, Mood, SpeechBubble } from '../src/components/Mascot';
@@ -667,7 +667,7 @@ function PhotosStep({ photos, onPick }: { photos: string[]; onPick: () => void }
               justify="center"
             >
               {uri ? (
-                <Image
+                <RNImage
                   source={{ uri }}
                   style={{ width: '100%', height: '100%' }}
                   resizeMode="cover"

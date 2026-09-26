@@ -82,6 +82,9 @@ export default function RootLayout() {
             <Stack.Screen name="races" />
             <Stack.Screen name="race/[id]" />
             <Stack.Screen name="safety" />
+            <Stack.Screen name="moment/[id]" options={{ presentation: 'fullScreenModal' }} />
+            <Stack.Screen name="moment-new" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="travel" options={{ presentation: 'modal' }} />
           </Stack>
           <PipToastHost />
         </Theme>

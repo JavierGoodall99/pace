@@ -25,6 +25,8 @@ import {
   WeekBuilder,
 } from '../src/components/OnboardingKit';
 import { PhotoSlot } from '../src/components/PhotoSlot';
+import { PickRow } from '../src/components/Sessions';
+import { PhotoGrid } from '../src/components/PhotoGrid';
 import { RhythmStrip } from '../src/components/Rhythm';
 import { Badge, Button, Callout, DisplayTitle, IconButton, Input } from '../src/components/ui';
 import { successHaptic } from '../src/lib/haptics';
@@ -32,9 +34,11 @@ import { ATHLETES, DISCIPLINES, Discipline, SPORT_ILLO } from '../src/data/mockD
 import { ATHLETE_PHOTOS, HERO_RUNNERS } from '../src/data/photos';
 import { cadenceForDays, Rhythm, rhythmForMe } from '../src/data/rhythm';
 import { compatibility } from '../src/data/compat';
+import { wantEachOther } from '../src/data/pacers';
 import { LEVELS } from '../src/data/athleteDepth';
 import { athletesTrainingFor, formatRaceDate, raceById, upcomingRaces } from '../src/data/races';
 import { completeOnboarding, Intent, MeProfile, updateMe, useMe } from '../src/data/session';
+import { DIETS, DRINKS, GENDERS, REST_DAYS, showMeLabel } from '../src/data/identity';
 import { useColors } from '../src/theme/appearance';
 import { brand, formatLabel, shadow } from '../src/theme/tokens';
 
@@ -51,6 +55,8 @@ type StepId =
   | 'welcome'
   | 'meet'
   | 'name'
+  | 'gender'
+  | 'showme'
   | 'intent'
   | 'sports'
   | 'week'
@@ -58,6 +64,7 @@ type StepId =
   | 'level'
   | 'goal'
   | 'basics'
+  | 'lifestyle'
   | 'photos'
   | 'sync'
   | 'verify'
@@ -69,6 +76,8 @@ const STEPS: StepId[] = [
   'welcome',
   'meet',
   'name',
+  'gender',
+  'showme',
   'intent',
   'sports',
   'week',
@@ -76,6 +85,7 @@ const STEPS: StepId[] = [
   'time',
   'goal',
   'basics',
+  'lifestyle',
   'photos',
   'sync',
   'verify',
@@ -87,6 +97,8 @@ const STEPS: StepId[] = [
 // Steps that count toward the progress bar.
 const QUESTIONS: StepId[] = [
   'name',
+  'gender',
+  'showme',
   'intent',
   'sports',
   'week',
@@ -94,12 +106,13 @@ const QUESTIONS: StepId[] = [
   'time',
   'goal',
   'basics',
+  'lifestyle',
   'photos',
   'sync',
   'verify',
 ];
 
-const MAX_PHOTOS = 3;
+const MAX_PHOTOS = 4;
 
 const BODY_STYLE = { px: 20, pt: 8, pb: 24, flexGrow: 1 };
 const WELCOME_BODY_STYLE = { pb: 0, flexGrow: 1 };
@@ -169,6 +182,10 @@ function answered(step: StepId, me: MeProfile): boolean {
   switch (step) {
     case 'name':
       return me.name.trim().length > 0;
+    case 'gender':
+      return !!me.gender;
+    case 'showme':
+      return !!me.showMe && me.showMe.length > 0;
     case 'intent':
       return !!me.intent;
     case 'sports':
@@ -182,9 +199,15 @@ function answered(step: StepId, me: MeProfile): boolean {
     case 'goal':
       return me.goalRaceId !== null;
     case 'basics':
-      return Number(me.age) >= 18 && me.city.trim().length > 0;
+      return Number(me.age) >= 18 && me.city.trim().length > 0 && !!me.heightCm;
+    case 'lifestyle':
+      return !!me.lifestyle.drinks && !!me.lifestyle.diet && !!me.lifestyle.restDay;
     case 'photos':
-      return me.photos.length > 0;
+      return (
+        me.photos.length >= 2 &&
+        me.photos.every((_, i) => !!me.photoLabels[i]) &&
+        me.photoLabels.includes('offclock')
+      );
     case 'sync':
       return me.stravaConnected || me.garminConnected;
     case 'verify':
@@ -208,6 +231,17 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
       return done
         ? { text: `Nice to meet you, ${first}!`, mood: 'excited' }
         : { text: 'First things first — what should I call you?', mood: 'happy' };
+    case 'gender':
+      return done
+        ? { text: 'Got it. Next: who would you like to meet?', mood: 'happy' }
+        : { text: 'Let’s get the basics right. I am a…', mood: 'happy' };
+    case 'showme':
+      return done
+        ? {
+            text: `${showMeLabel(me.showMe)} it is. They’ll only see you if they want to meet you too.`,
+            mood: 'wink',
+          }
+        : { text: 'Who do you want to see on Pace?', mood: 'happy' };
     case 'intent': {
       const pick = INTENTS.find((i) => i.id === me.intent);
       return pick
@@ -283,11 +317,31 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
           text: `${me.city.trim()}! Plenty of athletes training there.`,
           mood: 'excited',
         };
-      return { text: 'Almost there. How old are you, and where do you train?', mood: 'happy' };
-    case 'photos':
+      return {
+        text: 'Almost there. How old are you, how tall, and where do you train?',
+        mood: 'happy',
+      };
+    case 'lifestyle':
       return done
-        ? { text: 'Looking strong! Action shots get 3× more likes.', mood: 'excited' }
-        : { text: 'Show off your training! One good action shot beats a long bio.', mood: 'happy' };
+        ? { text: 'Perfect. Deal-breakers sorted before the first session.', mood: 'excited' }
+        : { text: 'Quick lifestyle check — the stuff that matters off the track.', mood: 'happy' };
+    case 'photos':
+      if (done)
+        return {
+          text: 'Looking great! Both sides of you — that’s what gets likes.',
+          mood: 'excited',
+        };
+      if (me.photos.length >= 2 && !me.photoLabels.includes('offclock'))
+        return {
+          text: 'Mark one photo Off the clock — people want to see you dressed up, not just sweaty.',
+          mood: 'wink',
+        };
+      if (me.photos.length >= 2)
+        return { text: 'Now label each photo so people know what they’re seeing.', mood: 'happy' };
+      return {
+        text: 'Add 2–4 photos: at least one in action and one off the clock. Faces first!',
+        mood: 'happy',
+      };
     case 'sync':
       return done
         ? { text: 'Synced! Your stats now carry a verified badge.', mood: 'excited' }
@@ -362,7 +416,7 @@ export default function OnboardingScreen() {
     });
     if (result.canceled) return;
     const merged = [...me.photos, ...result.assets.map((a) => a.uri)].slice(0, MAX_PHOTOS);
-    await updateMe({ photos: merged });
+    await updateMe({ photos: merged, photosUpdatedAt: new Date().toISOString() });
   }
 
   // Footer CTA per step.
@@ -402,6 +456,7 @@ export default function OnboardingScreen() {
               items="center"
               gap={3}
               accessibilityLabel={`Profile strength ${profileStrength}%`}
+              aria-label={`Profile strength ${profileStrength}%`}
             >
               <Icon name="zap" size={18} color={colors.accentText} filled />
               <Text fontFamily="$bold" fontSize={15} color="$accentText">
@@ -443,6 +498,46 @@ export default function OnboardingScreen() {
                   returnKeyType="next"
                   onSubmitEditing={() => answered('name', me) && next()}
                 />
+              )}
+
+              {step === 'gender' && (
+                <YStack gap={12}>
+                  {GENDERS.map((g) => (
+                    <OptionCard
+                      key={g.id}
+                      title={g.label}
+                      selected={me.gender === g.id}
+                      onPress={() => updateMe({ gender: g.id })}
+                    />
+                  ))}
+                </YStack>
+              )}
+
+              {step === 'showme' && (
+                <YStack gap={12}>
+                  {GENDERS.map((g) => {
+                    const on = !!me.showMe?.includes(g.id);
+                    return (
+                      <OptionCard
+                        key={g.id}
+                        title={g.plural}
+                        selected={on}
+                        onPress={() => {
+                          const cur = me.showMe ?? [];
+                          updateMe({
+                            showMe: on ? cur.filter((x) => x !== g.id) : [...cur, g.id],
+                          });
+                        }}
+                      />
+                    );
+                  })}
+                  <OptionCard
+                    title="Everyone"
+                    subtitle="Show me all genders"
+                    selected={me.showMe?.length === GENDERS.length}
+                    onPress={() => updateMe({ showMe: GENDERS.map((g) => g.id) })}
+                  />
+                </YStack>
               )}
 
               {step === 'intent' && (
@@ -556,6 +651,15 @@ export default function OnboardingScreen() {
                     keyboardType="numeric"
                   />
                   <Input
+                    placeholder="Height in cm"
+                    value={me.heightCm ? String(me.heightCm) : ''}
+                    onChangeText={(v) => {
+                      const n = Number(v.replace(/[^0-9]/g, '').slice(0, 3));
+                      updateMe({ heightCm: n || null });
+                    }}
+                    keyboardType="numeric"
+                  />
+                  <Input
                     placeholder="City"
                     value={me.city}
                     onChangeText={(v) => updateMe({ city: v })}
@@ -564,7 +668,70 @@ export default function OnboardingScreen() {
                 </YStack>
               )}
 
-              {step === 'photos' && <PhotosStep photos={me.photos} onPick={pickPhotos} />}
+              {step === 'lifestyle' && (
+                <YStack gap={22}>
+                  <YStack gap={10}>
+                    <Text fontFamily="$semibold" fontSize={15} color="$text">
+                      Drinking
+                    </Text>
+                    <PickRow
+                      options={DRINKS.map((d) => d.id)}
+                      value={me.lifestyle.drinks}
+                      onChange={(v) => updateMe({ lifestyle: { ...me.lifestyle, drinks: v } })}
+                      render={(v) => DRINKS.find((d) => d.id === v)!.label}
+                    />
+                  </YStack>
+                  <YStack gap={10}>
+                    <Text fontFamily="$semibold" fontSize={15} color="$text">
+                      How you eat
+                    </Text>
+                    <PickRow
+                      options={DIETS.map((d) => d.id)}
+                      value={me.lifestyle.diet}
+                      onChange={(v) => updateMe({ lifestyle: { ...me.lifestyle, diet: v } })}
+                      render={(v) => DIETS.find((d) => d.id === v)!.label}
+                    />
+                  </YStack>
+                  <YStack gap={10}>
+                    <Text fontFamily="$semibold" fontSize={15} color="$text">
+                      Rest day energy
+                    </Text>
+                    <YStack gap={10}>
+                      {REST_DAYS.map((r) => (
+                        <OptionCard
+                          key={r.id}
+                          title={r.label}
+                          subtitle={r.detail}
+                          selected={me.lifestyle.restDay === r.id}
+                          onPress={() =>
+                            updateMe({ lifestyle: { ...me.lifestyle, restDay: r.id } })
+                          }
+                        />
+                      ))}
+                    </YStack>
+                  </YStack>
+                </YStack>
+              )}
+
+              {step === 'photos' && (
+                <PhotoGrid
+                  max={MAX_PHOTOS}
+                  photos={me.photos}
+                  labels={me.photoLabels}
+                  onPick={pickPhotos}
+                  onLabel={(i, l) => {
+                    const labels = [...me.photoLabels];
+                    labels[i] = l;
+                    updateMe({ photoLabels: labels });
+                  }}
+                  onRemove={(i) =>
+                    updateMe({
+                      photos: me.photos.filter((_, k) => k !== i),
+                      photoLabels: me.photoLabels.filter((_, k) => k !== i),
+                    })
+                  }
+                />
+              )}
 
               {step === 'sync' && (
                 <YStack gap={12}>
@@ -714,66 +881,6 @@ function MeetStep({ text }: { text: string }) {
   );
 }
 
-function PhotosStep({ photos, onPick }: { photos: string[]; onPick: () => void }) {
-  const colors = useColors();
-  return (
-    <YStack gap={14}>
-      <XStack gap={10} height={270}>
-        {[0, 1, 2].map((i) => {
-          const uri = photos[i];
-          const main = i === 0;
-          return (
-            <YStack
-              key={i}
-              onPress={onPick}
-              flex={main ? 1.4 : 1}
-              rounded={22}
-              bg={uri ? '$card' : '$surface'}
-              borderWidth={uri ? 0 : 2}
-              borderColor="$borderStrong"
-              borderStyle="dashed"
-              overflow="hidden"
-              items="center"
-              justify="center"
-            >
-              {uri ? (
-                <RNImage
-                  source={{ uri }}
-                  style={{ width: '100%', height: '100%' }}
-                  resizeMode="cover"
-                />
-              ) : (
-                <YStack items="center" gap={8}>
-                  <XStack
-                    width={40}
-                    height={40}
-                    rounded={20}
-                    bg="$accent"
-                    items="center"
-                    justify="center"
-                  >
-                    <Icon name="plus" size={22} color={colors.onAccent} strokeWidth={2.4} />
-                  </XStack>
-                  {main ? (
-                    <Text fontFamily="$semibold" fontSize={13} color="$muted">
-                      Main photo
-                    </Text>
-                  ) : null}
-                </YStack>
-              )}
-            </YStack>
-          );
-        })}
-      </XStack>
-      <Text fontSize={14} color="$muted" text="center">
-        {photos.length > 0
-          ? `${photos.length} of ${MAX_PHOTOS} added · tap a tile to change`
-          : 'Tap a tile to add up to 3 photos'}
-      </Text>
-    </YStack>
-  );
-}
-
 // "Building your matches" — a short, satisfying checklist that ticks
 // through, then hands off to the reveal on its own.
 const BUILD_STEPS = [
@@ -847,7 +954,7 @@ function BuildingStep({ text, onDone }: { text: string; onDone: () => void }) {
 function RevealStep({ me, rhythm }: { me: MeProfile; rhythm: Rhythm }) {
   const ranked = useMemo(
     () =>
-      ATHLETES.filter((a) => a.name !== me.name.trim().split(' ')[0])
+      ATHLETES.filter((a) => a.name !== me.name.trim().split(' ')[0] && wantEachOther(me, a))
         .map((a) => ({ a, sync: compatibility(me, a).score }))
         .sort((x, y) => y.sync - x.sync),
     [me]

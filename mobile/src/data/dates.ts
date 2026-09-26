@@ -64,7 +64,25 @@ export function shortDay(d: Date): string {
   return `${DAY[dayIndex(d)]} ${d.getDate()}`;
 }
 
-// Next Sunday 18:00 — when the weekly pacers drop lands.
+// Pacers drop daily at 07:00. A "drop day" starts at 07:00, so at 02:00
+// you're still on yesterday's drop.
+export const DROP_HOUR = 7;
+
+export function dropKey(now: Date = new Date()): string {
+  const d = new Date(now.getTime() - DROP_HOUR * 3600000);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 export function nextDrop(now: Date = new Date()): Date {
-  return nextDateFor(6, '18:00', now);
+  const d = startOfDay(now);
+  d.setHours(DROP_HOUR, 0, 0, 0);
+  if (d.getTime() <= now.getTime()) d.setDate(d.getDate() + 1);
+  return d;
+}
+
+// "in 9h" / "in 40m" until the next drop.
+export function untilLabel(target: Date, now: Date = new Date()): string {
+  const mins = Math.max(1, Math.round((target.getTime() - now.getTime()) / 60000));
+  if (mins < 60) return `${mins}m`;
+  return `${Math.round(mins / 60)}h`;
 }

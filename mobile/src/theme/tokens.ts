@@ -27,6 +27,7 @@ const lightPalette = {
   // Status
   success: '#178A5B',
   successSoft: '#E3F4EC',
+  danger: '#C8372D',
 
   // Photo scrim and floating controls over images
   scrim: 'rgba(28,25,23,0.55)',
@@ -62,6 +63,7 @@ const darkPalette: Palette = {
 
   success: '#3CCB8A',
   successSoft: '#15302A',
+  danger: '#FF7B6E',
 
   scrim: 'rgba(0,0,0,0.6)',
   glass: 'rgba(29,27,26,0.82)',

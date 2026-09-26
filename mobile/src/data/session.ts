@@ -1,3 +1,5 @@
+import type { Gender, Lifestyle, PhotoLabel } from './identity';
+import type { Provider, SyncSummary } from './sync';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import type { Level, Prompt } from './athleteDepth';
@@ -30,7 +32,27 @@ export interface MeProfile {
   // Race they're training for. null = not asked yet, '' = nothing specific.
   goalRaceId: string | null;
   prompts: Prompt[];
-  pbs: { label: string; value: string }[];
+  pbs: { label: string; value: string; source?: Provider }[];
+  // Last Strava/Garmin import.
+  sync: SyncSummary | null;
+  // Dating basics — null until asked in onboarding.
+  gender: Gender | null;
+  showMe: Gender[] | null;
+  heightCm: number | null;
+  lifestyle: Lifestyle;
+  // One label per entry in `photos` (same order).
+  photoLabels: PhotoLabel[];
+  photosUpdatedAt: string | null;
+  // Women-first messaging: after a match, only you can start the chat.
+  womenFirst: boolean;
+  // Travel / race-weekend mode: match in another city until a date.
+  travel: Travel | null;
+}
+
+export interface Travel {
+  city: string;
+  until: string; // ISO date
+  raceId?: string;
 }
 
 export type Intent = 'love' | 'partner' | 'both';
@@ -74,6 +96,15 @@ const DEFAULT_ME: MeProfile = {
     { label: 'Back squat', value: '105 kg' },
     { label: '5 km', value: '22:40' },
   ],
+  gender: 'woman',
+  showMe: ['man'],
+  heightCm: 167,
+  lifestyle: { drinks: 'social', diet: 'highprotein', restDay: 'brunch' },
+  photoLabels: [],
+  photosUpdatedAt: null,
+  womenFirst: false,
+  travel: null,
+  sync: null,
 };
 
 const DEFAULT_STATE: SessionState = {
@@ -161,7 +192,27 @@ export function freshMe(name: string, email: string): MeProfile {
     goalRaceId: null,
     prompts: [],
     pbs: [],
+    gender: null,
+    showMe: null,
+    heightCm: null,
+    lifestyle: { drinks: null, diet: null, restDay: null },
+    photoLabels: [],
+    photosUpdatedAt: null,
+    womenFirst: false,
+    travel: null,
+    sync: null,
   };
+}
+
+// The city you're matching in right now: your travel city while travel
+// mode is on, otherwise home.
+export function activeCity(me: MeProfile, now: Date = new Date()): string {
+  if (me.travel && new Date(me.travel.until).getTime() >= now.getTime()) return me.travel.city;
+  return me.city;
+}
+
+export function isTravelling(me: MeProfile, now: Date = new Date()): boolean {
+  return !!me.travel && new Date(me.travel.until).getTime() >= now.getTime();
 }
 
 export type AuthResult = { ok: true } | { ok: false; error: string };

@@ -10,6 +10,8 @@ export interface DiscoverFilterState {
   radiusKm: number | null; // null = anywhere
   verifiedOnly: boolean;
   times: string[];
+  heightMin: number;
+  heightMax: number;
 }
 
 export const RADIUS_OPTIONS: { label: string; km: number }[] = [
@@ -29,6 +31,8 @@ const DEFAULT_FILTERS: DiscoverFilterState = {
   radiusKm: null,
   verifiedOnly: false,
   times: [],
+  heightMin: 145,
+  heightMax: 210,
 };
 
 let state: DiscoverFilterState = DEFAULT_FILTERS;
@@ -36,7 +40,7 @@ const listeners = new Set<() => void>();
 
 function setState(patch: Partial<DiscoverFilterState>) {
   const changed = (Object.keys(patch) as (keyof DiscoverFilterState)[]).some(
-    (k) => patch[k] !== state[k],
+    (k) => patch[k] !== state[k]
   );
   if (!changed) return;
   state = { ...state, ...patch };

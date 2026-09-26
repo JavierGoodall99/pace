@@ -113,14 +113,26 @@ export function WhyChips({ compat, onPhoto = false }: { compat: Compat; onPhoto?
 
 // Last 4 weeks of training as a heatmap — proof they actually show up.
 // Mock: derived from their weekly rhythm with a little variation.
-export function Heatmap({ rhythm, seed = 1 }: { rhythm: Rhythm; seed?: number }) {
+export function Heatmap({
+  rhythm,
+  seed = 1,
+  data,
+  source,
+}: {
+  rhythm: Rhythm;
+  seed?: number;
+  data?: number[][];
+  source?: string;
+}) {
   const c = useColors();
-  const weeks = [0, 1, 2, 3].map((w) =>
-    rhythm.map((on, d) => {
-      if (!on) return (seed + w + d) % 11 === 0 ? 1 : 0; // the odd bonus session
-      return (seed * 3 + w * 5 + d) % 7 === 0 ? 0 : 1 + ((seed + w + d) % 3); // the odd rest day
-    })
-  );
+  const weeks =
+    data ??
+    [0, 1, 2, 3].map((w) =>
+      rhythm.map((on, d) => {
+        if (!on) return (seed + w + d) % 11 === 0 ? 1 : 0; // the odd bonus session
+        return (seed * 3 + w * 5 + d) % 7 === 0 ? 0 : 1 + ((seed + w + d) % 3); // the odd rest day
+      })
+    );
   const total = weeks.flat().filter((v) => v > 0).length;
   const shade = (v: number) =>
     v === 0 ? c.surface : v === 1 ? c.accentBorder : v === 2 ? `${c.accent}B3` : c.accent;
@@ -134,6 +146,14 @@ export function Heatmap({ rhythm, seed = 1 }: { rhythm: Rhythm; seed?: number })
           {total} sessions
         </Text>
       </XStack>
+      {source ? (
+        <XStack items="center" gap={6} mt={-4}>
+          <Icon name="shield-check" size={13} color={c.success} strokeWidth={2.2} />
+          <Text fontSize={12} color="$muted">
+            {source}
+          </Text>
+        </XStack>
+      ) : null}
       <YStack gap={5}>
         {weeks.map((week, w) => (
           <XStack key={w} gap={5}>
@@ -220,7 +240,11 @@ export function PromptCard({ prompt }: { prompt: Prompt }) {
   );
 }
 
-export function PersonalBests({ pbs }: { pbs: { label: string; value: string }[] }) {
+export function PersonalBests({
+  pbs,
+}: {
+  pbs: { label: string; value: string; source?: string }[];
+}) {
   if (!pbs.length) return null;
   return (
     <XStack gap={10} flexWrap="wrap">
@@ -241,6 +265,11 @@ export function PersonalBests({ pbs }: { pbs: { label: string; value: string }[]
           <Text fontSize={13} color="$muted" mt={2}>
             PB · {pb.label}
           </Text>
+          {pb.source ? (
+            <Text fontFamily="$semibold" fontSize={11} color="$success" mt={4}>
+              Verified by {pb.source === 'garmin' ? 'Garmin' : 'Strava'}
+            </Text>
+          ) : null}
         </YStack>
       ))}
     </XStack>

@@ -69,6 +69,7 @@ export function FloatingTabBar({
             key={route.key}
             accessibilityRole="tab"
             accessibilityLabel={tab.label}
+            aria-label={tab.label}
             accessibilityState={{ selected: focused }}
             onPress={onPress}
             pressStyle={{ scale: 0.94 }}

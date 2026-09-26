@@ -35,7 +35,15 @@ export type IconName =
   | 'sliders'
   | 'plus'
   | 'pencil'
-  | 'camera';
+  | 'camera'
+  | 'plane'
+  | 'mic'
+  | 'image'
+  | 'flag'
+  | 'more'
+  | 'play'
+  | 'pause'
+  | 'star';
 
 interface IconProps {
   name: IconName;
@@ -296,6 +304,61 @@ export function Icon({ name, size = 20, color, strokeWidth = 1.8, filled = false
         <Svg {...common}>
           <Path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
           <Circle cx="12" cy="13" r="3" />
+        </Svg>
+      );
+    case 'plane':
+      return (
+        <Svg {...common}>
+          <Path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
+        </Svg>
+      );
+    case 'mic':
+      return (
+        <Svg {...common}>
+          <Path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+          <Path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+          <Path d="M12 19v3" />
+        </Svg>
+      );
+    case 'image':
+      return (
+        <Svg {...common}>
+          <Path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+          <Circle cx="9" cy="9" r="2" />
+          <Path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+        </Svg>
+      );
+    case 'flag':
+      return (
+        <Svg {...common}>
+          <Path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+          <Path d="M4 22v-7" />
+        </Svg>
+      );
+    case 'more':
+      return (
+        <Svg {...common} fill={tint}>
+          <Circle cx="5" cy="12" r="1.6" />
+          <Circle cx="12" cy="12" r="1.6" />
+          <Circle cx="19" cy="12" r="1.6" />
+        </Svg>
+      );
+    case 'play':
+      return (
+        <Svg {...common} fill={tint}>
+          <Path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z" />
+        </Svg>
+      );
+    case 'pause':
+      return (
+        <Svg {...common} fill={tint}>
+          <Path d="M7 4h3v16H7zM14 4h3v16h-3z" />
+        </Svg>
+      );
+    case 'star':
+      return (
+        <Svg {...common}>
+          <Path d="M11.5 2.3a.5.5 0 0 1 .9 0l2.3 4.7a2 2 0 0 0 1.5 1.1l5.2.8a.5.5 0 0 1 .3.9l-3.8 3.7a2 2 0 0 0-.6 1.8l.9 5.2a.5.5 0 0 1-.7.5l-4.6-2.5a2 2 0 0 0-1.9 0l-4.6 2.5a.5.5 0 0 1-.7-.5l.9-5.2a2 2 0 0 0-.6-1.8L2.5 9.8a.5.5 0 0 1 .3-.9l5.2-.8a2 2 0 0 0 1.5-1.1z" />
         </Svg>
       );
     default:

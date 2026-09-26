@@ -65,7 +65,7 @@ export function todayLine(
   if (pacersLeft > 0) {
     return {
       key: 'pacers',
-      text: `${pacersLeft} pacer${pacersLeft === 1 ? ' is' : 's are'} waiting for you this week, ${first}.`,
+      text: `${pacersLeft} pacer${pacersLeft === 1 ? ' is' : 's are'} waiting for you today, ${first}.`,
       mood: 'excited',
       cta: { label: 'See pacers', href: '/(tabs)/discover' },
     };
@@ -81,6 +81,22 @@ export function todayLine(
 
 // The next best thing to improve on your profile.
 export function profileTip(me: MeProfile, now: Date = new Date()): PipLine {
+  if (!me.gender || !me.showMe?.length) {
+    return {
+      key: 'tip-basics',
+      text: 'Tell me who you are and who you want to meet, so I only show you people who fit.',
+      mood: 'thinking',
+      cta: { label: 'Edit profile', href: '/edit-profile' },
+    };
+  }
+  if (me.photos.length > 0 && !me.photoLabels.includes('offclock')) {
+    return {
+      key: 'tip-offclock',
+      text: 'Add an Off the clock photo. People want to see you dressed up, not just mid-rep.',
+      mood: 'wink',
+      cta: { label: 'Edit photos', href: '/edit-profile' },
+    };
+  }
   if (me.photos.length < 3) {
     return {
       key: 'tip-photos',

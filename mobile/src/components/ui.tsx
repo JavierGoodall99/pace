@@ -150,6 +150,7 @@ export function IconButton({
     <XStack
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
+      aria-label={accessibilityLabel}
       onPress={onPress}
       pressStyle={{ opacity: 0.7 }}
       hitSlop={6}
@@ -327,6 +328,7 @@ export function Toggle({
     <XStack
       accessibilityRole="switch"
       accessibilityLabel={label}
+      aria-label={label}
       accessibilityState={{ checked: value }}
       onPress={() => onChange(!value)}
       hitSlop={8}

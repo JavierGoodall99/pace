@@ -1,39 +1,47 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
+  Image,
   LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
+import { LikeSheet } from '../../src/components/LikeSheet';
 import { Mascot } from '../../src/components/Mascot';
-import { PhotoSlot } from '../../src/components/PhotoSlot';
+import { PhotoStory, StoryPage } from '../../src/components/PhotoStory';
 import { showPip } from '../../src/components/PipKit';
 import { WhyChips } from '../../src/components/Proof';
 import { RhythmStrip, SyncBadge } from '../../src/components/Rhythm';
 import { useTabBarSpace } from '../../src/components/TabBar';
-import { Button, DisplayTitle, IconButton } from '../../src/components/ui';
-import { formatWhen, nextDrop } from '../../src/data/dates';
+import { Button, DisplayTitle, IconButton, SegmentedControl } from '../../src/components/ui';
+import { depthFor } from '../../src/data/athleteDepth';
+import { hasLiked, LikeTarget, useChat } from '../../src/data/chat';
+import { formatWhen, nextDrop, untilLabel } from '../../src/data/dates';
 import { cityWithinRadius, useFilters } from '../../src/data/filters';
-import { ATHLETES } from '../../src/data/mockData';
-import { Pacer, weeklyPacers } from '../../src/data/pacers';
-import { ATHLETE_ACTION_PHOTOS } from '../../src/data/photos';
+import { formatHeight, freshnessLabel, lifestyleChips } from '../../src/data/identity';
+import { Athlete, ATHLETES } from '../../src/data/mockData';
+import { dailyPacers, Pacer, standouts } from '../../src/data/pacers';
+import { ATHLETE_PHOTOS, galleryFor } from '../../src/data/photos';
 import { formatKm } from '../../src/data/places';
-import { dropAction, dropActions, usePlans } from '../../src/data/plans';
-import { useMe } from '../../src/data/session';
+import { dropAction, DropAction, dropActions, usePlans } from '../../src/data/plans';
+import { activeCity, isTravelling, useMe } from '../../src/data/session';
 import { useSocial } from '../../src/data/social';
 import { useColors } from '../../src/theme/appearance';
 import { shadow } from '../../src/theme/tokens';
 
-// This week's pacers. Not an endless swipe deck: a short, curated drop of
-// people who fit your week, each with a session already suggested. You
-// invite them to train — an accepted invite is the match.
+// Today's pacers. Not an endless swipe deck: a short daily drop of people
+// who fit your training, photos first. Like a photo or prompt with a
+// comment, or skip straight to an invite to train. Standouts shows the
+// most-liked people near you.
 
 const GAP = 12;
+const TABS = ['For you', 'Standouts'];
+
+type Liking = { athlete: Athlete; target: LikeTarget; source?: StoryPage } | null;
 
 export default function PacersScreen() {
   const colors = useColors();
@@ -42,11 +50,14 @@ export default function PacersScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const me = useMe();
-  const { blocked } = useSocial();
+  const { blocked, matches } = useSocial();
   const filters = useFilters();
   const plans = usePlans();
+  const chat = useChat();
+  const [tab, setTab] = useState(TABS[0]);
   const [page, setPage] = useState(0);
   const [cardHeight, setCardHeight] = useState(0);
+  const [liking, setLiking] = useState<Liking>(null);
 
   const cardWidth = width - 40;
   const now = useMemo(() => new Date(), []);
@@ -54,24 +65,34 @@ export default function PacersScreen() {
   const excluded = useMemo(
     () => [
       ...blocked,
-      ...ATHLETES.filter(
-        (a) =>
+      ...ATHLETES.filter((a) => {
+        const d = depthFor(a);
+        return (
           a.age < filters.ageMin ||
           a.age > filters.ageMax ||
+          d.heightCm < filters.heightMin ||
+          d.heightCm > filters.heightMax ||
           (filters.verifiedOnly && !a.verified) ||
           !cityWithinRadius(a.city, filters.radiusKm)
-      ).map((a) => a.id),
+        );
+      }).map((a) => a.id),
     ],
     [blocked, filters]
   );
-  const pacers = useMemo(() => weeklyPacers(me, excluded, now), [me, excluded, now]);
+  const pacers = useMemo(() => dailyPacers(me, excluded, now), [me, excluded, now]);
+  const stand = useMemo(() => standouts(me, [...excluded, ...matches]), [me, excluded, matches]);
   const actions = dropActions(plans, now);
   const remaining = pacers.filter((p) => !actions[p.athlete.id]).length;
   const filtersActive =
-    filters.ageMin > 18 || filters.ageMax < 60 || filters.radiusKm != null || filters.verifiedOnly;
+    filters.ageMin > 18 ||
+    filters.ageMax < 60 ||
+    filters.radiusKm != null ||
+    filters.verifiedOnly ||
+    filters.heightMin > 145 ||
+    filters.heightMax < 210;
 
-  const drop = nextDrop(now);
-  const daysToDrop = Math.max(1, Math.ceil((drop.getTime() - now.getTime()) / 86400000));
+  const until = untilLabel(nextDrop(now), now);
+  const travelling = isTravelling(me, now);
 
   function invite(p: Pacer) {
     router.push({
@@ -90,94 +111,214 @@ export default function PacersScreen() {
     setPage(Math.round(e.nativeEvent.contentOffset.x / (cardWidth + GAP)));
   }
 
+  const likingSource = liking?.source?.kind === 'photo' ? liking.source.source : undefined;
+
   return (
     <YStack flex={1} bg="$canvas">
-      <XStack px={20} pt={insets.top + 8} items="flex-end" justify="space-between">
+      <XStack px={20} pt={insets.top + 8} items="flex-end" justify="space-between" gap={10}>
         <YStack flex={1}>
-          <DisplayTitle size={42}>This week’s *pacers*</DisplayTitle>
+          <DisplayTitle size={40}>Today’s *pacers*</DisplayTitle>
           <Text fontFamily="$medium" fontSize={14} color="$muted" mt={4}>
             {remaining > 0
-              ? `${remaining} of ${pacers.length} left · new drop in ${daysToDrop} day${daysToDrop === 1 ? '' : 's'}`
-              : `All done · new drop in ${daysToDrop} day${daysToDrop === 1 ? '' : 's'}`}
+              ? `${remaining} of ${pacers.length} left · next drop in ${until}`
+              : `All done · next drop in ${until}`}
           </Text>
         </YStack>
-        <YStack>
+        <XStack gap={8}>
           <IconButton
             size={40}
-            onPress={() => router.push('/discover-filters')}
-            accessibilityLabel="Filters"
+            tone={travelling ? 'accent' : undefined}
+            onPress={() => router.push('/travel')}
+            accessibilityLabel="Travel mode"
+            aria-label="Travel mode"
           >
-            <Icon name="sliders" size={18} color={colors.text} />
+            <Icon name="plane" size={18} color={travelling ? colors.accentText : colors.text} />
           </IconButton>
-          {filtersActive ? (
-            <YStack
-              position="absolute"
-              t={2}
-              r={2}
-              width={10}
-              height={10}
-              rounded={5}
-              bg="$accent"
-              borderWidth={2}
-              borderColor="$canvas"
-            />
-          ) : null}
-        </YStack>
+          <YStack>
+            <IconButton
+              size={40}
+              onPress={() => router.push('/discover-filters')}
+              accessibilityLabel="Filters"
+              aria-label="Filters"
+            >
+              <Icon name="sliders" size={18} color={colors.text} />
+            </IconButton>
+            {filtersActive ? (
+              <YStack
+                position="absolute"
+                t={2}
+                r={2}
+                width={10}
+                height={10}
+                rounded={5}
+                bg="$accent"
+                borderWidth={2}
+                borderColor="$canvas"
+              />
+            ) : null}
+          </YStack>
+        </XStack>
       </XStack>
 
-      <YStack
-        flex={1}
-        mt={14}
-        mb={tabBarSpace - 4}
-        onLayout={(e: LayoutChangeEvent) => setCardHeight(e.nativeEvent.layout.height - 30)}
-      >
-        {remaining === 0 || pacers.length === 0 ? (
-          <DropDone days={daysToDrop} onBrowse={() => router.push('/(tabs)/sessions')} />
-        ) : cardHeight > 0 ? (
-          <>
-            <ScrollView
-              horizontal
-              snapToInterval={cardWidth + GAP}
-              decelerationRate="fast"
-              showsHorizontalScrollIndicator={false}
-              onScroll={onScroll}
-              scrollEventThrottle={32}
-              contentContainerStyle={{ px: 20, gap: GAP }}
-            >
-              {pacers.map((p) => (
-                <PacerCard
-                  key={p.athlete.id}
-                  pacer={p}
-                  width={cardWidth}
-                  height={cardHeight}
-                  action={actions[p.athlete.id]}
-                  onOpen={() =>
-                    router.push({ pathname: '/athlete/[id]', params: { id: String(p.athlete.id) } })
-                  }
-                  onInvite={() => invite(p)}
-                  onSkip={() => {
-                    dropAction(p.athlete.id, 'skipped', now);
-                    showPip(`No worries — ${p.athlete.name} might show up another week.`, 'wink');
-                  }}
-                />
-              ))}
-            </ScrollView>
-            <XStack justify="center" gap={6} mt={12}>
-              {pacers.map((p, i) => (
-                <YStack
-                  key={p.athlete.id}
-                  width={i === page ? 18 : 6}
-                  height={6}
-                  rounded={3}
-                  bg={actions[p.athlete.id] ? '$borderStrong' : i === page ? '$accent' : '$border'}
-                />
-              ))}
-            </XStack>
-          </>
+      <YStack px={20} mt={12} gap={10}>
+        {travelling ? (
+          <XStack
+            accessibilityRole="button"
+            onPress={() => router.push('/travel')}
+            items="center"
+            gap={8}
+            px={12}
+            height={36}
+            rounded="$full"
+            bg="$accentSoft"
+            self="flex-start"
+          >
+            <Icon name="plane" size={14} color={colors.accentText} />
+            <Text fontFamily="$semibold" fontSize={13} color="$accentText">
+              Matching in {activeCity(me, now)} until{' '}
+              {new Date(me.travel!.until).toLocaleDateString('en-ZA', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+              })}
+            </Text>
+          </XStack>
         ) : null}
+        <SegmentedControl options={TABS} value={tab} onChange={setTab} />
       </YStack>
+
+      {tab === 'Standouts' ? (
+        <Standouts
+          list={stand}
+          liked={(id) => hasLiked(chat, id)}
+          bottom={tabBarSpace + 16}
+          onOpen={(a) => router.push({ pathname: '/athlete/[id]', params: { id: String(a.id) } })}
+          onLike={(a) => {
+            const g = galleryFor(a.slotId)[0];
+            setLiking({
+              athlete: a,
+              target: { kind: 'photo', index: 0, label: g?.caption ?? `${a.name}’s photo` },
+              source: g ? { kind: 'photo', source: g.source, label: g.label } : undefined,
+            });
+          }}
+        />
+      ) : (
+        <YStack
+          flex={1}
+          mt={12}
+          mb={tabBarSpace - 4}
+          onLayout={(e: LayoutChangeEvent) => setCardHeight(e.nativeEvent.layout.height - 22)}
+        >
+          {remaining === 0 || pacers.length === 0 ? (
+            <DropDone until={until} onBrowse={() => setTab('Standouts')} />
+          ) : cardHeight > 0 ? (
+            <>
+              <ScrollView
+                horizontal
+                snapToInterval={cardWidth + GAP}
+                decelerationRate="fast"
+                showsHorizontalScrollIndicator={false}
+                onScroll={onScroll}
+                scrollEventThrottle={32}
+                contentContainerStyle={{ px: 20, gap: GAP }}
+              >
+                {pacers.map((p) => (
+                  <PacerCard
+                    key={p.athlete.id}
+                    pacer={p}
+                    width={cardWidth}
+                    height={cardHeight}
+                    action={actions[p.athlete.id]}
+                    liked={hasLiked(chat, p.athlete.id)}
+                    onOpen={() =>
+                      router.push({
+                        pathname: '/athlete/[id]',
+                        params: { id: String(p.athlete.id) },
+                      })
+                    }
+                    onLike={(pg, index) =>
+                      setLiking({
+                        athlete: p.athlete,
+                        source: pg,
+                        target:
+                          pg.kind === 'prompt'
+                            ? {
+                                kind: 'prompt',
+                                index,
+                                label: pg.prompt.q,
+                                text: pg.prompt.a,
+                              }
+                            : {
+                                kind: 'photo',
+                                index,
+                                label:
+                                  pg.kind === 'photo' && pg.caption
+                                    ? pg.caption
+                                    : `${p.athlete.name}’s photo`,
+                              },
+                      })
+                    }
+                    onInvite={() => invite(p)}
+                    onSkip={() => {
+                      dropAction(p.athlete.id, 'skipped', now);
+                      showPip(`No worries — ${p.athlete.name} might show up another day.`, 'wink');
+                    }}
+                  />
+                ))}
+              </ScrollView>
+              <XStack justify="center" gap={6} mt={10}>
+                {pacers.map((p, i) => (
+                  <YStack
+                    key={p.athlete.id}
+                    width={i === page ? 18 : 6}
+                    height={6}
+                    rounded={3}
+                    bg={
+                      actions[p.athlete.id] ? '$borderStrong' : i === page ? '$accent' : '$border'
+                    }
+                  />
+                ))}
+              </XStack>
+            </>
+          ) : null}
+        </YStack>
+      )}
+
+      {liking ? (
+        <LikeSheet
+          athlete={liking.athlete}
+          target={liking.target}
+          source={likingSource}
+          fromDrop={tab === 'For you'}
+          onClose={() => setLiking(null)}
+        />
+      ) : null}
     </YStack>
   );
+}
+
+function pagesFor(p: Pacer): StoryPage[] {
+  const d = depthFor(p.athlete);
+  const g = galleryFor(p.athlete.slotId);
+  const photo = (k: number): StoryPage | null =>
+    g[k]
+      ? {
+          kind: 'photo',
+          source: g[k].source,
+          label: g[k].label,
+          caption: g[k].caption,
+          motion: k === 0 && d.motion,
+        }
+      : null;
+  const pages: (StoryPage | null)[] = [
+    photo(0),
+    d.prompts[0] ? { kind: 'prompt', prompt: d.prompts[0] } : null,
+    photo(1),
+    { kind: 'info', content: <InfoPage pacer={p} /> },
+    d.prompts[1] ? { kind: 'prompt', prompt: d.prompts[1] } : null,
+    ...g.slice(2).map((_, k) => photo(k + 2)),
+  ];
+  return pages.filter((x): x is StoryPage => !!x);
 }
 
 function PacerCard({
@@ -185,21 +326,28 @@ function PacerCard({
   width,
   height,
   action,
+  liked,
   onOpen,
+  onLike,
   onInvite,
   onSkip,
 }: {
   pacer: Pacer;
   width: number;
   height: number;
-  action?: 'invited' | 'skipped';
+  action?: DropAction;
+  liked: boolean;
   onOpen: () => void;
+  onLike: (page: StoryPage, index: number) => void;
   onInvite: () => void;
   onSkip: () => void;
 }) {
   const colors = useColors();
-  const { athlete: a, compat, suggestion } = pacer;
-  const photoHeight = Math.max(220, height - 250);
+  const { athlete: a, compat } = pacer;
+  const d = depthFor(a);
+  const pages = useMemo(() => pagesFor(pacer), [pacer]);
+  const storyHeight = height - 74;
+
   return (
     <YStack
       width={width}
@@ -212,79 +360,72 @@ function PacerCard({
       opacity={action === 'skipped' ? 0.55 : 1}
       style={shadow.card}
     >
-      <YStack
-        height={photoHeight}
-        onPress={onOpen}
-        accessibilityRole="button"
-        accessibilityLabel={`View ${a.name}'s profile`}
-      >
-        <PhotoSlot
-          label={a.name}
-          shape="rect"
-          source={ATHLETE_ACTION_PHOTOS[a.slotId]}
-          style={{ width: '100%', height: '100%' }}
-        />
-        <YStack position="absolute" t={14} l={14}>
-          <SyncBadge pct={compat.score} variant="photo" />
-        </YStack>
-        <YStack pointerEvents="none" position="absolute" l={0} r={0} b={0} height={200}>
-          <Svg width="100%" height="100%">
-            <Defs>
-              <LinearGradient id={`pacerFade${a.id}`} x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0" stopColor="#140F10" stopOpacity={0} />
-                <Stop offset="1" stopColor="#140F10" stopOpacity={0.88} />
-              </LinearGradient>
-            </Defs>
-            <Rect width="100%" height="100%" fill={`url(#pacerFade${a.id})`} />
-          </Svg>
-        </YStack>
-        <YStack position="absolute" l={16} r={16} b={14} gap={8}>
-          <XStack items="center" gap={8}>
-            <DisplayTitle size={38} color="$onPhoto">{`${a.name} *${a.age}*`}</DisplayTitle>
-            {a.verified ? (
-              <Icon name="shield-check" size={20} color={colors.onPhoto} strokeWidth={2} />
-            ) : null}
-          </XStack>
-          <XStack items="center" gap={5}>
-            <Icon name="map-pin" size={13} color="rgba(255,255,255,0.85)" />
-            <Text fontFamily="$medium" fontSize={13} color="rgba(255,255,255,0.85)">
-              {a.city} · {formatKm(compat.distanceKm)}
+      <PhotoStory
+        pages={pages}
+        height={storyHeight}
+        liked={liked || action === 'liked'}
+        onLike={action ? undefined : onLike}
+        topRight={(onPhoto) => (
+          <SyncBadge pct={compat.score} variant={onPhoto ? 'photo' : 'card'} />
+        )}
+        footer={(pg) =>
+          pg.kind === 'photo' ? (
+            <YStack gap={6}>
+              <XStack
+                items="center"
+                gap={8}
+                onPress={onOpen}
+                accessibilityRole="button"
+                accessibilityLabel={`View ${a.name}'s full profile`}
+                aria-label={`View ${a.name}'s full profile`}
+              >
+                <DisplayTitle size={36} color="$onPhoto">{`${a.name} *${a.age}*`}</DisplayTitle>
+                {a.verified ? (
+                  <Icon name="shield-check" size={20} color={colors.onPhoto} strokeWidth={2} />
+                ) : null}
+              </XStack>
+              <Text fontFamily="$medium" fontSize={13} color="rgba(255,255,255,0.88)">
+                {formatHeight(d.heightCm)} · {a.city} · {formatKm(compat.distanceKm)}
+              </Text>
+              <WhyChips compat={compat} onPhoto />
+            </YStack>
+          ) : pg.kind === 'prompt' ? (
+            <Text fontFamily="$semibold" fontSize={14} color="$muted">
+              {a.name}, {a.age}
             </Text>
-          </XStack>
-          <WhyChips compat={compat} onPhoto />
-        </YStack>
-      </YStack>
+          ) : null
+        }
+      />
 
-      <YStack flex={1} p={14} gap={12} justify="space-between">
-        <RhythmStrip mine={compat.mine} theirs={compat.theirs} height={22} />
-        <XStack items="center" gap={10} p={12} rounded={16} bg="$accentSoft">
-          <Icon name="calendar" size={18} color={colors.accentText} strokeWidth={2} />
-          <YStack flex={1}>
-            <Text fontFamily="$semibold" fontSize={14} color="$text">
-              {formatWhen(suggestion.date.toISOString())}
-            </Text>
-            <Text fontSize={12} color="$muted" numberOfLines={1}>
-              {suggestion.place}
-            </Text>
-          </YStack>
-        </XStack>
+      <XStack flex={1} px={14} gap={10} items="center">
         {action ? (
-          <XStack height={48} rounded={24} items="center" justify="center" gap={8} bg="$surface">
-            <Icon name={action === 'invited' ? 'send' : 'x'} size={16} color={colors.muted} />
+          <XStack
+            flex={1}
+            height={48}
+            rounded={24}
+            items="center"
+            justify="center"
+            gap={8}
+            bg="$surface"
+          >
+            <Icon
+              name={action === 'invited' ? 'send' : action === 'liked' ? 'heart' : 'x'}
+              size={16}
+              color={colors.muted}
+            />
             <Text fontFamily="$semibold" fontSize={15} color="$muted">
-              {action === 'invited' ? 'Invite sent' : 'Skipped this week'}
+              {action === 'invited'
+                ? 'Invite sent'
+                : action === 'liked'
+                  ? 'Like sent'
+                  : 'Skipped for today'}
             </Text>
           </XStack>
         ) : (
-          <XStack gap={10}>
-            <Button
-              variant="secondary"
-              icon="x"
-              onPress={onSkip}
-              style={{ height: 48, paddingHorizontal: 16 }}
-            >
-              Skip
-            </Button>
+          <>
+            <IconButton size={48} onPress={onSkip} accessibilityLabel={`Skip ${a.name}`}>
+              <Icon name="x" size={20} color={colors.text} strokeWidth={2.2} />
+            </IconButton>
             <Button
               icon="send"
               onPress={onInvite}
@@ -292,27 +433,173 @@ function PacerCard({
             >
               Invite to train
             </Button>
-          </XStack>
+          </>
         )}
-      </YStack>
+      </XStack>
     </YStack>
   );
 }
 
-function DropDone({ days, onBrowse }: { days: number; onBrowse: () => void }) {
+// The "why you match" page inside the story.
+function InfoPage({ pacer }: { pacer: Pacer }) {
+  const colors = useColors();
+  const { athlete: a, compat, suggestion } = pacer;
+  const d = depthFor(a);
+  const chips = lifestyleChips(d.lifestyle);
+  return (
+    <YStack flex={1} px={18} pt={48} pb={18} gap={14}>
+      <DisplayTitle size={28}>{`You & *${a.name}*`}</DisplayTitle>
+      <YStack gap={8}>
+        {compat.factors.slice(0, 3).map((f) => (
+          <XStack key={f.key} items="center" gap={8}>
+            <Icon name="check" size={15} color={colors.accentText} strokeWidth={2.6} />
+            <Text flex={1} fontSize={14} color="$text" numberOfLines={1}>
+              {f.detail}
+            </Text>
+          </XStack>
+        ))}
+      </YStack>
+      <RhythmStrip mine={compat.mine} theirs={compat.theirs} height={22} />
+      <XStack items="center" gap={10} p={12} rounded={16} bg="$accentSoft">
+        <Icon name="calendar" size={18} color={colors.accentText} strokeWidth={2} />
+        <YStack flex={1}>
+          <Text fontFamily="$semibold" fontSize={14} color="$text">
+            {formatWhen(suggestion.date.toISOString())}
+          </Text>
+          <Text fontSize={12} color="$muted" numberOfLines={1}>
+            {suggestion.place}
+          </Text>
+        </YStack>
+      </XStack>
+      {chips.length ? (
+        <XStack gap={6} flexWrap="wrap">
+          {chips.map((c) => (
+            <XStack key={c} height={28} px={10} rounded="$full" items="center" bg="$surface">
+              <Text fontFamily="$semibold" fontSize={12} color="$text">
+                {c}
+              </Text>
+            </XStack>
+          ))}
+        </XStack>
+      ) : null}
+      <Text fontSize={12} color="$muted" mt="auto">
+        {freshnessLabel(d.photosDaysAgo)}
+      </Text>
+    </YStack>
+  );
+}
+
+function Standouts({
+  list,
+  liked,
+  bottom,
+  onOpen,
+  onLike,
+}: {
+  list: Athlete[];
+  liked: (id: number) => boolean;
+  bottom: number;
+  onOpen: (a: Athlete) => void;
+  onLike: (a: Athlete) => void;
+}) {
+  const colors = useColors();
+  const { width } = useWindowDimensions();
+  const tile = (width - 40 - 12) / 2;
+  if (!list.length) {
+    return (
+      <YStack flex={1} items="center" justify="center" px={32} gap={10}>
+        <Mascot size={110} mood="thinking" />
+        <Text fontSize={15} color="$muted" text="center">
+          No standouts near you yet. Try widening your filters.
+        </Text>
+      </YStack>
+    );
+  }
+  return (
+    <ScrollView flex={1} contentContainerStyle={{ px: 20, pt: 14, pb: bottom, gap: 12 }}>
+      <Text fontSize={14} color="$muted">
+        The most-liked people near you this week. A like with a comment stands out most.
+      </Text>
+      <XStack flexWrap="wrap" gap={12}>
+        {list.map((a) => {
+          const d = depthFor(a);
+          const isLiked = liked(a.id);
+          return (
+            <YStack
+              key={a.id}
+              width={tile}
+              height={tile * 1.45}
+              rounded={22}
+              overflow="hidden"
+              bg="$surface"
+              onPress={() => onOpen(a)}
+              accessibilityRole="button"
+              accessibilityLabel={`View ${a.name}`}
+              aria-label={`View ${a.name}`}
+            >
+              <Image
+                source={ATHLETE_PHOTOS[a.slotId]}
+                resizeMode="cover"
+                style={{ position: 'absolute', width: '100%', height: '100%' }}
+              />
+              <YStack position="absolute" l={0} r={0} b={0} p={12} gap={2} bg="rgba(18,16,14,0.5)">
+                <Text fontFamily="$bold" fontSize={16} color="#FFFFFF">
+                  {a.name}, {a.age}
+                </Text>
+                <XStack items="center" gap={4}>
+                  <Icon name="star" size={12} color="#FFFFFF" strokeWidth={2.2} />
+                  <Text fontFamily="$medium" fontSize={12} color="rgba(255,255,255,0.9)">
+                    {d.likesThisWeek} likes this week
+                  </Text>
+                </XStack>
+              </YStack>
+              <XStack
+                position="absolute"
+                t={10}
+                r={10}
+                width={40}
+                height={40}
+                rounded={20}
+                items="center"
+                justify="center"
+                bg={isLiked ? '$accent' : '$card'}
+                accessibilityRole="button"
+                accessibilityLabel={`Like ${a.name}`}
+                aria-label={`Like ${a.name}`}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  if (!isLiked) onLike(a);
+                }}
+              >
+                <Icon
+                  name="heart"
+                  size={19}
+                  color={isLiked ? colors.onAccent : colors.accent}
+                  filled={isLiked}
+                  strokeWidth={2.2}
+                />
+              </XStack>
+            </YStack>
+          );
+        })}
+      </XStack>
+    </ScrollView>
+  );
+}
+
+function DropDone({ until, onBrowse }: { until: string; onBrowse: () => void }) {
   return (
     <YStack flex={1} items="center" justify="center" px={32} gap={10}>
       <Mascot size={120} mood="wink" />
       <DisplayTitle size={34} center>
-        That’s this week’s *drop*
+        That’s today’s *drop*
       </DisplayTitle>
       <Text fontSize={15} lineHeight={22} color="$muted" text="center">
-        No endless swiping here. Your next pacers land Sunday evening — in {days} day
-        {days === 1 ? '' : 's'}.
+        No endless swiping here. Fresh pacers land every morning at 7 — next one in {until}.
       </Text>
       <YStack mt={12}>
-        <Button icon="map" onPress={onBrowse}>
-          Browse open sessions
+        <Button icon="star" onPress={onBrowse}>
+          See standouts
         </Button>
       </YStack>
     </YStack>

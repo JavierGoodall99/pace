@@ -14,6 +14,8 @@ import { levelLabel } from '../../src/data/athleteDepth';
 import { effectiveStatus, usePlans } from '../../src/data/plans';
 import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { ME_AVATAR, ME_COVER, TRAINING_PHOTOS } from '../../src/data/photos';
+import { formatHeight, lifestyleChips } from '../../src/data/identity';
+import { syncLabel } from '../../src/data/sync';
 import { useMe } from '../../src/data/session';
 import { useSocial } from '../../src/data/social';
 import { useColors } from '../../src/theme/appearance';
@@ -57,6 +59,7 @@ export default function ProfileScreen() {
         <XStack
           accessibilityRole="button"
           accessibilityLabel="Settings"
+          aria-label="Settings"
           onPress={() => router.push('/settings')}
           pressStyle={{ opacity: 0.8 }}
           position="absolute"
@@ -112,6 +115,9 @@ export default function ProfileScreen() {
         <XStack gap={8} mt={14} flexWrap="wrap">
           <Badge tone="accent">{primary}</Badge>
           {me.cadence ? <Badge>{me.cadence}</Badge> : null}
+          {[formatHeight(me.heightCm), ...lifestyleChips(me.lifestyle)].filter(Boolean).map((b) => (
+            <Badge key={b}>{b}</Badge>
+          ))}
         </XStack>
 
         <XStack
@@ -187,7 +193,12 @@ export default function ProfileScreen() {
         </YStack>
 
         <YStack mt={12} p={16} rounded={20} borderWidth={1} borderColor="$border" bg="$card">
-          <Heatmap rhythm={myRhythm} seed={3} />
+          <Heatmap
+            rhythm={myRhythm}
+            seed={3}
+            data={me.sync?.weeks}
+            source={me.sync ? syncLabel(me.sync) : undefined}
+          />
         </YStack>
 
         {me.pbs.length ? (

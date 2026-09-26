@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import type { Level } from './athleteDepth';
-import { daysFrom, nextDateFor, weekKey } from './dates';
+import { daysFrom, dropKey, nextDateFor } from './dates';
 import type { Discipline } from './mockData';
 import { likeBack } from './social';
 import type { IlloName } from '../components/Illustrations';
@@ -17,6 +17,7 @@ import type { IlloName } from '../components/Illustrations';
 // Local mock until a backend exists; seeds are relative to "now" so the
 // demo always has something upcoming and something to check in on.
 
+export type DropAction = 'invited' | 'skipped' | 'liked';
 export type CheckIn = 'again' | 'coffee' | 'buddies';
 export type PlanStatus = 'sent' | 'received' | 'confirmed' | 'declined' | 'done';
 
@@ -49,12 +50,16 @@ export interface OpenSession {
   spots: number; // places besides the host
   joined: Attendee[];
   note?: string;
+  // Singles run club: open to singles only, with a gender-balanced
+  // guest list so nobody walks into a room of 9 guys and one woman.
+  singles?: boolean;
+  balance?: { women: number; men: number }; // spots held per side
 }
 
 interface PlansState {
   plans: Plan[];
   open: OpenSession[];
-  drop: { week: string; actions: Record<number, 'invited' | 'skipped'> };
+  drop: { week: string; actions: Record<number, DropAction> };
   // Plan just accepted by the other person — the app celebrates it once.
   celebrate: string | null;
 }
@@ -132,6 +137,38 @@ function seed(now: Date = new Date()): PlansState {
       },
     ],
     open: [
+      {
+        id: 'o-singles-sunrise',
+        hostId: 8,
+        title: 'Singles sunrise run club',
+        activity: 'RUNNING',
+        date: iso(nextDateFor(5, '06:30', now)),
+        place: 'Groenkloof Nature Reserve gate',
+        city: 'Pretoria',
+        distance: '6 km · chatty pace',
+        level: 1,
+        spots: 11,
+        joined: [5, 4, 3],
+        note: 'Singles only, 6 women + 6 men. Easy loop, then coffee at the gate. Name tags provided.',
+        singles: true,
+        balance: { women: 6, men: 6 },
+      },
+      {
+        id: 'o-singles-padel',
+        hostId: 7,
+        title: 'Singles trail + braai',
+        activity: 'TRAIL',
+        date: iso(nextDateFor(6, '08:00', now)),
+        place: 'Klipriviersberg Reserve',
+        city: 'Johannesburg',
+        distance: '8 km · rotating pairs',
+        level: 2,
+        spots: 7,
+        joined: [2, 6],
+        note: 'Swap running partners every 2 km, then a braai at the picnic spot. Balanced 4 + 4.',
+        singles: true,
+        balance: { women: 4, men: 4 },
+      },
       {
         id: 'o-kagiso-track',
         hostId: 8,
@@ -214,7 +251,7 @@ function seed(now: Date = new Date()): PlansState {
         joined: [],
       },
     ],
-    drop: { week: weekKey(now), actions: {} },
+    drop: { week: dropKey(now), actions: {} },
     celebrate: null,
   };
 }
@@ -298,6 +335,11 @@ export function respondToInvite(id: string, accept: boolean) {
   if (accept) likeBack(plan.athleteId);
 }
 
+// Unmatch / block: drop every 1:1 plan with that person.
+export function removePlansWith(athleteId: number) {
+  setState({ plans: state.plans.filter((p) => p.athleteId !== athleteId) });
+}
+
 export function cancelPlan(id: string) {
   setState({ plans: state.plans.filter((p) => p.id !== id) });
 }
@@ -338,21 +380,14 @@ export function hostOpen(input: Omit<OpenSession, 'id' | 'hostId' | 'joined'>): 
   return s;
 }
 
-export function dropAction(
-  athleteId: number,
-  action: 'invited' | 'skipped',
-  now: Date = new Date()
-) {
-  const week = weekKey(now);
+export function dropAction(athleteId: number, action: DropAction, now: Date = new Date()) {
+  const week = dropKey(now);
   const actions = state.drop.week === week ? state.drop.actions : {};
   setState({ drop: { week, actions: { ...actions, [athleteId]: action } } });
 }
 
-export function dropActions(
-  s: PlansState,
-  now: Date = new Date()
-): Record<number, 'invited' | 'skipped'> {
-  return s.drop.week === weekKey(now) ? s.drop.actions : {};
+export function dropActions(s: PlansState, now: Date = new Date()): Record<number, DropAction> {
+  return s.drop.week === dropKey(now) ? s.drop.actions : {};
 }
 
 // ── Relationship progress ────────────────────────────────────────────

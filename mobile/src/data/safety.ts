@@ -8,6 +8,7 @@ import { blockAthlete, fileReport, ReportReason, unmatchAthlete } from './social
 // reported again.
 
 export const REPORT_REASONS: { id: ReportReason; label: string; detail: string }[] = [
+  { id: 'money', label: 'Asked for money', detail: 'Cash, crypto, gift cards or “investments”' },
   { id: 'fake', label: 'Fake profile or photos', detail: 'Not who they say they are' },
   { id: 'inappropriate', label: 'Inappropriate content', detail: 'Photos, prompts or messages' },
   { id: 'harassment', label: 'Harassment or hate', detail: 'Rude, threatening or abusive' },

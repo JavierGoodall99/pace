@@ -4,6 +4,7 @@ import { depthFor } from './athleteDepth';
 import { athleteById, THREAD_MESSAGES, ThreadMessage } from './mockData';
 import type { MeProfile } from './session';
 import { likeBack } from './social';
+import { dayKeyOf, likesLeft } from './trust';
 
 // Chat threads and first-move likes. A like can target a specific photo
 // or prompt and carry a comment; if it's mutual, the comment opens the
@@ -28,6 +29,8 @@ interface ChatState {
   threads: Record<number, ChatMessage[]>;
   // Athletes you've sent a like to (pending until they like back).
   sentLikes: number[];
+  // Today's like budget use (see LIKES_PER_DAY).
+  likesUsed?: { day: string; count: number };
 }
 
 const STORAGE_KEY = 'pace.chat.v1';
@@ -121,8 +124,13 @@ export function sendLike(
   comment: string,
   opts: { replyDelayMs?: number; onMatch?: (athleteId: number) => void } = {}
 ) {
+  const today = dayKeyOf();
+  const used = state.likesUsed?.day === today ? state.likesUsed.count : 0;
   if (!state.sentLikes.includes(athleteId)) {
-    setState({ sentLikes: [...state.sentLikes, athleteId] });
+    setState({
+      sentLikes: [...state.sentLikes, athleteId],
+      likesUsed: { day: today, count: used + 1 },
+    });
   }
   const reply = LIKE_REPLIES[athleteId];
   if (!reply) return;
@@ -168,4 +176,8 @@ export function updateMessage(athleteId: number, index: number, patch: Partial<C
       [athleteId]: list.map((m, i) => (i === index ? { ...m, ...patch } : m)),
     },
   });
+}
+
+export function likesLeftToday(s: ChatState, now: Date = new Date()): number {
+  return likesLeft(s.likesUsed, now);
 }

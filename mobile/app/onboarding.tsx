@@ -34,11 +34,13 @@ import { ATHLETES, DISCIPLINES, Discipline, SPORT_ILLO } from '../src/data/mockD
 import { ATHLETE_PHOTOS, HERO_RUNNERS } from '../src/data/photos';
 import { cadenceForDays, Rhythm, rhythmForMe } from '../src/data/rhythm';
 import { compatibility } from '../src/data/compat';
-import { wantEachOther } from '../src/data/pacers';
-import { LEVELS } from '../src/data/athleteDepth';
+import { isShowable, wantEachOther } from '../src/data/pacers';
+import { distanceTo } from '../src/data/places';
+import { DEFAULT_RADIUS_KM } from '../src/data/trust';
+import { depthFor, LEVELS } from '../src/data/athleteDepth';
 import { athletesTrainingFor, formatRaceDate, raceById, upcomingRaces } from '../src/data/races';
 import { completeOnboarding, Intent, MeProfile, updateMe, useMe } from '../src/data/session';
-import { DIETS, DRINKS, GENDERS, REST_DAYS, showMeLabel } from '../src/data/identity';
+import { DIETS, DRINKS, GENDERS, REST_DAYS } from '../src/data/identity';
 import { useColors } from '../src/theme/appearance';
 import { brand, formatLabel, shadow } from '../src/theme/tokens';
 
@@ -56,7 +58,6 @@ type StepId =
   | 'meet'
   | 'name'
   | 'gender'
-  | 'showme'
   | 'intent'
   | 'sports'
   | 'week'
@@ -77,7 +78,6 @@ const STEPS: StepId[] = [
   'meet',
   'name',
   'gender',
-  'showme',
   'intent',
   'sports',
   'week',
@@ -98,7 +98,6 @@ const STEPS: StepId[] = [
 const QUESTIONS: StepId[] = [
   'name',
   'gender',
-  'showme',
   'intent',
   'sports',
   'week',
@@ -184,8 +183,6 @@ function answered(step: StepId, me: MeProfile): boolean {
       return me.name.trim().length > 0;
     case 'gender':
       return !!me.gender;
-    case 'showme':
-      return !!me.showMe && me.showMe.length > 0;
     case 'intent':
       return !!me.intent;
     case 'sports':
@@ -233,15 +230,11 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
         : { text: 'First things first — what should I call you?', mood: 'happy' };
     case 'gender':
       return done
-        ? { text: 'Got it. Next: who would you like to meet?', mood: 'happy' }
-        : { text: 'Let’s get the basics right. I am a…', mood: 'happy' };
-    case 'showme':
-      return done
         ? {
-            text: `${showMeLabel(me.showMe)} it is. They’ll only see you if they want to meet you too.`,
-            mood: 'wink',
+            text: `Got it — I’ll show you ${me.gender === 'woman' ? 'men' : 'women'} who train like you.`,
+            mood: 'happy',
           }
-        : { text: 'Who do you want to see on Pace?', mood: 'happy' };
+        : { text: 'Let’s get the basics right. I am a…', mood: 'happy' };
     case 'intent': {
       const pick = INTENTS.find((i) => i.id === me.intent);
       return pick
@@ -345,11 +338,17 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
     case 'sync':
       return done
         ? { text: 'Synced! Your stats now carry a verified badge.', mood: 'excited' }
-        : { text: 'Connect Strava or Garmin — matches trust real numbers.', mood: 'happy' };
+        : {
+            text: 'Connect Strava or Garmin. Pace only shows people who actually train — this proves you do.',
+            mood: 'happy',
+          };
     case 'verify':
       return done
         ? { text: 'Verified! You just unlocked Gold.', mood: 'excited' }
-        : { text: 'Last one: a quick selfie check so everyone knows you’re real.', mood: 'happy' };
+        : {
+            text: 'Last one: a quick selfie check. Everyone here is verified — you’ll need it to like or invite.',
+            mood: 'happy',
+          };
     case 'building':
       return { text: 'Hold tight — finding people who move like you…', mood: 'thinking' };
     default:
@@ -510,33 +509,6 @@ export default function OnboardingScreen() {
                       onPress={() => updateMe({ gender: g.id })}
                     />
                   ))}
-                </YStack>
-              )}
-
-              {step === 'showme' && (
-                <YStack gap={12}>
-                  {GENDERS.map((g) => {
-                    const on = !!me.showMe?.includes(g.id);
-                    return (
-                      <OptionCard
-                        key={g.id}
-                        title={g.plural}
-                        selected={on}
-                        onPress={() => {
-                          const cur = me.showMe ?? [];
-                          updateMe({
-                            showMe: on ? cur.filter((x) => x !== g.id) : [...cur, g.id],
-                          });
-                        }}
-                      />
-                    );
-                  })}
-                  <OptionCard
-                    title="Everyone"
-                    subtitle="Show me all genders"
-                    selected={me.showMe?.length === GENDERS.length}
-                    onPress={() => updateMe({ showMe: GENDERS.map((g) => g.id) })}
-                  />
                 </YStack>
               )}
 
@@ -954,7 +926,13 @@ function BuildingStep({ text, onDone }: { text: string; onDone: () => void }) {
 function RevealStep({ me, rhythm }: { me: MeProfile; rhythm: Rhythm }) {
   const ranked = useMemo(
     () =>
-      ATHLETES.filter((a) => a.name !== me.name.trim().split(' ')[0] && wantEachOther(me, a))
+      ATHLETES.filter(
+        (a) =>
+          a.name !== me.name.trim().split(' ')[0] &&
+          isShowable(a) &&
+          wantEachOther(me, a) &&
+          distanceTo(me.city, a.city, depthFor(a).nearKm) <= DEFAULT_RADIUS_KM
+      )
         .map((a) => ({ a, sync: compatibility(me, a).score }))
         .sort((x, y) => y.sync - x.sync),
     [me]
@@ -1003,13 +981,21 @@ function RevealStep({ me, rhythm }: { me: MeProfile; rhythm: Rhythm }) {
           </YStack>
         ))}
       </XStack>
-      <Text fontSize={15} color="$muted" text="center" maxW={300}>
-        {top.map((t) => t.a.name).join(', ')} and more train on your days. Your best match is{' '}
-        <Text fontFamily="$bold" color="$accentText">
-          {top[0]?.sync ?? 0}% in sync
+      {top.length ? (
+        <Text fontSize={15} color="$muted" text="center" maxW={300}>
+          {top.map((t) => t.a.name).join(', ')}
+          {ranked.length > top.length ? ' and more' : ''} train on your days. Your best match is{' '}
+          <Text fontFamily="$bold" color="$accentText">
+            {top[0].sync}% in sync
+          </Text>
+          .
         </Text>
-        .
-      </Text>
+      ) : (
+        <Text fontSize={15} color="$muted" text="center" maxW={300}>
+          Pace only shows verified people who actually train, so we’re still growing in {city}.
+          Singles run clubs are the fastest way to meet people this week.
+        </Text>
+      )}
     </YStack>
   );
 }

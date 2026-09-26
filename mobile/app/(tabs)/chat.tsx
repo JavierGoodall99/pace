@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
@@ -9,6 +10,7 @@ import { depthFor } from '../../src/data/athleteDepth';
 import { messagesWith, previewOf, useChat } from '../../src/data/chat';
 import { athleteById, CHAT_THREADS } from '../../src/data/mockData';
 import { useMe } from '../../src/data/session';
+import { expiryLabel, matchHoursLeft } from '../../src/data/trust';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
 import { useSocial } from '../../src/data/social';
 import { useColors } from '../../src/theme/appearance';
@@ -19,7 +21,8 @@ export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const tabBarSpace = useTabBarSpace();
   const router = useRouter();
-  const { blocked, matches } = useSocial();
+  const { blocked, matches, matchedAt } = useSocial();
+  const [now] = useState(() => new Date());
   const chat = useChat();
   const me = useMe();
   // Every match with messages is a thread; matches without any sit in
@@ -38,10 +41,16 @@ export default function ChatScreen() {
         at: last.at ?? '',
         time: last.at ? 'Now' : (seeded?.time ?? ''),
         unread: last.at ? last.from === 'them' : !!seeded?.unread,
+        yourTurn: last.from === 'them',
       };
     })
     .sort((a, b) => b.at.localeCompare(a.at));
-  const fresh = ids.filter((id) => messagesWith(chat, id).length === 0);
+  // Silent matches expire after MATCH_TTL_DAYS so nobody sits on a pile
+  // of matches that never talk.
+  const fresh = ids
+    .filter((id) => messagesWith(chat, id).length === 0)
+    .map((id) => ({ id, hours: matchedAt[id] ? matchHoursLeft(matchedAt[id], now) : null }))
+    .filter((m) => m.hours === null || m.hours > 0);
 
   return (
     <ScrollView
@@ -73,7 +82,7 @@ export default function ChatScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ px: 20, gap: 14 }}
           >
-            {fresh.map((id) => {
+            {fresh.map(({ id, hours }) => {
               const a = athleteById(id);
               if (!a) return null;
               const herMove = depthFor(a).womenFirst && me.gender === 'man';
@@ -104,7 +113,13 @@ export default function ChatScreen() {
                     {a.name}
                   </Text>
                   <Text fontSize={11} color="$muted" numberOfLines={1}>
-                    {herMove ? 'Her move' : myMove ? 'Your move' : 'Say hi'}
+                    {hours !== null
+                      ? expiryLabel(hours)
+                      : herMove
+                        ? 'Her move'
+                        : myMove
+                          ? 'Your move'
+                          : 'Say hi'}
                   </Text>
                 </YStack>
               );
@@ -162,7 +177,15 @@ export default function ChatScreen() {
                   >
                     {t.lastMsg}
                   </Text>
-                  {t.unread ? <XStack width={10} height={10} rounded={5} bg="$accent" /> : null}
+                  {t.yourTurn ? (
+                    <XStack height={22} px={8} rounded="$full" items="center" bg="$accentSoft">
+                      <Text fontFamily="$semibold" fontSize={11} color="$accentText">
+                        Your turn
+                      </Text>
+                    </XStack>
+                  ) : t.unread ? (
+                    <XStack width={10} height={10} rounded={5} bg="$accent" />
+                  ) : null}
                 </XStack>
               </YStack>
             </XStack>

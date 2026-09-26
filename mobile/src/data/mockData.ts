@@ -51,7 +51,7 @@ export const ATHLETES: Athlete[] = [
     city: 'Johannesburg',
     bio: 'Weekend gravel grinder, weekday commuter. Always down for a coffee-stop ride.',
     weekly: 4,
-    verified: false,
+    verified: true,
   },
   {
     id: 3,

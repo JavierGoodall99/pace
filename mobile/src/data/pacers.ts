@@ -1,4 +1,6 @@
 import { depthFor } from './athleteDepth';
+import { seeking } from './identity';
+import { inRange, isActive } from './trust';
 import { Compat, compatibility } from './compat';
 import { dayIndex, nextDateFor } from './dates';
 import { ATHLETES, Athlete, Discipline } from './mockData';
@@ -57,19 +59,27 @@ export interface Pacer {
   suggestion: Suggestion;
 }
 
-// Mutual "show me": you want to see them and they want to see you.
-// Unanswered preferences (null) don't filter.
+// Women see men and men see women. Before gender is answered, nothing
+// is filtered.
 export function wantEachOther(me: MeProfile, a: Athlete): boolean {
   const d = depthFor(a);
-  if (me.showMe && me.showMe.length && !me.showMe.includes(d.gender)) return false;
-  if (me.gender && !d.showMe.includes(me.gender)) return false;
+  const want = seeking(me.gender);
+  if (want && d.gender !== want) return false;
+  // Their age range has to include you too.
+  const myAge = Number(me.age);
+  if (myAge && !inRange(myAge, d.ageRange)) return false;
   return true;
+}
+
+// Only verified people who've actually trained recently make the drop.
+export function isShowable(a: Athlete): boolean {
+  return a.verified && isActive(depthFor(a));
 }
 
 function candidates(me: MeProfile, excluded: number[]): Athlete[] {
   const myFirst = me.name.trim().split(' ')[0];
   return ATHLETES.filter(
-    (a) => !excluded.includes(a.id) && a.name !== myFirst && wantEachOther(me, a)
+    (a) => !excluded.includes(a.id) && a.name !== myFirst && isShowable(a) && wantEachOther(me, a)
   );
 }
 

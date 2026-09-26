@@ -252,9 +252,24 @@ export default function InviteScreen() {
           <Text fontSize={13} color="$muted" text="center">
             {inPast ? 'That time has passed — pick a later slot.' : formatWhen(when.toISOString())}
           </Text>
-          <Button icon="send" disabled={inPast || !place} onPress={send} style={{ width: '100%' }}>
-            {`Invite ${athlete.name} to train`}
-          </Button>
+          {me.verified ? (
+            <Button
+              icon="send"
+              disabled={inPast || !place}
+              onPress={send}
+              style={{ width: '100%' }}
+            >
+              {`Invite ${athlete.name} to train`}
+            </Button>
+          ) : (
+            <Button
+              icon="shield-check"
+              onPress={() => router.push('/verify')}
+              style={{ width: '100%' }}
+            >
+              Verify to send invites
+            </Button>
+          )}
         </YStack>
       </YStack>
     </KeyboardAvoidingView>

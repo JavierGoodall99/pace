@@ -5,7 +5,7 @@ import { PhotoStory, StoryPage } from './PhotoStory';
 import { RhythmStrip } from './Rhythm';
 import { DisplayTitle } from './ui';
 import { levelLabel } from '../data/athleteDepth';
-import { formatHeight, lifestyleChips } from '../data/identity';
+import { lifestyleChips } from '../data/identity';
 import type { Rhythm } from '../data/rhythm';
 import type { MeProfile } from '../data/session';
 import { useColors } from '../theme/appearance';
@@ -27,7 +27,7 @@ export function MyCard({
   const colors = useColors();
   const pages = useMemo(() => myPages(me, rhythm), [me, rhythm]);
   const sports = me.disciplines.map(formatLabel);
-  const details = [formatHeight(me.heightCm), me.city].filter(Boolean).join(' · ');
+  const details = me.city;
 
   return (
     <YStack

@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useMemo, useSyncExternalStore } from 'react';
-import { dayIndex, localDayKey, startOfDay } from './dates';
+import { dayIndex, localDayKey, startOfDay, weekKey } from './dates';
 import type { Discipline } from './mockData';
 import { effectiveStatus, Plan, usePlans } from './plans';
 import type { Provider, SyncSummary } from './sync';
@@ -33,6 +33,8 @@ export const SOURCE_LABEL: Record<TrainingSource, string> = {
   manual: 'Logged',
   strava: 'Strava',
   garmin: 'Garmin',
+  apple: 'Apple Health',
+  samsung: 'Samsung Health',
   session: 'Pace session',
 };
 
@@ -199,6 +201,59 @@ export interface Activity {
   trainedToday: boolean;
   // Sessions in the last 7 days.
   thisWeek: number;
+  streak: Streak;
+}
+
+// Weekly streak: consecutive Monday-first weeks with at least one session
+// (logged, synced or a Pace session). Weeks, not days, so rest days never
+// break it. This week only counts once you've trained; until then the
+// streak carries over from last week and is at risk.
+export interface Streak {
+  weeks: number;
+  // Streak is alive but nothing logged yet this week.
+  atRisk: boolean;
+  best: number;
+}
+
+export function weeklyStreak(all: TrainingEntry[], now: Date = new Date()): Streak {
+  const trained = new Set(all.map((e) => weekKey(new Date(e.at))));
+  const weekBefore = (d: Date) => {
+    const prev = new Date(d);
+    prev.setDate(prev.getDate() - 7);
+    return prev;
+  };
+
+  const thisWeekDone = trained.has(weekKey(now));
+  let cursor = thisWeekDone ? now : weekBefore(now);
+  let weeks = 0;
+  while (trained.has(weekKey(cursor))) {
+    weeks++;
+    cursor = weekBefore(cursor);
+  }
+
+  // Longest run anywhere in the log.
+  let best = 0;
+  trained.forEach((key) => {
+    const [y, m, d] = key.split('-').map(Number);
+    const monday = new Date(y, m - 1, d);
+    if (trained.has(weekKey(weekBefore(monday)))) return; // not the start of a run
+    let run = 0;
+    let c = monday;
+    while (trained.has(weekKey(c))) {
+      run++;
+      c = new Date(c.getFullYear(), c.getMonth(), c.getDate() + 7);
+    }
+    best = Math.max(best, run);
+  });
+
+  return { weeks, atRisk: weeks > 0 && !thisWeekDone, best };
+}
+
+// "3-week streak" / "3-week streak · log a session this week to keep it"
+export function streakText(s: Streak): string {
+  if (s.weeks === 0) return 'Log a session to start a streak';
+  const base = `${s.weeks}-week streak`;
+  return s.atRisk ? `${base} · train this week to keep it` : base;
 }
 
 export function activityOf(all: TrainingEntry[], now: Date = new Date()): Activity {
@@ -214,6 +269,7 @@ export function activityOf(all: TrainingEntry[], now: Date = new Date()): Activi
     active: days !== null && days <= ACTIVE_DAYS,
     trainedToday: days === 0,
     thisWeek: all.filter((e) => startOfDay(new Date(e.at)).getTime() >= weekAgo).length,
+    streak: weeklyStreak(all, now),
   };
 }
 

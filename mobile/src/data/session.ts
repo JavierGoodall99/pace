@@ -20,8 +20,8 @@ export interface MeProfile {
   cadence: string | null;
   times: string[];
   photos: string[];
-  stravaConnected: boolean;
-  garminConnected: boolean;
+  // Activity sources the user has linked (Strava, Apple Health, …).
+  connected: Provider[];
   verified: boolean;
   // What they're here for — set in onboarding.
   intent: Intent | null;
@@ -36,11 +36,10 @@ export interface MeProfile {
   pbs: { label: string; value: string; source?: Provider }[];
   // Favourite routes, added in Personal bests & routes.
   routes: Route[];
-  // Last Strava/Garmin import.
+  // Last provider import.
   sync: SyncSummary | null;
   // Dating basics — null until asked in onboarding.
   gender: Gender | null;
-  heightCm: number | null;
   lifestyle: Lifestyle;
   // One label per entry in `photos` (same order).
   photoLabels: PhotoLabel[];
@@ -125,6 +124,16 @@ function normaliseMe(me: MeProfile): MeProfile {
   return { ...me, city: canonicalCity(me.city) };
 }
 
+// Saves from before `connected` stored one flag per provider.
+function migrateConnected(me: Partial<MeProfile> | undefined): Partial<MeProfile> {
+  if (!me || me.connected) return me ?? {};
+  const old = me as { stravaConnected?: boolean; garminConnected?: boolean };
+  const connected: Provider[] = [];
+  if (old.stravaConnected) connected.push('strava');
+  if (old.garminConnected) connected.push('garmin');
+  return { ...me, connected };
+}
+
 // Hydrate once at module load; screens render the default state until
 // the stored session (if any) replaces it.
 AsyncStorage.getItem(STORAGE_KEY)
@@ -136,7 +145,7 @@ AsyncStorage.getItem(STORAGE_KEY)
         // Saves from before `signedIn` existed were signed in whenever
         // they held an account.
         signedIn: saved.signedIn ?? !!saved.account,
-        me: normaliseMe({ ...freshMe('', ''), ...saved.me }),
+        me: normaliseMe({ ...freshMe('', ''), ...migrateConnected(saved.me) }),
         onboarded: saved.onboarded ?? false,
         loading: false,
       });
@@ -157,8 +166,7 @@ export function freshMe(name: string, email: string): MeProfile {
     cadence: null,
     times: [],
     photos: [],
-    stravaConnected: false,
-    garminConnected: false,
+    connected: [],
     verified: false,
     intent: null,
     trainingDays: null,
@@ -168,7 +176,6 @@ export function freshMe(name: string, email: string): MeProfile {
     pbs: [],
     routes: [],
     gender: null,
-    heightCm: null,
     lifestyle: { drinks: null, diet: null, restDay: null },
     photoLabels: [],
     photosUpdatedAt: null,

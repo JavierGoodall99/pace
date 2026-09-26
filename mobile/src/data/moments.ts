@@ -138,6 +138,13 @@ export function postMoment(input: Omit<Moment, 'id' | 'author' | 'at' | 'kudos'>
   return m;
 }
 
+// Only your own moments can be deleted.
+export function deleteMoment(id: string) {
+  setState({
+    moments: state.moments.filter((m) => !(m.id === id && m.author === 'me')),
+  });
+}
+
 export function toggleKudos(id: string) {
   setState({
     myKudos: state.myKudos.includes(id)

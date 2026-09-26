@@ -8,6 +8,7 @@ import { Icon } from '../../src/components/Icon';
 import { Illo } from '../../src/components/Illustrations';
 import { athleteById, SPORT_ILLO } from '../../src/data/mockData';
 import {
+  deleteMoment,
   kudosCount,
   liveMoments,
   markSeen,
@@ -19,6 +20,7 @@ import {
 import { ATHLETE_PHOTOS, ME_AVATAR } from '../../src/data/photos';
 import { useMe } from '../../src/data/session';
 import { useSocial } from '../../src/data/social';
+import { confirmAction } from '../../src/lib/dialogs';
 import { successHaptic } from '../../src/lib/haptics';
 import { useColors } from '../../src/theme/appearance';
 import { formatLabel } from '../../src/theme/tokens';
@@ -63,6 +65,18 @@ export default function MomentScreen() {
       ? ATHLETE_PHOTOS[a.slotId]
       : ME_AVATAR;
   const gave = state.myKudos.includes(m.id);
+
+  async function remove() {
+    const ok = await confirmAction({
+      title: 'Delete moment',
+      message: 'Your matches will no longer see this moment. This cannot be undone.',
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!ok) return;
+    deleteMoment(m.id);
+    router.back();
+  }
 
   function go(delta: number) {
     const next = live[index + delta];
@@ -142,6 +156,22 @@ export default function MomentScreen() {
               {postedAgo(m, now)} · {timeLeft(m, now)}
             </Text>
           </YStack>
+          {mine ? (
+            <XStack
+              accessibilityRole="button"
+              accessibilityLabel="Delete moment"
+              aria-label="Delete moment"
+              onPress={remove}
+              width={36}
+              height={36}
+              rounded={18}
+              items="center"
+              justify="center"
+              bg="rgba(255,255,255,0.18)"
+            >
+              <Icon name="trash" size={17} color="#FFFFFF" strokeWidth={2.2} />
+            </XStack>
+          ) : null}
           <XStack
             accessibilityRole="button"
             accessibilityLabel="Close"

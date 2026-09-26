@@ -7,6 +7,7 @@ import { Compat, FactorKey } from '../data/compat';
 import { Rhythm } from '../data/rhythm';
 import { Race, daysUntil, formatRaceDate } from '../data/races';
 import { Stage, STAGES } from '../data/plans';
+import { Provider, PROVIDER_LABEL } from '../data/sync';
 import type { Prompt } from '../data/athleteDepth';
 import { useColors } from '../theme/appearance';
 
@@ -243,7 +244,7 @@ export function PromptCard({ prompt }: { prompt: Prompt }) {
 export function PersonalBests({
   pbs,
 }: {
-  pbs: { label: string; value: string; source?: string }[];
+  pbs: { label: string; value: string; source?: Provider }[];
 }) {
   if (!pbs.length) return null;
   return (
@@ -267,7 +268,7 @@ export function PersonalBests({
           </Text>
           {pb.source ? (
             <Text fontFamily="$semibold" fontSize={11} color="$success" mt={4}>
-              Verified by {pb.source === 'garmin' ? 'Garmin' : 'Strava'}
+              Verified by {PROVIDER_LABEL[pb.source]}
             </Text>
           ) : null}
         </YStack>

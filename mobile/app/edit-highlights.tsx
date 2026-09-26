@@ -16,7 +16,7 @@ import {
 import { CT_SPOTS } from '../src/data/capeTown';
 import { addRoute, MAX_PBS, MAX_ROUTES, pbPresetsFor, upsertPb } from '../src/data/highlights';
 import { updateMe, useMe } from '../src/data/session';
-import { PROVIDER_LABEL } from '../src/data/sync';
+import { hasSync, PROVIDER_LABEL, providerList } from '../src/data/sync';
 import { tapHaptic } from '../src/lib/haptics';
 import { useColors } from '../src/theme/appearance';
 
@@ -148,9 +148,9 @@ export default function EditHighlightsScreen() {
                 : 'Add PB'}
             </Button>
             <Text fontSize={12} color="$muted">
-              {me.stravaConnected || me.garminConnected
+              {hasSync(me)
                 ? 'PBs you type in show without a verified badge. Editing a synced PB removes its badge.'
-                : 'Connect Strava or Garmin to get a “verified” badge on synced PBs.'}
+                : `Connect ${providerList()} to get a “verified” badge on synced PBs.`}
             </Text>
           </YStack>
 

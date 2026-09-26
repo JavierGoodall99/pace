@@ -45,7 +45,6 @@ export interface AthleteDepth {
   nearKm: number;
   // Dating basics.
   gender: Gender;
-  heightCm: number;
   lifestyle: Lifestyle;
   // Days since they last updated their photos.
   photosDaysAgo: number;
@@ -81,7 +80,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     ],
     nearKm: 3,
     gender: 'woman',
-    heightCm: 168,
     lifestyle: { drinks: 'social', diet: 'anything', restDay: 'brunch' },
     photosDaysAgo: 9,
     womenFirst: false,
@@ -106,7 +104,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     routes: [{ name: 'Cradle of Humankind loop', detail: '85 km · rolling hills' }],
     nearKm: 6,
     gender: 'man',
-    heightCm: 183,
     lifestyle: { drinks: 'social', diet: 'highprotein', restDay: 'brunch' },
     photosDaysAgo: 22,
     womenFirst: false,
@@ -131,7 +128,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     ],
     nearKm: 5,
     gender: 'woman',
-    heightCm: 171,
     lifestyle: { drinks: 'never', diet: 'vegetarian', restDay: 'adventure' },
     photosDaysAgo: 4,
     womenFirst: true,
@@ -153,7 +149,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     routes: [{ name: 'North Beach to uShaka', detail: '2 km sea swim' }],
     nearKm: 4,
     gender: 'man',
-    heightCm: 188,
     lifestyle: { drinks: 'offseason', diet: 'highprotein', restDay: 'couch' },
     photosDaysAgo: 48,
     womenFirst: false,
@@ -175,7 +170,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     routes: [{ name: 'CrossFit box, Woodstock', detail: '6am class' }],
     nearKm: 7,
     gender: 'woman',
-    heightCm: 165,
     lifestyle: { drinks: 'social', diet: 'highprotein', restDay: 'brunch' },
     photosDaysAgo: 15,
     womenFirst: false,
@@ -194,7 +188,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     routes: [{ name: 'City Rock', detail: 'Bouldering gym · Observatory' }],
     nearKm: 4,
     gender: 'man',
-    heightCm: 179,
     lifestyle: { drinks: 'social', diet: 'anything', restDay: 'adventure' },
     photosDaysAgo: 6,
     womenFirst: false,
@@ -213,7 +206,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     routes: [{ name: 'Rondebosch Common', detail: 'Brick sessions · run loops' }],
     nearKm: 8,
     gender: 'woman',
-    heightCm: 173,
     lifestyle: { drinks: 'offseason', diet: 'vegan', restDay: 'adventure' },
     photosDaysAgo: 11,
     womenFirst: true,
@@ -235,7 +227,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     routes: [{ name: 'Green Point Athletics Stadium', detail: 'Tuesday intervals' }],
     nearKm: 5,
     gender: 'man',
-    heightCm: 185,
     lifestyle: { drinks: 'never', diet: 'highprotein', restDay: 'couch' },
     photosDaysAgo: 3,
     womenFirst: false,
@@ -258,7 +249,6 @@ export function depthFor(a: Pick<Athlete, 'id'>): AthleteDepth {
       routes: [],
       nearKm: 10,
       gender: 'woman',
-      heightCm: 170,
       lifestyle: { drinks: null, diet: null, restDay: null },
       photosDaysAgo: 30,
       womenFirst: false,

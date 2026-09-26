@@ -3,7 +3,7 @@ import type { Discipline } from './mockData';
 import type { MeProfile } from './session';
 
 // Personal bests and favourite routes on your card. You add these
-// yourself; a PB only shows "Verified by Strava/Garmin" when it came from
+// yourself; a PB only shows "Verified by Strava" (or another provider) when it came from
 // a sync, and editing it by hand drops that badge.
 
 export const MAX_PBS = 4;

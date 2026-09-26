@@ -21,7 +21,7 @@ import {
   usePlans,
 } from '../../src/data/plans';
 import { usePacerDeck } from '../../src/data/deck';
-import { activityText, SOURCE_LABEL, useMyTraining } from '../../src/data/training';
+import { activityText, SOURCE_LABEL, streakText, useMyTraining } from '../../src/data/training';
 import { todayLine } from '../../src/data/pip';
 import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { rhythmForMe, WEEK_DAY_NAMES } from '../../src/data/rhythm';
@@ -407,6 +407,23 @@ function TrainedTodayCard({ now, onLog }: { now: Date; onLog: () => void }) {
             ? `${formatLabel(today.sport)} · ${today.minutes} min · ${SOURCE_LABEL[today.source]}`
             : activityText(activity)}
         </Text>
+        {activity.streak.weeks > 0 ? (
+          <XStack items="center" gap={4} mt={2}>
+            <Icon
+              name="zap"
+              size={12}
+              color={activity.streak.atRisk ? colors.accentText : colors.success}
+              filled
+            />
+            <Text
+              fontFamily="$semibold"
+              fontSize={12}
+              color={activity.streak.atRisk ? '$accentText' : '$success'}
+            >
+              {streakText(activity.streak)}
+            </Text>
+          </XStack>
+        ) : null}
       </YStack>
       <Button
         variant={today ? 'ghost' : 'primary'}

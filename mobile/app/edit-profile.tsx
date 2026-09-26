@@ -39,7 +39,6 @@ export default function EditProfileScreen() {
 
   const [name, setName] = useState(me.name);
   const [age, setAge] = useState(me.age);
-  const [height, setHeight] = useState(me.heightCm ? String(me.heightCm) : '');
   const [bio, setBio] = useState(me.bio);
   const [gender, setGender] = useState<Gender | null>(me.gender);
   const [lifestyle, setLifestyle] = useState<Lifestyle>(me.lifestyle);
@@ -72,7 +71,6 @@ export default function EditProfileScreen() {
     await updateMe({
       name: name.trim() || me.name,
       age: age.trim(),
-      heightCm: Number(height) || null,
       bio: bio.trim(),
       gender,
       lifestyle,
@@ -128,24 +126,12 @@ export default function EditProfileScreen() {
           <SectionTitle>About you</SectionTitle>
           <YStack gap={12}>
             <Input placeholder="Name" value={name} onChangeText={setName} autoCapitalize="words" />
-            <XStack gap={10}>
-              <YStack flex={1}>
-                <Input
-                  placeholder="Age"
-                  value={age}
-                  onChangeText={(v) => setAge(v.replace(/[^0-9]/g, '').slice(0, 2))}
-                  keyboardType="numeric"
-                />
-              </YStack>
-              <YStack flex={1}>
-                <Input
-                  placeholder="Height (cm)"
-                  value={height}
-                  onChangeText={(v) => setHeight(v.replace(/[^0-9]/g, '').slice(0, 3))}
-                  keyboardType="numeric"
-                />
-              </YStack>
-            </XStack>
+            <Input
+              placeholder="Age"
+              value={age}
+              onChangeText={(v) => setAge(v.replace(/[^0-9]/g, '').slice(0, 2))}
+              keyboardType="numeric"
+            />
             <Input placeholder="Bio — one line is plenty" value={bio} onChangeText={setBio} />
           </YStack>
         </YStack>

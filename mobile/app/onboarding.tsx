@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import type { IlloName } from '../src/components/Illustrations';
 import { buildConfettiPieces, Confetti } from '../src/components/Confetti';
-import { Icon } from '../src/components/Icon';
+import { Icon, IconName } from '../src/components/Icon';
 import { Mascot, Mood, SpeechBubble } from '../src/components/Mascot';
 import { MyCard } from '../src/components/MyCard';
 import { Aurora, PulseLine } from '../src/components/Motif';
@@ -53,6 +53,13 @@ import { isOnWaitlist, joinWaitlist, useWaitlist } from '../src/data/waitlist';
 import { DEFAULT_RADIUS_KM } from '../src/data/trust';
 import { depthFor, LEVELS } from '../src/data/athleteDepth';
 import { athletesTrainingFor, formatRaceDate, raceById, upcomingRaces } from '../src/data/races';
+import {
+  availableProviders,
+  hasSync,
+  PROVIDER_INFO,
+  PROVIDER_LABEL,
+  providerList,
+} from '../src/data/sync';
 import {
   completeOnboarding,
   createAccount,
@@ -221,7 +228,7 @@ function answered(step: StepId, me: MeProfile): boolean {
     case 'goal':
       return me.goalRaceId !== null;
     case 'basics':
-      return Number(me.age) >= 18 && !!me.heightCm;
+      return Number(me.age) >= 18;
     case 'lifestyle':
       return !!me.lifestyle.drinks && !!me.lifestyle.diet && !!me.lifestyle.restDay;
     case 'photos':
@@ -231,7 +238,7 @@ function answered(step: StepId, me: MeProfile): boolean {
         me.photoLabels.includes('offclock')
       );
     case 'sync':
-      return me.stravaConnected || me.garminConnected;
+      return hasSync(me);
     case 'verify':
       return me.verified;
     default:
@@ -341,7 +348,7 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
       if (me.age && Number(me.age) < 18)
         return { text: 'Pace is for adults only — you need to be 18+.', mood: 'thinking' };
       if (done) return { text: 'Perfect. Nearly done!', mood: 'excited' };
-      return { text: 'Almost there. How old are you, and how tall?', mood: 'happy' };
+      return { text: 'Almost there. How old are you?', mood: 'happy' };
     case 'lifestyle':
       return done
         ? { text: 'Perfect. Deal-breakers sorted before the first session.', mood: 'excited' }
@@ -367,7 +374,7 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
       return done
         ? { text: 'Synced! Your stats now carry a verified badge.', mood: 'excited' }
         : {
-            text: 'Connect Strava or Garmin. Pace only shows people who actually train — this proves you do.',
+            text: `Connect ${providerList()}. Pace only shows people who actually train — this proves you do.`,
             mood: 'happy',
           };
     case 'verify':
@@ -414,17 +421,13 @@ export default function OnboardingScreen() {
     step === 'account'
       ? 100
       : questionIndex >= 0
-      ? ((questionIndex + (answered(step, me) ? 1 : 0.35)) / QUESTIONS.length) * 100
-      : 0;
+        ? ((questionIndex + (answered(step, me) ? 1 : 0.35)) / QUESTIONS.length) * 100
+        : 0;
 
   const myRhythm = rhythmForMe(me.cadence, me.trainingDays);
   const pip = pipLine(step, me);
 
-  const badgeTierLabel = me.verified
-    ? 'Gold · Verified'
-    : me.stravaConnected || me.garminConnected
-      ? 'Silver'
-      : 'Bronze';
+  const badgeTierLabel = me.verified ? 'Gold · Verified' : hasSync(me) ? 'Silver' : 'Bronze';
 
   function next() {
     if (QUESTIONS.includes(step) && answered(step, me)) successHaptic();
@@ -489,9 +492,9 @@ export default function OnboardingScreen() {
               ? busy
                 ? 'Saving…'
                 : 'Create account'
-            : skippable && !answered(step, me)
-              ? 'Maybe later'
-              : 'Continue';
+              : skippable && !answered(step, me)
+                ? 'Maybe later'
+                : 'Continue';
 
   const showHeader = QUESTIONS.includes(step) || step === 'account';
 
@@ -676,23 +679,12 @@ export default function OnboardingScreen() {
               )}
 
               {step === 'basics' && (
-                <YStack gap={12}>
-                  <Input
-                    placeholder="Age"
-                    value={me.age}
-                    onChangeText={(v) => updateMe({ age: v.replace(/[^0-9]/g, '').slice(0, 2) })}
-                    keyboardType="numeric"
-                  />
-                  <Input
-                    placeholder="Height in cm"
-                    value={me.heightCm ? String(me.heightCm) : ''}
-                    onChangeText={(v) => {
-                      const n = Number(v.replace(/[^0-9]/g, '').slice(0, 3));
-                      updateMe({ heightCm: n || null });
-                    }}
-                    keyboardType="numeric"
-                  />
-                </YStack>
+                <Input
+                  placeholder="Age"
+                  value={me.age}
+                  onChangeText={(v) => updateMe({ age: v.replace(/[^0-9]/g, '').slice(0, 2) })}
+                  keyboardType="numeric"
+                />
               )}
 
               {step === 'lifestyle' && (
@@ -762,18 +754,15 @@ export default function OnboardingScreen() {
 
               {step === 'sync' && (
                 <YStack gap={12}>
-                  <SyncRow
-                    icon="activity"
-                    label="Strava"
-                    connected={me.stravaConnected}
-                    onPress={() => router.push('/connect/strava')}
-                  />
-                  <SyncRow
-                    icon="repeat"
-                    label="Garmin"
-                    connected={me.garminConnected}
-                    onPress={() => router.push('/connect/garmin')}
-                  />
+                  {availableProviders().map((p) => (
+                    <SyncRow
+                      key={p}
+                      icon={PROVIDER_INFO[p].icon}
+                      label={PROVIDER_LABEL[p]}
+                      connected={me.connected.includes(p)}
+                      onPress={() => router.push(`/connect/${p}`)}
+                    />
+                  ))}
                   <YStack mt={6}>
                     <Callout icon="sparkles" title="Unlocks Silver tier">
                       A wider match radius and a verified-stats badge on your card.
@@ -1227,7 +1216,7 @@ function SyncRow({
   connected,
   onPress,
 }: {
-  icon: 'activity' | 'repeat';
+  icon: IconName;
   label: string;
   connected: boolean;
   onPress: () => void;

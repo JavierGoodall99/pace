@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
-import { Icon } from '../../src/components/Icon';
+import { Icon, IconName } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { useTabBarSpace } from '../../src/components/TabBar';
 import { DisplayTitle, IconButton } from '../../src/components/ui';
@@ -21,7 +21,7 @@ export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const tabBarSpace = useTabBarSpace();
   const router = useRouter();
-  const { blocked, matches, matchedAt } = useSocial();
+  const { blocked, likes, matches, matchedAt } = useSocial();
   const [now] = useState(() => new Date());
   const chat = useChat();
   const me = useMe();
@@ -70,6 +70,22 @@ export default function ChatScreen() {
         >
           <Icon name="bell" size={18} color={colors.text} />
         </IconButton>
+      </XStack>
+
+      <XStack gap={10} px={20} pt={4} pb={12}>
+        <QuickLink
+          icon="heart"
+          label="Liked you"
+          count={likes.length}
+          highlight={likes.length > 0}
+          onPress={() => router.push('/likes')}
+        />
+        <QuickLink
+          icon="users"
+          label="Matches"
+          count={ids.length}
+          onPress={() => router.push('/matches')}
+        />
       </XStack>
 
       {fresh.length ? (
@@ -193,5 +209,67 @@ export default function ChatScreen() {
         })}
       </YStack>
     </ScrollView>
+  );
+}
+
+// Likes and matches live here, next to the conversations they lead to.
+function QuickLink({
+  icon,
+  label,
+  count,
+  highlight = false,
+  onPress,
+}: {
+  icon: IconName;
+  label: string;
+  count: number;
+  highlight?: boolean;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  return (
+    <XStack
+      flex={1}
+      accessibilityRole="button"
+      onPress={onPress}
+      pressStyle={{ opacity: 0.8 }}
+      items="center"
+      gap={12}
+      p={14}
+      rounded={20}
+      borderWidth={1}
+      borderColor={highlight ? '$accentBorder' : '$border'}
+      bg={highlight ? '$accentSoft' : '$card'}
+    >
+      <XStack
+        width={40}
+        height={40}
+        rounded={12}
+        items="center"
+        justify="center"
+        bg={highlight ? '$card' : '$surface'}
+      >
+        <Icon
+          name={icon}
+          size={20}
+          color={highlight ? colors.accentText : colors.text}
+          filled={highlight && icon === 'heart'}
+        />
+      </XStack>
+      <YStack flex={1}>
+        <Text
+          fontFamily="$bold"
+          fontSize={18}
+          lineHeight={22}
+          color={highlight ? '$accentText' : '$text'}
+        >
+          {count}
+        </Text>
+        <Text fontSize={13} color="$muted">
+          {label}
+        </Text>
+      </YStack>
+      <Icon name="chevron-right" size={18} color={colors.muted} />
+    </XStack>
   );
 }

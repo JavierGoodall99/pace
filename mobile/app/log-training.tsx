@@ -17,6 +17,7 @@ import {
   removeTraining,
   SOURCE_LABEL,
   useMyTraining,
+  weeklyStreak,
 } from '../src/data/training';
 import { ACTIVE_DAYS } from '../src/data/trust';
 import { successHaptic } from '../src/lib/haptics';
@@ -24,7 +25,7 @@ import { useColors } from '../src/theme/appearance';
 import { formatLabel } from '../src/theme/tokens';
 
 // Log a session. Pace only shows people who trained in the last
-// ACTIVE_DAYS days, so this (or a Strava/Garmin sync, or a Pace session)
+// ACTIVE_DAYS days, so this (or a provider sync, or a Pace session)
 // keeps you visible.
 
 const DURATIONS = ['20', '30', '45', '60', '90', '120'];
@@ -80,8 +81,16 @@ export default function LogTrainingScreen() {
     });
     if (!res.ok) return setError(res.error);
     successHaptic();
+    const streak = weeklyStreak([res.entry, ...all], new Date());
+    const grew = streak.weeks > activity.streak.weeks;
     showPip(
-      dayKey === '0' ? 'Logged! That keeps you in people’s decks.' : 'Logged. Nice work.',
+      grew && streak.weeks > 1
+        ? `Logged! That’s a ${streak.weeks}-week streak.`
+        : grew
+          ? 'Logged! Streak started — train once a week to keep it going.'
+          : dayKey === '0'
+            ? 'Logged! That keeps you in people’s decks.'
+            : 'Logged. Nice work.',
       'excited'
     );
     router.back();

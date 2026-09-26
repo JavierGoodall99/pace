@@ -54,7 +54,7 @@ test('profile tips walk through the next best improvement', () => {
   };
   expect(profileTip(withPhotos, now).key).toBe('tip-verify');
   expect(profileTip({ ...withPhotos, verified: true }, now).key).toBe('tip-sync');
-  const synced = { ...withPhotos, verified: true, stravaConnected: true };
+  const synced = { ...withPhotos, verified: true, connected: ['strava' as const] };
   expect(profileTip(synced, now).key).toBe('tip-race');
   const racing = profileTip({ ...synced, goalRaceId: 'soweto-marathon' }, now);
   expect(racing.text).toBe('37 days to Soweto Marathon. Find a pacer for your long runs!');

@@ -14,7 +14,7 @@ import { Icon } from '../../src/components/Icon';
 import { PipTip } from '../../src/components/PipKit';
 import { PickRow, SessionCard } from '../../src/components/Sessions';
 import { useTabBarSpace } from '../../src/components/TabBar';
-import { Button, DisplayTitle, SegmentedControl } from '../../src/components/ui';
+import { Button, Chip, DisplayTitle } from '../../src/components/ui';
 import { levelLabel } from '../../src/data/athleteDepth';
 import {
   CHALLENGES,
@@ -138,9 +138,19 @@ export default function ExploreScreen() {
         </Text>
       </YStack>
 
-      <YStack px={20} mt={16} gap={14}>
-        <SegmentedControl options={TABS} value={tab} onChange={setTab} />
+      {/* Scrolls sideways so every tab keeps its full label on narrow phones. */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        mt={16}
+        contentContainerStyle={{ px: 20, gap: 8 }}
+      >
+        {TABS.map((t) => (
+          <Chip key={t} label={t} selected={tab === t} onPress={() => setTab(t)} />
+        ))}
+      </ScrollView>
 
+      <YStack px={20} mt={14} gap={14}>
         {tab === 'This week' ? (
           <>
             <ConditionsCard compact />

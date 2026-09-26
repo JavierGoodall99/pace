@@ -18,10 +18,6 @@ export function seeking(g: Gender | null | undefined): Gender | null {
   return g === 'woman' ? 'man' : g === 'man' ? 'woman' : null;
 }
 
-export function formatHeight(cm: number | null | undefined): string {
-  return cm ? `${cm} cm` : '';
-}
-
 // Lifestyle — the deal-breakers athletes actually screen for.
 export type Drinks = 'never' | 'social' | 'offseason';
 export type Diet = 'anything' | 'vegetarian' | 'vegan' | 'highprotein';

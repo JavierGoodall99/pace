@@ -19,7 +19,7 @@ import { formatWhen } from '../../src/data/dates';
 import { usePacerDeck } from '../../src/data/deck';
 import { useFilters } from '../../src/data/filters';
 import { ACTIVE_DAYS, activityLabel, DEFAULT_RADIUS_KM, LIKES_PER_DAY } from '../../src/data/trust';
-import { formatHeight, freshnessLabel, lifestyleChips } from '../../src/data/identity';
+import { freshnessLabel, lifestyleChips } from '../../src/data/identity';
 import { Athlete } from '../../src/data/mockData';
 import type { Pacer } from '../../src/data/pacers';
 import { galleryFor } from '../../src/data/photos';
@@ -330,7 +330,7 @@ function PacerCard({
                 ) : null}
               </XStack>
               <Text fontFamily="$medium" fontSize={13} color="rgba(255,255,255,0.88)">
-                {formatHeight(d.heightCm)} · {a.city} · {formatKm(compat.distanceKm)}
+                {a.city} · {formatKm(compat.distanceKm)}
               </Text>
               <XStack items="center" gap={5}>
                 <Icon name="zap" size={13} color="#FFFFFF" filled />

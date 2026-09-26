@@ -4,6 +4,7 @@ import { athleteById } from './mockData';
 import { checkInOutcome, effectiveStatus, Plan } from './plans';
 import { daysUntil, raceById } from './races';
 import type { MeProfile } from './session';
+import { availableProviders, hasSync, providerList } from './sync';
 import { upcomingEvents } from './capeTown';
 import { EVENT_ATTENDEES, ExploreState, pacersAmong } from './explore';
 
@@ -115,12 +116,12 @@ export function profileTip(me: MeProfile, now: Date = new Date()): PipLine {
       cta: { label: 'Get verified', href: '/verify' },
     };
   }
-  if (!me.stravaConnected && !me.garminConnected) {
+  if (!hasSync(me)) {
     return {
       key: 'tip-sync',
-      text: 'Sync Strava or Garmin. Pace hides profiles that haven’t trained in two weeks — this keeps you visible.',
+      text: `Sync ${providerList()}. Pace hides profiles that haven’t trained in two weeks — this keeps you visible.`,
       mood: 'thinking',
-      cta: { label: 'Connect', href: '/connect/strava' },
+      cta: { label: 'Connect', href: `/connect/${availableProviders()[0]}` },
     };
   }
   const race = raceById(me.goalRaceId);

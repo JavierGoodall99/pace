@@ -6,25 +6,9 @@ import { Icon } from '../../src/components/Icon';
 import { Button, Callout, ScreenHeader } from '../../src/components/ui';
 import { showPip } from '../../src/components/PipKit';
 import { updateMe, useMe } from '../../src/data/session';
-import { importActivities, PROVIDER_LABEL } from '../../src/data/sync';
+import { importActivities, isProvider, PROVIDER_INFO, PROVIDER_LABEL } from '../../src/data/sync';
 import { importSynced } from '../../src/data/training';
 import { useColors } from '../../src/theme/appearance';
-
-const PROVIDERS: Record<
-  'strava' | 'garmin',
-  { label: string; desc: string; icon: 'activity' | 'repeat' }
-> = {
-  strava: {
-    label: 'Strava',
-    desc: 'Sync runs, rides and swims so the stats on your card stay honest.',
-    icon: 'activity',
-  },
-  garmin: {
-    label: 'Garmin',
-    desc: 'Pair Garmin Connect and your sessions show up automatically.',
-    icon: 'repeat',
-  },
-};
 
 export default function ConnectScreen() {
   const colors = useColors();
@@ -32,9 +16,9 @@ export default function ConnectScreen() {
   const router = useRouter();
   const me = useMe();
   const { provider } = useLocalSearchParams<{ provider?: string }>();
-  const providerKey = provider === 'garmin' ? 'garmin' : 'strava';
-  const p = PROVIDERS[providerKey];
-  const connected = providerKey === 'garmin' ? me.garminConnected : me.stravaConnected;
+  const providerKey = isProvider(provider) ? provider : 'strava';
+  const p = { ...PROVIDER_INFO[providerKey], label: PROVIDER_LABEL[providerKey] };
+  const connected = me.connected.includes(providerKey);
   const [connecting, setConnecting] = useState(false);
 
   function connect() {
@@ -48,7 +32,7 @@ export default function ConnectScreen() {
       // you "recently active" for other people's decks.
       importSynced(sync, me.disciplines[0] ?? 'RUNNING');
       await updateMe({
-        ...(providerKey === 'garmin' ? { garminConnected: true } : { stravaConnected: true }),
+        connected: [...me.connected.filter((x) => x !== providerKey), providerKey],
         sync,
         pbs: me.pbs.map((pb) => ({ ...pb, source: providerKey })),
       });
@@ -104,8 +88,8 @@ export default function ConnectScreen() {
         ) : null}
 
         <Text color="$muted" fontSize={13} lineHeight={19}>
-          Demo note: this is a simulated authorize screen. A real build opens {p.label}&apos;s OAuth
-          page and swaps the timeout in connect() for the callback.
+          Demo note: this is a simulated authorize screen. A real build opens {p.label}&apos;s
+          permission screen and swaps the timeout in connect() for the callback.
         </Text>
       </YStack>
     </YStack>

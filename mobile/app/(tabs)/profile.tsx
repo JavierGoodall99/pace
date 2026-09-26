@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
-import { Icon, IconName } from '../../src/components/Icon';
+import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { PipTip } from '../../src/components/PipKit';
 import { GoalCard, Heatmap, PersonalBests, PromptCard } from '../../src/components/Proof';
@@ -14,15 +14,14 @@ import { levelLabel } from '../../src/data/athleteDepth';
 import { effectiveStatus, usePlans } from '../../src/data/plans';
 import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { ME_AVATAR, ME_COVER, TRAINING_PHOTOS } from '../../src/data/photos';
-import { formatHeight, lifestyleChips } from '../../src/data/identity';
-import { syncLabel } from '../../src/data/sync';
+import { lifestyleChips } from '../../src/data/identity';
+import { availableProviders, hasSync, providerList, syncLabel } from '../../src/data/sync';
 import { communityById } from '../../src/data/capeTown';
 import { completedChallenges, passport, useExplore } from '../../src/data/explore';
 import { useMe } from '../../src/data/session';
-import { activityText, useMyTraining } from '../../src/data/training';
+import { activityText, streakText, useMyTraining } from '../../src/data/training';
 import { ACTIVE_DAYS } from '../../src/data/trust';
 import { useNow } from '../../src/lib/useNow';
-import { useSocial } from '../../src/data/social';
 import { useColors } from '../../src/theme/appearance';
 import { shadow } from '../../src/theme/tokens';
 
@@ -33,7 +32,6 @@ export default function ProfileScreen() {
   const router = useRouter();
   const me = useMe();
   const explore = useExplore();
-  const { matches, likes } = useSocial();
   const now = useNow();
   const training = useMyTraining(now);
   const { activity } = training;
@@ -138,21 +136,24 @@ export default function ProfileScreen() {
         {!activity.active ? (
           <YStack mt={12}>
             <Callout icon="activity" title="You’re hidden from other people’s decks">
-              {`Pace only shows people who trained in the last ${ACTIVE_DAYS} days. Log a session or connect Strava or Garmin to show up again.`}
+              {`Pace only shows people who trained in the last ${ACTIVE_DAYS} days. Log a session or connect ${providerList()} to show up again.`}
             </Callout>
             <XStack gap={10} mt={10}>
               <Button icon="plus" onPress={() => router.push('/log-training')} style={{ flex: 1 }}>
                 Log training
               </Button>
-              {!me.stravaConnected && !me.garminConnected ? (
+              {!hasSync(me) ? (
                 <Button
                   variant="secondary"
                   onPress={() =>
-                    router.push({ pathname: '/connect/[provider]', params: { provider: 'strava' } })
+                    router.push({
+                      pathname: '/connect/[provider]',
+                      params: { provider: availableProviders()[0] },
+                    })
                   }
                   style={{ flex: 1 }}
                 >
-                  Connect Strava
+                  Connect data
                 </Button>
               ) : null}
             </XStack>
@@ -164,7 +165,7 @@ export default function ProfileScreen() {
         <XStack gap={8} mt={14} flexWrap="wrap">
           <Badge tone="accent">{primary}</Badge>
           {me.cadence ? <Badge>{me.cadence}</Badge> : null}
-          {[formatHeight(me.heightCm), ...lifestyleChips(me.lifestyle)].filter(Boolean).map((b) => (
+          {lifestyleChips(me.lifestyle).map((b) => (
             <Badge key={b}>{b}</Badge>
           ))}
         </XStack>
@@ -247,7 +248,7 @@ export default function ProfileScreen() {
             data={training.heatmap}
             source={
               training.all.length
-                ? `${activity.thisWeek} session${activity.thisWeek === 1 ? '' : 's'} this week${me.sync ? ` · ${syncLabel(me.sync)}` : ''}`
+                ? `${streakText(activity.streak)} · ${activity.thisWeek} session${activity.thisWeek === 1 ? '' : 's'} this week${me.sync ? ` · ${syncLabel(me.sync)}` : ''}`
                 : 'Nothing logged yet'
             }
           />
@@ -388,22 +389,6 @@ export default function ProfileScreen() {
           </YStack>
         ))}
 
-        <XStack gap={10} mt={12}>
-          <QuickLink
-            icon="users"
-            label="Matches"
-            count={matches.length}
-            onPress={() => router.push('/matches')}
-          />
-          <QuickLink
-            icon="heart"
-            label="Likes"
-            count={likes.length}
-            highlight={likes.length > 0}
-            onPress={() => router.push('/likes')}
-          />
-        </XStack>
-
         <XStack items="center" justify="space-between" mt={28} mb={12}>
           <Text fontFamily="$semibold" fontSize={17} color="$text">
             Training photos
@@ -443,66 +428,5 @@ export default function ProfileScreen() {
         ) : null}
       </YStack>
     </ScrollView>
-  );
-}
-
-function QuickLink({
-  icon,
-  label,
-  count,
-  highlight = false,
-  onPress,
-}: {
-  icon: IconName;
-  label: string;
-  count: number;
-  highlight?: boolean;
-  onPress: () => void;
-}) {
-  const colors = useColors();
-  return (
-    <XStack
-      flex={1}
-      accessibilityRole="button"
-      onPress={onPress}
-      pressStyle={{ opacity: 0.8 }}
-      items="center"
-      gap={12}
-      p={14}
-      rounded={20}
-      borderWidth={1}
-      borderColor={highlight ? '$accentBorder' : '$border'}
-      bg={highlight ? '$accentSoft' : '$card'}
-    >
-      <XStack
-        width={40}
-        height={40}
-        rounded={12}
-        items="center"
-        justify="center"
-        bg={highlight ? '$card' : '$surface'}
-      >
-        <Icon
-          name={icon}
-          size={20}
-          color={highlight ? colors.accentText : colors.text}
-          filled={highlight && icon === 'heart'}
-        />
-      </XStack>
-      <YStack flex={1}>
-        <Text
-          fontFamily="$bold"
-          fontSize={18}
-          lineHeight={22}
-          color={highlight ? '$accentText' : '$text'}
-        >
-          {count}
-        </Text>
-        <Text fontSize={13} color="$muted">
-          {label}
-        </Text>
-      </YStack>
-      <Icon name="chevron-right" size={18} color={colors.muted} />
-    </XStack>
   );
 }

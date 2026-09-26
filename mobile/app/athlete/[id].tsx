@@ -18,7 +18,7 @@ import { LikeSheet } from '../../src/components/LikeSheet';
 import { PhotoStory, StoryPage } from '../../src/components/PhotoStory';
 import { SafetySheet } from '../../src/components/SafetySheet';
 import { hasLiked, LikeTarget, useChat } from '../../src/data/chat';
-import { formatHeight, freshnessLabel, genderLabel, lifestyleChips } from '../../src/data/identity';
+import { freshnessLabel, genderLabel, lifestyleChips } from '../../src/data/identity';
 import { sharedDaysLabel } from '../../src/data/rhythm';
 import { depthFor } from '../../src/data/athleteDepth';
 import { compatibility } from '../../src/data/compat';
@@ -72,11 +72,7 @@ export default function AthleteDetailScreen() {
   const crews = COMMUNITIES.filter((c) => CREW_MEMBERS[c.id]?.includes(athlete.id));
   const shared = crews.filter((c) => explore.crews.includes(c.id));
   const liked = hasLiked(chat, athlete.id);
-  const basics = [
-    formatHeight(depth.heightCm),
-    genderLabel(depth.gender),
-    ...lifestyleChips(depth.lifestyle),
-  ].filter(Boolean);
+  const basics = [genderLabel(depth.gender), ...lifestyleChips(depth.lifestyle)].filter(Boolean);
 
   const pages: StoryPage[] = [];
   gallery.forEach((g, i) => {

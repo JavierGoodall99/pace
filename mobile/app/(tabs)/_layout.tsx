@@ -7,7 +7,7 @@ import { clearCelebrate, usePlans } from '../../src/data/plans';
 const TABS: Record<string, { label: string; icon: IconName }> = {
   today: { label: 'Today', icon: 'calendar' },
   discover: { label: 'Pacers', icon: 'sparkles' },
-  sessions: { label: 'Sessions', icon: 'map' },
+  sessions: { label: 'Explore', icon: 'map' },
   chat: { label: 'Chats', icon: 'message-circle' },
   profile: { label: 'You', icon: 'user' },
 };

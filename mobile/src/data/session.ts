@@ -73,7 +73,7 @@ const STORAGE_KEY = 'pace.session.v1';
 const DEFAULT_ME: MeProfile = {
   name: 'Naledi Khumalo',
   age: '29',
-  city: 'Pretoria',
+  city: 'Cape Town',
   email: 'naledi@pace.fit',
   bio: 'Competing at regionals next year. Coffee after WODs, always.',
   disciplines: ['CROSSFIT'],
@@ -86,7 +86,7 @@ const DEFAULT_ME: MeProfile = {
   intent: 'both',
   trainingDays: null,
   level: 3,
-  goalRaceId: 'soweto-marathon',
+  goalRaceId: 'two-oceans',
   prompts: [
     { q: 'Coffee after…', a: 'Every WOD. Every single one.' },
     { q: 'My ideal first date', a: 'A sunrise run, then breakfast somewhere with a view.' },

@@ -82,7 +82,7 @@ export const ME_AVATAR = require('../../public/images/headshots/blonde_woman_hea
 export const ME_COVER = require('../../public/images/activity/yoga_beach_sunrise.jpg');
 export const TRAINING_PHOTOS = [
   require('../../public/images/activity/surfing_wave_action.jpg'),
-  require('../../public/images/activity/box_jump_midair.jpg'),
-  require('../../public/images/activity/coastal_cyclist_action.jpg'),
+  require('../../public/images/activity/boxing_training_portrait.jpg'),
+  require('../../public/images/activity/sunrise_trail_runner.jpg'),
 ];
 export const ACTIVITY_PHOTO = require('../../public/images/activity/box_jump_midair.jpg');

@@ -97,7 +97,7 @@ export const DEPTH: Record<number, AthleteDepth> = {
   2: {
     level: 2,
     times: ['EARLY MORNING', 'WEEKENDS'],
-    goalRaceId: 'cycle-challenge',
+    goalRaceId: 'cape-town-cycle-tour',
     pbs: [
       { label: '100 km', value: '3:05:00' },
       { label: 'Longest ride', value: '160 km' },
@@ -123,7 +123,7 @@ export const DEPTH: Record<number, AthleteDepth> = {
   3: {
     level: 1,
     times: ['WEEKENDS', 'EARLY MORNING'],
-    goalRaceId: 'two-oceans',
+    goalRaceId: 'utct',
     pbs: [{ label: 'Platteklip Gorge', value: '48 min' }],
     prompts: [
       { q: 'I’m happiest when…', a: 'The mist burns off at the top of Lion’s Head.' },
@@ -178,7 +178,7 @@ export const DEPTH: Record<number, AthleteDepth> = {
       { label: 'Fran', value: '4:52' },
     ],
     prompts: [{ q: 'Coffee after…', a: 'Every WOD. Every single one.' }],
-    routes: [{ name: 'CrossFit Box, Pretoria East', detail: '6am class' }],
+    routes: [{ name: 'CrossFit box, Woodstock', detail: '6am class' }],
     nearKm: 7,
     gender: 'woman',
     heightCm: 165,
@@ -218,7 +218,7 @@ export const DEPTH: Record<number, AthleteDepth> = {
     goalRaceId: 'im-703-east-london',
     pbs: [{ label: 'Olympic tri', value: '2:31:08' }],
     prompts: [{ q: 'Transition hack', a: 'Elastic laces. Changed my life.' }],
-    routes: [{ name: 'Zoo Lake', detail: 'Brick sessions · 5 km loop' }],
+    routes: [{ name: 'Rondebosch Common', detail: 'Brick sessions · run loops' }],
     nearKm: 8,
     gender: 'woman',
     heightCm: 173,
@@ -235,13 +235,13 @@ export const DEPTH: Record<number, AthleteDepth> = {
   8: {
     level: 4,
     times: ['EVENING', 'WEEKENDS'],
-    goalRaceId: 'soweto-marathon',
+    goalRaceId: 'two-oceans-half',
     pbs: [
       { label: 'Marathon', value: '3:04:55' },
       { label: '5 km', value: '17:40' },
     ],
     prompts: [{ q: 'Chasing', a: 'Sub-3. This is the year.' }],
-    routes: [{ name: 'Groenkloof track', detail: 'Tuesday intervals' }],
+    routes: [{ name: 'Green Point Athletics Stadium', detail: 'Tuesday intervals' }],
     nearKm: 5,
     gender: 'man',
     heightCm: 185,

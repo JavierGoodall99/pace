@@ -16,6 +16,8 @@ import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { ME_AVATAR, ME_COVER, TRAINING_PHOTOS } from '../../src/data/photos';
 import { formatHeight, lifestyleChips } from '../../src/data/identity';
 import { syncLabel } from '../../src/data/sync';
+import { communityById } from '../../src/data/capeTown';
+import { completedChallenges, passport, useExplore } from '../../src/data/explore';
 import { useMe } from '../../src/data/session';
 import { useSocial } from '../../src/data/social';
 import { useColors } from '../../src/theme/appearance';
@@ -27,6 +29,7 @@ export default function ProfileScreen() {
   const tabBarSpace = useTabBarSpace();
   const router = useRouter();
   const me = useMe();
+  const explore = useExplore();
   const { matches, likes } = useSocial();
 
   const avatar = me.photos[0] ? { uri: me.photos[0] } : ME_AVATAR;
@@ -199,6 +202,44 @@ export default function ProfileScreen() {
             data={me.sync?.weeks}
             source={me.sync ? syncLabel(me.sync) : undefined}
           />
+        </YStack>
+
+        <YStack
+          mt={12}
+          p={16}
+          gap={12}
+          rounded={20}
+          borderWidth={1}
+          borderColor="$border"
+          bg="$card"
+          onPress={() => router.push('/(tabs)/sessions')}
+          accessibilityRole="button"
+        >
+          <XStack items="center" justify="space-between">
+            <Text fontFamily="$semibold" fontSize={15} color="$text">
+              Pace passport
+            </Text>
+            <Text fontFamily="$bold" fontSize={15} color="$accentText">
+              {passport(explore).visited}/{passport(explore).total} Cape Town spots
+            </Text>
+          </XStack>
+          {completedChallenges(explore).length || explore.crews.length ? (
+            <XStack gap={8} flexWrap="wrap">
+              {completedChallenges(explore).map((c) => (
+                <Badge key={c.id} tone="accent" illo="medal">
+                  {c.badge}
+                </Badge>
+              ))}
+              {explore.crews.map((id) => {
+                const crew = communityById(id);
+                return crew ? <Badge key={id}>{crew.name}</Badge> : null;
+              })}
+            </XStack>
+          ) : (
+            <Text fontSize={13} color="$muted">
+              Check in at spots and follow your crews — they show here for matches to see.
+            </Text>
+          )}
         </YStack>
 
         {me.pbs.length ? (

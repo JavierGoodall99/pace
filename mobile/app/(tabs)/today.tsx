@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Illo } from '../../src/components/Illustrations';
 import { Icon } from '../../src/components/Icon';
+import { ConditionsCard } from '../../src/components/Explore';
 import { MomentsRow } from '../../src/components/Moments';
 import { PipTip, showPip } from '../../src/components/PipKit';
 import { GoalCard } from '../../src/components/Proof';
@@ -166,8 +167,9 @@ export default function TodayScreen() {
         <Legend dotBg="$borderStrong" label="Your training day" />
       </XStack>
 
-      <YStack px={20} mt={20}>
+      <YStack px={20} mt={20} gap={14}>
         <PipTip line={todayLine(me, state.plans, pacersLeft, now)} />
+        <ConditionsCard compact />
       </YStack>
 
       <YStack px={20} gap={14} mt={20}>

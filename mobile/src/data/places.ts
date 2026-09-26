@@ -1,3 +1,4 @@
+import { CT_SPOTS } from './capeTown';
 import type { Discipline } from './mockData';
 
 // Public, busy meeting spots per city and sport. Sessions default to
@@ -10,11 +11,14 @@ export interface Spot {
   sports: Discipline[];
 }
 
+// Cape Town (launch city) comes from the curated guide; the rest are for
+// travel mode.
 export const SPOTS: Spot[] = [
-  { name: 'Sea Point Promenade', city: 'Cape Town', sports: ['RUNNING', 'CYCLING'] },
-  { name: 'Kloof Nek parking, Lion’s Head', city: 'Cape Town', sports: ['TRAIL', 'RUNNING'] },
-  { name: 'City Rock, Observatory', city: 'Cape Town', sports: ['CLIMBING', 'CROSSFIT'] },
-  { name: 'Sea Point Pavilion pool', city: 'Cape Town', sports: ['SWIMMING', 'TRIATHLON'] },
+  ...CT_SPOTS.filter((s) => s.firstMeet).map((s) => ({
+    name: s.name,
+    city: 'Cape Town',
+    sports: s.sports,
+  })),
   { name: 'Groenkloof Athletics Track', city: 'Pretoria', sports: ['RUNNING', 'TRIATHLON'] },
   { name: 'Moreleta Kloof Nature Reserve', city: 'Pretoria', sports: ['TRAIL', 'RUNNING'] },
   { name: 'CrossFit Box, Pretoria East', city: 'Pretoria', sports: ['CROSSFIT', 'CLIMBING'] },

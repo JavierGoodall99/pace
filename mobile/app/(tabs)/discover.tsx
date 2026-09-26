@@ -31,6 +31,8 @@ import { distanceTo, formatKm } from '../../src/data/places';
 import { dropAction, DropAction, dropActions, usePlans } from '../../src/data/plans';
 import { activeCity, isTravelling, useMe } from '../../src/data/session';
 import { useSocial } from '../../src/data/social';
+import { upcomingEvents } from '../../src/data/capeTown';
+import { EVENT_ATTENDEES, pacersAmong } from '../../src/data/explore';
 import { useColors } from '../../src/theme/appearance';
 import { shadow } from '../../src/theme/tokens';
 
@@ -96,6 +98,15 @@ export default function PacersScreen() {
     filters.heightMax < 210;
 
   const until = untilLabel(nextDrop(now), now);
+  // When the drop runs dry, point at events where people you'd like are going.
+  const goingCount = new Set(
+    upcomingEvents(now)
+      .filter((e) => e.at.getTime() - now.getTime() < 7 * 86400000)
+      .flatMap(({ event }) => pacersAmong(me, EVENT_ATTENDEES[event.id], blocked).map((a) => a.id))
+  ).size;
+  const goingNote = goingCount
+    ? `${goingCount} pacer${goingCount === 1 ? '' : 's'} you might like ${goingCount === 1 ? 'is' : 'are'} going to Cape Town events this week.`
+    : undefined;
   const travelling = isTravelling(me, now);
 
   function invite(p: Pacer) {
@@ -224,6 +235,7 @@ export default function PacersScreen() {
               onTravel={() => router.push('/travel')}
               onFilters={() => router.push('/discover-filters')}
               onClubs={() => router.push('/(tabs)/sessions')}
+              goingNote={goingNote}
             />
           ) : cardHeight > 0 ? (
             <>
@@ -615,6 +627,7 @@ function DropDone({
   onTravel,
   onFilters,
   onClubs,
+  goingNote,
 }: {
   until: string;
   empty: boolean;
@@ -623,6 +636,7 @@ function DropDone({
   onTravel: () => void;
   onFilters: () => void;
   onClubs: () => void;
+  goingNote?: string;
 }) {
   // An honest empty state: we'd rather show nobody than show people who
   // are fake, inactive or two hours away.
@@ -638,8 +652,13 @@ function DropDone({
           {radius ? `, within ${radius} km` : ''}. No ghosts, no one hours away.
         </Text>
         <YStack mt={12} gap={10} self="stretch">
-          <Button icon="users" onPress={onClubs} style={{ width: '100%' }}>
-            Join a singles run club
+          {goingNote ? (
+            <Text fontFamily="$semibold" fontSize={14} color="$accentText" text="center">
+              {goingNote}
+            </Text>
+          ) : null}
+          <Button icon="map" onPress={onClubs} style={{ width: '100%' }}>
+            Explore Cape Town
           </Button>
           <XStack gap={10}>
             <Button variant="secondary" icon="plane" onPress={onTravel} style={{ flex: 1 }}>
@@ -662,8 +681,16 @@ function DropDone({
       <Text fontSize={15} lineHeight={22} color="$muted" text="center">
         No endless swiping here. Fresh pacers land every morning at 7 — next one in {until}.
       </Text>
-      <YStack mt={12}>
-        <Button icon="star" onPress={onBrowse}>
+      {goingNote ? (
+        <Text fontFamily="$semibold" fontSize={14} color="$accentText" text="center" mt={4}>
+          {goingNote}
+        </Text>
+      ) : null}
+      <YStack mt={12} gap={10} self="stretch">
+        <Button icon="map" onPress={onClubs} style={{ width: '100%' }}>
+          Explore Cape Town
+        </Button>
+        <Button variant="secondary" icon="star" onPress={onBrowse} style={{ width: '100%' }}>
           See standouts
         </Button>
       </YStack>

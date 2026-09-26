@@ -37,7 +37,6 @@ export interface MeProfile {
   sync: SyncSummary | null;
   // Dating basics — null until asked in onboarding.
   gender: Gender | null;
-  showMe: Gender[] | null;
   heightCm: number | null;
   lifestyle: Lifestyle;
   // One label per entry in `photos` (same order).
@@ -97,7 +96,6 @@ const DEFAULT_ME: MeProfile = {
     { label: '5 km', value: '22:40' },
   ],
   gender: 'woman',
-  showMe: ['man'],
   heightCm: 167,
   lifestyle: { drinks: 'social', diet: 'highprotein', restDay: 'brunch' },
   photoLabels: [],
@@ -193,7 +191,6 @@ export function freshMe(name: string, email: string): MeProfile {
     prompts: [],
     pbs: [],
     gender: null,
-    showMe: null,
     heightCm: null,
     lifestyle: { drinks: null, diet: null, restDay: null },
     photoLabels: [],

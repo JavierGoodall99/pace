@@ -6,7 +6,9 @@ import { Text, XStack, YStack } from 'tamagui';
 import { Icon } from './Icon';
 import { showPip } from './PipKit';
 import { Button, Input } from './ui';
-import { LikeTarget, sendLike } from '../data/chat';
+import { LikeTarget, likesLeftToday, sendLike, useChat } from '../data/chat';
+import { useMe } from '../data/session';
+import { LIKES_PER_DAY } from '../data/trust';
 import type { Athlete } from '../data/mockData';
 import { dropAction } from '../data/plans';
 import { successHaptic } from '../lib/haptics';
@@ -36,9 +38,11 @@ export function LikeSheet({
   const c = useColors();
   const insets = useSafeAreaInsets();
   const [comment, setComment] = useState('');
+  const me = useMe();
+  const left = likesLeftToday(useChat());
 
   function send() {
-    if (!target) return;
+    if (!target || left <= 0 || !me.verified) return;
     successHaptic();
     sendLike(athlete.id, target, comment, {
       onMatch: (id) => {
@@ -148,9 +152,38 @@ export function LikeSheet({
                 </YStack>
 
                 <YStack gap={8}>
-                  <Button icon="heart" onPress={send} style={{ width: '100%' }}>
-                    {comment.trim() ? 'Send like with comment' : 'Send like'}
-                  </Button>
+                  {!me.verified ? (
+                    <Button
+                      icon="shield-check"
+                      onPress={() => {
+                        onClose();
+                        router.push('/verify');
+                      }}
+                      style={{ width: '100%' }}
+                    >
+                      Verify to send likes
+                    </Button>
+                  ) : (
+                    <Button
+                      icon="heart"
+                      disabled={left <= 0}
+                      onPress={send}
+                      style={{ width: '100%' }}
+                    >
+                      {left <= 0
+                        ? 'No likes left today'
+                        : comment.trim()
+                          ? 'Send like with comment'
+                          : 'Send like'}
+                    </Button>
+                  )}
+                  <Text fontFamily="$body" fontSize={12} color="$muted" text="center">
+                    {!me.verified
+                      ? 'Only selfie-verified members can like — it keeps fakes out.'
+                      : left <= 0
+                        ? 'Likes reset at midnight. Invites to train are unlimited.'
+                        : `${left} of ${LIKES_PER_DAY} likes left today — make them count.`}
+                  </Text>
                   <Button variant="ghost" icon="send" onPress={invite} style={{ width: '100%' }}>
                     Invite to train instead
                   </Button>

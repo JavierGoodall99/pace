@@ -22,6 +22,7 @@ import { athleteById, updateSessionStatus } from '../../src/data/mockData';
 import { ATHLETE_PHOTOS, galleryFor } from '../../src/data/photos';
 import { sessionsTogether, stageWith, usePlans } from '../../src/data/plans';
 import { useMe } from '../../src/data/session';
+import { scamSignal, sharesContact } from '../../src/data/trust';
 import { useSocial } from '../../src/data/social';
 import { tapHaptic } from '../../src/lib/haptics';
 import { useColors } from '../../src/theme/appearance';
@@ -185,6 +186,7 @@ export default function ThreadScreen() {
               m={m}
               likedSource={m.like?.kind === 'photo' ? gallery[m.like.index]?.source : undefined}
               onRespond={(s) => respondTo(i, s)}
+              onReport={() => setSafety(true)}
             />
           ))}
         </ScrollView>
@@ -248,61 +250,72 @@ export default function ThreadScreen() {
             </IconButton>
           </XStack>
         ) : (
-          <XStack
-            items="center"
-            gap={8}
-            px={16}
-            pt={10}
-            borderTopWidth={1}
-            borderTopColor="$border"
-            bg="$card"
-            style={{ paddingBottom: insets.bottom + 12 }}
-          >
-            <IconButton
-              size={44}
-              tone="accent"
-              onPress={inviteToTrain}
-              accessibilityLabel="Invite to train"
+          <YStack bg="$card">
+            {sharesContact(note) ? (
+              <XStack items="center" gap={8} px={20} pt={10}>
+                <Icon name="shield-check" size={15} color={colors.accentText} />
+                <Text flex={1} fontSize={13} color="$muted">
+                  Tip: keep it on Pace until you’ve trained together — it’s how we keep scammers
+                  out.
+                </Text>
+              </XStack>
+            ) : null}
+            <XStack
+              items="center"
+              gap={8}
+              px={16}
+              pt={10}
+              borderTopWidth={1}
+              borderTopColor="$border"
+              bg="$card"
+              style={{ paddingBottom: insets.bottom + 12 }}
             >
-              <Icon name="calendar" size={20} color={colors.accentText} />
-            </IconButton>
-            <IconButton size={44} onPress={sendPhoto} accessibilityLabel="Send a photo">
-              <Icon name="image" size={19} color={colors.text} />
-            </IconButton>
-            <YStack flex={1}>
-              <Input
-                placeholder="Message"
-                value={note}
-                onChangeText={setNote}
-                returnKeyType="send"
-                onSubmitEditing={sendText}
-                style={{
-                  borderRadius: 22,
-                  height: 44,
-                  backgroundColor: colors.surface,
-                  borderWidth: 0,
-                }}
-              />
-            </YStack>
-            {note.trim() ? (
-              <IconButton tone="solid" size={44} onPress={sendText} accessibilityLabel="Send">
-                <Icon name="send" size={18} color={colors.onAccent} />
-              </IconButton>
-            ) : (
               <IconButton
-                tone="accent"
                 size={44}
-                onPress={() => {
-                  tapHaptic();
-                  setRecording(0);
-                }}
-                accessibilityLabel="Record a voice note"
-                aria-label="Record a voice note"
+                tone="accent"
+                onPress={inviteToTrain}
+                accessibilityLabel="Invite to train"
               >
-                <Icon name="mic" size={19} color={colors.accentText} />
+                <Icon name="calendar" size={20} color={colors.accentText} />
               </IconButton>
-            )}
-          </XStack>
+              <IconButton size={44} onPress={sendPhoto} accessibilityLabel="Send a photo">
+                <Icon name="image" size={19} color={colors.text} />
+              </IconButton>
+              <YStack flex={1}>
+                <Input
+                  placeholder="Message"
+                  value={note}
+                  onChangeText={setNote}
+                  returnKeyType="send"
+                  onSubmitEditing={sendText}
+                  style={{
+                    borderRadius: 22,
+                    height: 44,
+                    backgroundColor: colors.surface,
+                    borderWidth: 0,
+                  }}
+                />
+              </YStack>
+              {note.trim() ? (
+                <IconButton tone="solid" size={44} onPress={sendText} accessibilityLabel="Send">
+                  <Icon name="send" size={18} color={colors.onAccent} />
+                </IconButton>
+              ) : (
+                <IconButton
+                  tone="accent"
+                  size={44}
+                  onPress={() => {
+                    tapHaptic();
+                    setRecording(0);
+                  }}
+                  accessibilityLabel="Record a voice note"
+                  aria-label="Record a voice note"
+                >
+                  <Icon name="mic" size={19} color={colors.accentText} />
+                </IconButton>
+              )}
+            </XStack>
+          </YStack>
         )}
       </KeyboardAvoidingView>
 
@@ -321,13 +334,16 @@ function Bubble({
   m,
   likedSource,
   onRespond,
+  onReport,
 }: {
   m: ChatMessage;
   likedSource?: number;
   onRespond: (s: 'CONFIRMED' | 'DECLINED') => void;
+  onReport: () => void;
 }) {
   const colors = useColors();
   const mine = m.from === 'me';
+  const signal = mine ? null : scamSignal(m.text);
   const plan = m.plan;
   return (
     <YStack items={mine ? 'flex-end' : 'flex-start'} gap={6}>
@@ -459,6 +475,37 @@ function Bubble({
             </YStack>
           ) : null}
         </YStack>
+      ) : null}
+
+      {signal ? (
+        <XStack
+          maxW="88%"
+          items="flex-start"
+          gap={10}
+          p={12}
+          rounded={16}
+          borderWidth={1}
+          borderColor="$accentBorder"
+          bg="$accentSoft"
+        >
+          <Mascot size={36} mood="thinking" />
+          <YStack flex={1} gap={6}>
+            <Text fontFamily="$semibold" fontSize={14} lineHeight={19} color="$text">
+              {signal === 'money'
+                ? 'Heads up: never send money, crypto or gift cards to someone you haven’t met. Real athletes don’t ask.'
+                : 'Keep chatting on Pace until you’ve trained together. Moving to another app early is a common scam tactic.'}
+            </Text>
+            <Text
+              fontFamily="$semibold"
+              fontSize={13}
+              color="$accentText"
+              onPress={onReport}
+              accessibilityRole="button"
+            >
+              Report this
+            </Text>
+          </YStack>
+        </XStack>
       ) : null}
     </YStack>
   );

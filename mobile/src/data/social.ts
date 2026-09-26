@@ -9,7 +9,7 @@ export const LIKES_IDS = [2, 4, 6, 8];
 export const MATCH_IDS = [1, 3, 5, 7];
 
 export type ReportReason =
-  'fake' | 'inappropriate' | 'harassment' | 'safety' | 'underage' | 'other';
+  'money' | 'fake' | 'inappropriate' | 'harassment' | 'safety' | 'underage' | 'other';
 
 export interface Report {
   athleteId: number;
@@ -23,6 +23,8 @@ interface SocialState {
   matches: number[];
   blocked: number[];
   reports: Report[];
+  // When each match happened — silent matches expire (MATCH_TTL_DAYS).
+  matchedAt: Record<number, string>;
 }
 
 const STORAGE_KEY = 'pace.social.v1';
@@ -32,6 +34,7 @@ const DEFAULT_STATE: SocialState = {
   matches: MATCH_IDS,
   blocked: [],
   reports: [],
+  matchedAt: {},
 };
 
 let state: SocialState = DEFAULT_STATE;
@@ -72,6 +75,7 @@ AsyncStorage.getItem(STORAGE_KEY)
         matches: saved.matches ?? MATCH_IDS,
         blocked: saved.blocked ?? [],
         reports: saved.reports ?? [],
+        matchedAt: saved.matchedAt ?? {},
       });
     }
   })
@@ -81,6 +85,9 @@ export async function likeBack(athleteId: number) {
   setState({
     likes: state.likes.filter((id) => id !== athleteId),
     matches: state.matches.includes(athleteId) ? state.matches : [...state.matches, athleteId],
+    matchedAt: state.matchedAt[athleteId]
+      ? state.matchedAt
+      : { ...state.matchedAt, [athleteId]: new Date().toISOString() },
   });
   await persist();
 }

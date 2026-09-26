@@ -81,10 +81,10 @@ export function todayLine(
 
 // The next best thing to improve on your profile.
 export function profileTip(me: MeProfile, now: Date = new Date()): PipLine {
-  if (!me.gender || !me.showMe?.length) {
+  if (!me.gender) {
     return {
       key: 'tip-basics',
-      text: 'Tell me who you are and who you want to meet, so I only show you people who fit.',
+      text: 'Tell me whether you’re a man or a woman so I can show you the right people.',
       mood: 'thinking',
       cta: { label: 'Edit profile', href: '/edit-profile' },
     };
@@ -111,6 +111,14 @@ export function profileTip(me: MeProfile, now: Date = new Date()): PipLine {
       text: 'Verified athletes get twice the matches. It takes 10 seconds!',
       mood: 'excited',
       cta: { label: 'Get verified', href: '/verify' },
+    };
+  }
+  if (!me.stravaConnected && !me.garminConnected) {
+    return {
+      key: 'tip-sync',
+      text: 'Sync Strava or Garmin. Pace hides profiles that haven’t trained in two weeks — this keeps you visible.',
+      mood: 'thinking',
+      cta: { label: 'Connect', href: '/connect/strava' },
     };
   }
   const race = raceById(me.goalRaceId);

@@ -26,6 +26,7 @@ import { sessionsTogether, stageWith, usePlans } from '../../src/data/plans';
 import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { useMe } from '../../src/data/session';
 import { galleryFor } from '../../src/data/photos';
+import { activityLabel, repliesLabel } from '../../src/data/trust';
 import { useSocial } from '../../src/data/social';
 import { useColors } from '../../src/theme/appearance';
 import { formatLabel, shadow } from '../../src/theme/tokens';
@@ -191,6 +192,12 @@ export default function AthleteDetailScreen() {
             <Text fontSize={13} color="$muted">
               {freshnessLabel(depth.photosDaysAgo)}
               {athlete.verified ? ' · Selfie matches photos' : ''}
+            </Text>
+          </XStack>
+          <XStack items="center" gap={6} mt={6}>
+            <Icon name="zap" size={14} color={colors.success} filled />
+            <Text fontSize={13} color="$muted">
+              {activityLabel(depth)} · {repliesLabel(depth.replies)}
             </Text>
           </XStack>
 

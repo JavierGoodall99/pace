@@ -2,23 +2,20 @@
 // next to the training data. Kept as plain options + formatters so
 // onboarding, edit profile, filters and profile cards share one source.
 
-export type Gender = 'woman' | 'man' | 'nonbinary';
+export type Gender = 'woman' | 'man';
 
 export const GENDERS: { id: Gender; label: string; plural: string }[] = [
   { id: 'woman', label: 'Woman', plural: 'Women' },
   { id: 'man', label: 'Man', plural: 'Men' },
-  { id: 'nonbinary', label: 'Non-binary', plural: 'Non-binary people' },
 ];
 
 export function genderLabel(g: Gender | null | undefined): string {
   return GENDERS.find((x) => x.id === g)?.label ?? '';
 }
 
-// "Show me" as a sentence: ['woman'] → "Women", all three → "Everyone".
-export function showMeLabel(showMe: Gender[] | null | undefined): string {
-  if (!showMe || showMe.length === 0) return 'Not set';
-  if (showMe.length === GENDERS.length) return 'Everyone';
-  return showMe.map((g) => GENDERS.find((x) => x.id === g)!.plural).join(' & ');
+// Pace matches women with men. Who you see follows from who you are.
+export function seeking(g: Gender | null | undefined): Gender | null {
+  return g === 'woman' ? 'man' : g === 'man' ? 'woman' : null;
 }
 
 export const HEIGHT_RANGE = { min: 145, max: 210 };

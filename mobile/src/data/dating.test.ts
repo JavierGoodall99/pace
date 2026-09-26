@@ -1,6 +1,6 @@
 import { getChatState, composerLock, messagesWith, resetChat, sendLike } from './chat';
 import { dropKey, nextDrop } from './dates';
-import { freshnessLabel, showMeLabel } from './identity';
+import { freshnessLabel, seeking } from './identity';
 import { getMomentsState, kudosCount, liveMoments, resetMoments, toggleKudos } from './moments';
 import { getPlansState, resetPlans } from './plans';
 import { block, report } from './safety';
@@ -88,8 +88,8 @@ test('travel mode changes the city you match in until it ends', () => {
 });
 
 test('labels read naturally', () => {
-  expect(showMeLabel(['man'])).toBe('Men');
-  expect(showMeLabel(['woman', 'man', 'nonbinary'])).toBe('Everyone');
+  expect(seeking('woman')).toBe('man');
+  expect(seeking('man')).toBe('woman');
   expect(freshnessLabel(3)).toBe('Photos updated 3 days ago');
   expect(freshnessLabel(22)).toBe('Photos updated 3 weeks ago');
 });

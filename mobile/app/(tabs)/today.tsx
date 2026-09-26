@@ -78,9 +78,11 @@ export default function TodayScreen() {
   });
 
   const goal = raceById(me.goalRaceId);
-  const { blocked } = useSocial();
+  const { blocked, matches } = useSocial();
   const actions = dropActions(state, now);
-  const pacersLeft = dailyPacers(me, blocked, now).filter((p) => !actions[p.athlete.id]).length;
+  const pacersLeft = dailyPacers(me, [...blocked, ...matches], now).filter(
+    (p) => !actions[p.athlete.id]
+  ).length;
 
   return (
     <ScrollView

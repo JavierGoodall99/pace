@@ -9,7 +9,7 @@ import {
   ScreenHeader,
   SectionTitle,
   TextAction,
-  ToggleRow,
+  Callout,
 } from '../src/components/ui';
 import {
   AGE_RANGE,
@@ -17,30 +17,35 @@ import {
   RADIUS_OPTIONS,
   resetFilters,
   setFilters,
+  ageWindow,
   useFilters,
 } from '../src/data/filters';
-import { GENDERS, HEIGHT_RANGE } from '../src/data/identity';
-import { updateMe, useMe } from '../src/data/session';
+import { HEIGHT_RANGE } from '../src/data/identity';
+import { useMe } from '../src/data/session';
+import { ACTIVE_DAYS } from '../src/data/trust';
 
 export default function DiscoverFiltersScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const f = useFilters();
   const me = useMe();
-  const showMe = me.showMe ?? [];
+  const [autoMin, autoMax] = ageWindow(f, me.age);
   const hMin = useMemo(() => [f.heightMin], [f.heightMin]);
   const hMax = useMemo(() => [f.heightMax], [f.heightMax]);
-  const ageMinValue = useMemo(() => [f.ageMin], [f.ageMin]);
-  const ageMaxValue = useMemo(() => [f.ageMax], [f.ageMax]);
+  const ageMinValue = useMemo(() => [autoMin], [autoMin]);
+  const ageMaxValue = useMemo(() => [autoMax], [autoMax]);
 
+  // Moving a slider takes the range off "around my age".
   function setAgeMin(v: number) {
-    const next = Math.min(v, f.ageMax);
-    if (next !== f.ageMin) setFilters({ ageMin: next });
+    const next = Math.min(v, autoMax);
+    if (f.ageAuto || next !== f.ageMin)
+      setFilters({ ageAuto: false, ageMin: next, ageMax: autoMax });
   }
 
   function setAgeMax(v: number) {
-    const next = Math.max(v, f.ageMin);
-    if (next !== f.ageMax) setFilters({ ageMax: next });
+    const next = Math.max(v, autoMin);
+    if (f.ageAuto || next !== f.ageMax)
+      setFilters({ ageAuto: false, ageMin: autoMin, ageMax: next });
   }
 
   function toggleTime(t: string) {
@@ -63,33 +68,20 @@ export default function DiscoverFiltersScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <YStack>
-          <SectionTitle hint="Saved to your profile. People only see you if they want to see you too.">
-            Show me
-          </SectionTitle>
-          <XStack flexWrap="wrap" gap={8}>
-            {GENDERS.map((g) => (
-              <Chip
-                key={g.id}
-                label={g.plural}
-                selected={showMe.includes(g.id)}
-                onPress={() =>
-                  updateMe({
-                    showMe: showMe.includes(g.id)
-                      ? showMe.filter((x) => x !== g.id)
-                      : [...showMe, g.id],
-                  })
-                }
-              />
-            ))}
-          </XStack>
-        </YStack>
-
-        <YStack>
           <XStack items="baseline" justify="space-between">
-            <SectionTitle>Age range</SectionTitle>
+            <SectionTitle hint="They also only see you if you’re in their range.">
+              Age range
+            </SectionTitle>
             <Text fontFamily="$semibold" fontSize={15} color="$accentText">
-              {f.ageMin} – {f.ageMax}
+              {autoMin} – {autoMax}
             </Text>
+          </XStack>
+          <XStack mb={10}>
+            <Chip
+              label="Around my age"
+              selected={f.ageAuto}
+              onPress={() => setFilters({ ageAuto: true })}
+            />
           </XStack>
           <Card py={14}>
             <YStack gap={14}>
@@ -127,7 +119,7 @@ export default function DiscoverFiltersScreen() {
         </YStack>
 
         <YStack>
-          <SectionTitle hint="Simulated from your city until real location data lands.">
+          <SectionTitle hint="Nearby first, so a first session is easy. Travelling? Use travel mode.">
             Distance
           </SectionTitle>
           <XStack flexWrap="wrap" gap={8}>
@@ -161,15 +153,9 @@ export default function DiscoverFiltersScreen() {
           </XStack>
         </YStack>
 
-        <Card>
-          <ToggleRow
-            label="Verified only"
-            hint="Only show people with the verified badge"
-            last
-            value={f.verifiedOnly}
-            onChange={(v) => setFilters({ verifiedOnly: v })}
-          />
-        </Card>
+        <Callout icon="shield-check" title="Always on">
+          {`Everyone you see is selfie-verified and has trained in the last ${ACTIVE_DAYS} days. Inactive profiles drop out automatically.`}
+        </Callout>
 
         <Button icon="check" onPress={() => router.back()} style={{ width: '100%' }}>
           Show results

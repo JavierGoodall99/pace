@@ -30,7 +30,7 @@ test('each pacer comes with a session on a day you both train', () => {
 });
 
 test('the drop only shows people who want to see each other', () => {
-  const woman = { ...me, gender: 'woman' as const, showMe: ['man' as const] };
+  const woman = { ...me, gender: 'woman' as const };
   const drop = dailyPacers(woman, []);
   expect(drop.length).toBeGreaterThan(0);
   drop.forEach(({ athlete }) =>

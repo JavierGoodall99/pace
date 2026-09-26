@@ -42,7 +42,6 @@ export default function EditProfileScreen() {
   const [city, setCity] = useState(me.city);
   const [bio, setBio] = useState(me.bio);
   const [gender, setGender] = useState<Gender | null>(me.gender);
-  const [showMe, setShowMe] = useState<Gender[]>(me.showMe ?? []);
   const [lifestyle, setLifestyle] = useState<Lifestyle>(me.lifestyle);
   const [disciplines, setDisciplines] = useState<Discipline[]>(me.disciplines);
 
@@ -75,7 +74,6 @@ export default function EditProfileScreen() {
       city: city.trim(),
       bio: bio.trim(),
       gender,
-      showMe,
       lifestyle,
       disciplines,
     });
@@ -157,24 +155,6 @@ export default function EditProfileScreen() {
                 label={g.label}
                 selected={gender === g.id}
                 onPress={() => setGender(g.id)}
-              />
-            ))}
-          </XStack>
-        </YStack>
-
-        <YStack>
-          <SectionTitle hint="They only see you if they want to see you too.">Show me</SectionTitle>
-          <XStack flexWrap="wrap" gap={8}>
-            {GENDERS.map((g) => (
-              <Chip
-                key={g.id}
-                label={g.plural}
-                selected={showMe.includes(g.id)}
-                onPress={() =>
-                  setShowMe((cur) =>
-                    cur.includes(g.id) ? cur.filter((x) => x !== g.id) : [...cur, g.id]
-                  )
-                }
               />
             ))}
           </XStack>

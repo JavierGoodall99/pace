@@ -7,10 +7,18 @@ import { Badge, Button, Card, ScreenHeader } from '../src/components/ui';
 import { useColors } from '../src/theme/appearance';
 
 const PRO_FEATURES = [
-  'Unlimited likes',
-  'See who liked you',
-  'Double the match radius',
-  'Verified stats badge',
+  '10 extra likes a day',
+  'Every Standout, not just the top four',
+  'Advanced filters: level, lifestyle, race goal',
+  'First pick of spots in singles run clubs',
+];
+
+// Never paywalled. Other apps hide messages until you pay — Pace doesn't.
+const ALWAYS_FREE = [
+  'Every message you receive',
+  'Who liked you — names and photos',
+  'Unlimited invites to train',
+  'Safety tools, travel mode and singles run clubs',
 ];
 
 export default function SettingsSubscriptionScreen() {
@@ -36,8 +44,24 @@ export default function SettingsSubscriptionScreen() {
             <Badge>Current plan</Badge>
           </XStack>
           <Text color="$muted" fontSize={15} lineHeight={22} mt={12}>
-            5 likes a day, the standard match radius, and your training log.
+            10 likes a day and everything that matters for meeting someone.
           </Text>
+          <YStack mt={14} gap={10}>
+            {ALWAYS_FREE.map((f) => (
+              <XStack key={f} items="center" gap={10}>
+                <Icon name="check" size={16} color={colors.success} strokeWidth={2.6} />
+                <Text flex={1} fontFamily="$medium" fontSize={15} color="$text">
+                  {f}
+                </Text>
+              </XStack>
+            ))}
+          </YStack>
+          <XStack mt={14} p={12} gap={10} rounded={14} bg="$successSoft" items="center">
+            <Icon name="lock" size={16} color={colors.success} />
+            <Text flex={1} fontSize={13} lineHeight={18} color="$text">
+              We’ll never hide a message or a like behind a paywall.
+            </Text>
+          </XStack>
         </Card>
 
         <YStack

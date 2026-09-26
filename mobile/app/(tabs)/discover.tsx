@@ -21,12 +21,13 @@ import { Button, DisplayTitle, IconButton, SegmentedControl } from '../../src/co
 import { depthFor } from '../../src/data/athleteDepth';
 import { hasLiked, LikeTarget, useChat } from '../../src/data/chat';
 import { formatWhen, nextDrop, untilLabel } from '../../src/data/dates';
-import { cityWithinRadius, useFilters } from '../../src/data/filters';
+import { ageWindow, useFilters } from '../../src/data/filters';
+import { ACTIVE_DAYS, activityLabel, DEFAULT_RADIUS_KM } from '../../src/data/trust';
 import { formatHeight, freshnessLabel, lifestyleChips } from '../../src/data/identity';
 import { Athlete, ATHLETES } from '../../src/data/mockData';
 import { dailyPacers, Pacer, standouts } from '../../src/data/pacers';
 import { ATHLETE_PHOTOS, galleryFor } from '../../src/data/photos';
-import { formatKm } from '../../src/data/places';
+import { distanceTo, formatKm } from '../../src/data/places';
 import { dropAction, DropAction, dropActions, usePlans } from '../../src/data/plans';
 import { activeCity, isTravelling, useMe } from '../../src/data/session';
 import { useSocial } from '../../src/data/social';
@@ -62,32 +63,35 @@ export default function PacersScreen() {
   const cardWidth = width - 40;
   const now = useMemo(() => new Date(), []);
 
+  const [ageMin, ageMax] = ageWindow(filters, me.age);
+  const here = activeCity(me, now);
   const excluded = useMemo(
     () => [
       ...blocked,
       ...ATHLETES.filter((a) => {
         const d = depthFor(a);
         return (
-          a.age < filters.ageMin ||
-          a.age > filters.ageMax ||
+          a.age < ageMin ||
+          a.age > ageMax ||
           d.heightCm < filters.heightMin ||
           d.heightCm > filters.heightMax ||
-          (filters.verifiedOnly && !a.verified) ||
-          !cityWithinRadius(a.city, filters.radiusKm)
+          (filters.radiusKm != null && distanceTo(here, a.city, d.nearKm) > filters.radiusKm)
         );
       }).map((a) => a.id),
     ],
-    [blocked, filters]
+    [blocked, filters, ageMin, ageMax, here]
   );
-  const pacers = useMemo(() => dailyPacers(me, excluded, now), [me, excluded, now]);
+  // Already-matched people don't come back in the drop.
+  const pacers = useMemo(
+    () => dailyPacers(me, [...excluded, ...matches], now),
+    [me, excluded, matches, now]
+  );
   const stand = useMemo(() => standouts(me, [...excluded, ...matches]), [me, excluded, matches]);
   const actions = dropActions(plans, now);
   const remaining = pacers.filter((p) => !actions[p.athlete.id]).length;
   const filtersActive =
-    filters.ageMin > 18 ||
-    filters.ageMax < 60 ||
-    filters.radiusKm != null ||
-    filters.verifiedOnly ||
+    !filters.ageAuto ||
+    filters.radiusKm !== DEFAULT_RADIUS_KM ||
     filters.heightMin > 145 ||
     filters.heightMax < 210;
 
@@ -121,7 +125,9 @@ export default function PacersScreen() {
           <Text fontFamily="$medium" fontSize={14} color="$muted" mt={4}>
             {remaining > 0
               ? `${remaining} of ${pacers.length} left · next drop in ${until}`
-              : `All done · next drop in ${until}`}
+              : pacers.length
+                ? `All done · next drop in ${until}`
+                : `Next drop in ${until}`}
           </Text>
         </YStack>
         <XStack gap={8}>
@@ -210,7 +216,15 @@ export default function PacersScreen() {
           onLayout={(e: LayoutChangeEvent) => setCardHeight(e.nativeEvent.layout.height - 22)}
         >
           {remaining === 0 || pacers.length === 0 ? (
-            <DropDone until={until} onBrowse={() => setTab('Standouts')} />
+            <DropDone
+              until={until}
+              empty={pacers.length === 0}
+              radius={filters.radiusKm}
+              onBrowse={() => setTab('Standouts')}
+              onTravel={() => router.push('/travel')}
+              onFilters={() => router.push('/discover-filters')}
+              onClubs={() => router.push('/(tabs)/sessions')}
+            />
           ) : cardHeight > 0 ? (
             <>
               <ScrollView
@@ -387,6 +401,12 @@ function PacerCard({
               <Text fontFamily="$medium" fontSize={13} color="rgba(255,255,255,0.88)">
                 {formatHeight(d.heightCm)} · {a.city} · {formatKm(compat.distanceKm)}
               </Text>
+              <XStack items="center" gap={5}>
+                <Icon name="zap" size={13} color="#FFFFFF" filled />
+                <Text fontFamily="$semibold" fontSize={13} color="#FFFFFF">
+                  {activityLabel(d)}
+                </Text>
+              </XStack>
               <WhyChips compat={compat} onPhoto />
             </YStack>
           ) : pg.kind === 'prompt' ? (
@@ -587,7 +607,52 @@ function Standouts({
   );
 }
 
-function DropDone({ until, onBrowse }: { until: string; onBrowse: () => void }) {
+function DropDone({
+  until,
+  empty,
+  radius,
+  onBrowse,
+  onTravel,
+  onFilters,
+  onClubs,
+}: {
+  until: string;
+  empty: boolean;
+  radius: number | null;
+  onBrowse: () => void;
+  onTravel: () => void;
+  onFilters: () => void;
+  onClubs: () => void;
+}) {
+  // An honest empty state: we'd rather show nobody than show people who
+  // are fake, inactive or two hours away.
+  if (empty) {
+    return (
+      <YStack flex={1} items="center" justify="center" px={28} gap={10}>
+        <Mascot size={110} mood="thinking" />
+        <DisplayTitle size={30} center>
+          No one new *nearby* today
+        </DisplayTitle>
+        <Text fontSize={15} lineHeight={22} color="$muted" text="center">
+          We only show selfie-verified people who trained in the last {ACTIVE_DAYS} days
+          {radius ? `, within ${radius} km` : ''}. No ghosts, no one hours away.
+        </Text>
+        <YStack mt={12} gap={10} self="stretch">
+          <Button icon="users" onPress={onClubs} style={{ width: '100%' }}>
+            Join a singles run club
+          </Button>
+          <XStack gap={10}>
+            <Button variant="secondary" icon="plane" onPress={onTravel} style={{ flex: 1 }}>
+              Travel
+            </Button>
+            <Button variant="secondary" icon="sliders" onPress={onFilters} style={{ flex: 1 }}>
+              Filters
+            </Button>
+          </XStack>
+        </YStack>
+      </YStack>
+    );
+  }
   return (
     <YStack flex={1} items="center" justify="center" px={32} gap={10}>
       <Mascot size={120} mood="wink" />

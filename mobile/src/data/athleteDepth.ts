@@ -45,7 +45,6 @@ export interface AthleteDepth {
   nearKm: number;
   // Dating basics.
   gender: Gender;
-  showMe: Gender[];
   heightCm: number;
   lifestyle: Lifestyle;
   // Days since they last updated their photos.
@@ -56,6 +55,13 @@ export interface AthleteDepth {
   womenFirst: boolean;
   // Main photo is a motion clip (plays as a slow loop on the card).
   motion: boolean;
+  // Proof they're actually active: days since their last synced activity
+  // or Pace session, and where it came from.
+  lastTrainedDays: number;
+  activitySource: 'strava' | 'garmin' | 'sessions';
+  // The ages they want to see — mutual with yours.
+  ageRange: [number, number];
+  replies: 'fast' | 'usually';
 }
 
 export const DEPTH: Record<number, AthleteDepth> = {
@@ -77,13 +83,16 @@ export const DEPTH: Record<number, AthleteDepth> = {
     ],
     nearKm: 3,
     gender: 'woman',
-    showMe: ['man'],
     heightCm: 168,
     lifestyle: { drinks: 'social', diet: 'anything', restDay: 'brunch' },
     photosDaysAgo: 9,
     likesThisWeek: 41,
     womenFirst: false,
     motion: true,
+    lastTrainedDays: 0,
+    activitySource: 'strava',
+    ageRange: [25, 36],
+    replies: 'fast',
   },
   2: {
     level: 2,
@@ -100,13 +109,16 @@ export const DEPTH: Record<number, AthleteDepth> = {
     routes: [{ name: 'Cradle of Humankind loop', detail: '85 km · rolling hills' }],
     nearKm: 6,
     gender: 'man',
-    showMe: ['woman'],
     heightCm: 183,
     lifestyle: { drinks: 'social', diet: 'highprotein', restDay: 'brunch' },
     photosDaysAgo: 22,
     likesThisWeek: 18,
     womenFirst: false,
     motion: false,
+    lastTrainedDays: 1,
+    activitySource: 'strava',
+    ageRange: [23, 34],
+    replies: 'usually',
   },
   3: {
     level: 1,
@@ -123,13 +135,16 @@ export const DEPTH: Record<number, AthleteDepth> = {
     ],
     nearKm: 5,
     gender: 'woman',
-    showMe: ['man', 'woman'],
     heightCm: 171,
     lifestyle: { drinks: 'never', diet: 'vegetarian', restDay: 'adventure' },
     photosDaysAgo: 4,
     likesThisWeek: 37,
     womenFirst: true,
     motion: true,
+    lastTrainedDays: 0,
+    activitySource: 'garmin',
+    ageRange: [24, 34],
+    replies: 'fast',
   },
   4: {
     level: 3,
@@ -143,13 +158,16 @@ export const DEPTH: Record<number, AthleteDepth> = {
     routes: [{ name: 'North Beach to uShaka', detail: '2 km sea swim' }],
     nearKm: 4,
     gender: 'man',
-    showMe: ['woman'],
     heightCm: 188,
     lifestyle: { drinks: 'offseason', diet: 'highprotein', restDay: 'couch' },
     photosDaysAgo: 48,
     likesThisWeek: 12,
     womenFirst: false,
     motion: false,
+    lastTrainedDays: 3,
+    activitySource: 'garmin',
+    ageRange: [26, 38],
+    replies: 'usually',
   },
   5: {
     level: 3,
@@ -163,13 +181,16 @@ export const DEPTH: Record<number, AthleteDepth> = {
     routes: [{ name: 'CrossFit Box, Pretoria East', detail: '6am class' }],
     nearKm: 7,
     gender: 'woman',
-    showMe: ['man'],
     heightCm: 165,
     lifestyle: { drinks: 'social', diet: 'highprotein', restDay: 'brunch' },
     photosDaysAgo: 15,
     likesThisWeek: 29,
     womenFirst: false,
     motion: false,
+    lastTrainedDays: 1,
+    activitySource: 'sessions',
+    ageRange: [26, 38],
+    replies: 'fast',
   },
   6: {
     level: 2,
@@ -180,13 +201,16 @@ export const DEPTH: Record<number, AthleteDepth> = {
     routes: [{ name: 'City Rock', detail: 'Bouldering gym · Observatory' }],
     nearKm: 4,
     gender: 'man',
-    showMe: ['woman'],
     heightCm: 179,
     lifestyle: { drinks: 'social', diet: 'anything', restDay: 'adventure' },
     photosDaysAgo: 6,
     likesThisWeek: 33,
     womenFirst: false,
     motion: true,
+    lastTrainedDays: 23,
+    activitySource: 'strava',
+    ageRange: [22, 34],
+    replies: 'usually',
   },
   7: {
     level: 3,
@@ -197,13 +221,16 @@ export const DEPTH: Record<number, AthleteDepth> = {
     routes: [{ name: 'Zoo Lake', detail: 'Brick sessions · 5 km loop' }],
     nearKm: 8,
     gender: 'woman',
-    showMe: ['man'],
     heightCm: 173,
     lifestyle: { drinks: 'offseason', diet: 'vegan', restDay: 'adventure' },
     photosDaysAgo: 11,
     likesThisWeek: 52,
     womenFirst: true,
     motion: true,
+    lastTrainedDays: 0,
+    activitySource: 'strava',
+    ageRange: [26, 37],
+    replies: 'fast',
   },
   8: {
     level: 4,
@@ -217,13 +244,16 @@ export const DEPTH: Record<number, AthleteDepth> = {
     routes: [{ name: 'Groenkloof track', detail: 'Tuesday intervals' }],
     nearKm: 5,
     gender: 'man',
-    showMe: ['woman'],
     heightCm: 185,
     lifestyle: { drinks: 'never', diet: 'highprotein', restDay: 'couch' },
     photosDaysAgo: 3,
     likesThisWeek: 46,
     womenFirst: false,
     motion: true,
+    lastTrainedDays: 2,
+    activitySource: 'strava',
+    ageRange: [24, 35],
+    replies: 'fast',
   },
 };
 
@@ -238,13 +268,16 @@ export function depthFor(a: Pick<Athlete, 'id'>): AthleteDepth {
       routes: [],
       nearKm: 10,
       gender: 'woman',
-      showMe: ['man', 'woman', 'nonbinary'],
       heightCm: 170,
       lifestyle: { drinks: null, diet: null, restDay: null },
       photosDaysAgo: 30,
       likesThisWeek: 0,
       womenFirst: false,
       motion: false,
+      lastTrainedDays: 30,
+      activitySource: 'sessions',
+      ageRange: [18, 60],
+      replies: 'usually',
     }
   );
 }

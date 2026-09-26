@@ -42,7 +42,7 @@ test('a mutual check-in no longer counts as pending', () => {
 
 test('profile tips walk through the next best improvement', () => {
   expect(profileTip(me, now).key).toBe('tip-basics');
-  const basics = { ...me, gender: 'woman' as const, showMe: ['man' as const] };
+  const basics = { ...me, gender: 'woman' as const };
   expect(profileTip(basics, now).key).toBe('tip-photos');
   expect(profileTip({ ...basics, photos: ['a'], photoLabels: ['action' as const] }, now).key).toBe(
     'tip-offclock'
@@ -53,7 +53,9 @@ test('profile tips walk through the next best improvement', () => {
     photoLabels: ['offclock' as const, 'action' as const, 'post' as const],
   };
   expect(profileTip(withPhotos, now).key).toBe('tip-verify');
-  expect(profileTip({ ...withPhotos, verified: true }, now).key).toBe('tip-race');
-  const racing = profileTip({ ...withPhotos, verified: true, goalRaceId: 'soweto-marathon' }, now);
+  expect(profileTip({ ...withPhotos, verified: true }, now).key).toBe('tip-sync');
+  const synced = { ...withPhotos, verified: true, stravaConnected: true };
+  expect(profileTip(synced, now).key).toBe('tip-race');
+  const racing = profileTip({ ...synced, goalRaceId: 'soweto-marathon' }, now);
   expect(racing.text).toBe('37 days to Soweto Marathon. Find a pacer for your long runs!');
 });

@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import type { Discipline } from './mockData';
 import { ATHLETE_ACTION_PHOTOS, ATHLETE_PHOTOS } from './photos';
+import { DEMO_DATA } from '../config';
 
 // Session moments: after a workout you post one photo that your matches
 // see for 24 hours. Keeps profiles honest and fresh, and gives matches a
@@ -36,6 +37,7 @@ function hoursAgo(now: Date, h: number) {
 }
 
 function seed(now: Date = new Date()): MomentsState {
+  if (!DEMO_DATA) return { moments: [], myKudos: [], seen: [] };
   return {
     moments: [
       {

@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import type { Gender } from './identity';
+import { DEMO_DATA, demo } from '../config';
 
 // Mock of the social graph: who liked you and who you matched with.
 // Seeded from the design's fixed match set; both lists are editable in
@@ -38,8 +39,8 @@ export const PASS_COOLDOWN_DAYS = 30;
 const STORAGE_KEY = 'pace.social.v1';
 
 const DEFAULT_STATE: SocialState = {
-  likes: LIKES_IDS,
-  matches: MATCH_IDS,
+  likes: demo(LIKES_IDS, []),
+  matches: demo(MATCH_IDS, []),
   blocked: [],
   reports: [],
   matchedAt: {},
@@ -119,6 +120,7 @@ export function resetSocial() {
 // so it depends on who you are: the default lists (women matched, men
 // liking you) only fit a man.
 export function demoGraphFor(gender: Gender | null): { likes: number[]; matches: number[] } {
+  if (!DEMO_DATA) return { likes: [], matches: [] };
   if (gender === 'woman') return { likes: [6, 8], matches: [2, 4] };
   if (gender === 'man') return { likes: [7], matches: [1, 3, 5] };
   return { likes: [], matches: [] };
@@ -142,8 +144,8 @@ AsyncStorage.getItem(STORAGE_KEY)
     if (raw) {
       const saved = JSON.parse(raw) as Partial<SocialState>;
       setState({
-        likes: saved.likes ?? LIKES_IDS,
-        matches: saved.matches ?? MATCH_IDS,
+        likes: saved.likes ?? DEFAULT_STATE.likes,
+        matches: saved.matches ?? DEFAULT_STATE.matches,
         blocked: saved.blocked ?? [],
         reports: saved.reports ?? [],
         matchedAt: saved.matchedAt ?? {},

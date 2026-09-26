@@ -23,6 +23,7 @@ import { ACTIVE_DAYS } from '../src/data/trust';
 import { successHaptic } from '../src/lib/haptics';
 import { useColors } from '../src/theme/appearance';
 import { formatLabel } from '../src/theme/tokens';
+import { LAUNCH_MODE } from '../src/config';
 
 // Log a session. Pace only shows people who trained in the last
 // ACTIVE_DAYS days, so this (or a provider sync, or a Pace session)
@@ -160,7 +161,9 @@ export default function LogTrainingScreen() {
           </Button>
 
           <Callout icon="shield-check">
-            {`Training in the last ${ACTIVE_DAYS} days keeps you visible.`}
+            {LAUNCH_MODE
+              ? 'Logging keeps your streak and puts you higher in people’s picks.'
+              : `Training in the last ${ACTIVE_DAYS} days keeps you visible.`}
           </Callout>
 
           {recent.length ? (

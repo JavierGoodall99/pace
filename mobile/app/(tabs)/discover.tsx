@@ -38,6 +38,7 @@ import { EVENT_ATTENDEES, pacersAmong, useExplore } from '../../src/data/explore
 import { useColors } from '../../src/theme/appearance';
 import { useNow } from '../../src/lib/useNow';
 import { shadow } from '../../src/theme/tokens';
+import { LAUNCH_MODE } from '../../src/config';
 
 // Pacers: a swipe deck of everyone near you who fits, best training fit
 // first. Swipe right (or tap the heart) to like, left to pass. Tapping the
@@ -96,7 +97,7 @@ export default function PacersScreen() {
   function allowSwipe(p: Pacer, dir: SwipeDir): boolean {
     if (dir === 'left') return true;
     if (!me.verified) {
-      showPip('Verify your selfie to start liking.', 'thinking');
+      showPip('Do the live selfie check to start liking.', 'thinking');
       router.push('/verify');
       return false;
     }
@@ -344,6 +345,7 @@ function PacerCard({
                 ) : null}
               </XStack>
               <Text fontFamily="$medium" fontSize={13} color="rgba(255,255,255,0.88)">
+                {a.verified ? '' : 'Not verified yet · '}
                 {a.city} · {formatKm(compat.distanceKm)}
                 {matchKind(me, a) === 'partner' ? ' · Training partner' : ''}
               </Text>
@@ -505,8 +507,9 @@ function DeckDone({
           No one new *nearby* yet
         </DisplayTitle>
         <Text fontSize={15} lineHeight={22} color="$muted" text="center">
-          We only show selfie-verified people who trained in the last {ACTIVE_DAYS} days
-          {radius ? `, within ${radius} km` : ''}. No ghosts, no one hours away.
+          {LAUNCH_MODE
+            ? `Nobody fits your filters yet${radius ? ` within ${radius} km` : ''}. New members join every week.`
+            : `We only show verified people who trained in the last ${ACTIVE_DAYS} days${radius ? `, within ${radius} km` : ''}. No ghosts, no one hours away.`}
         </Text>
         <YStack mt={12} gap={10} self="stretch">
           {goingNote ? (

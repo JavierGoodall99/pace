@@ -36,6 +36,7 @@ import { tapHaptic } from '../../src/lib/haptics';
 import { useColors } from '../../src/theme/appearance';
 import { formatLabel } from '../../src/theme/tokens';
 import { keepPhoto } from '../../src/lib/photoStore';
+import { FEATURES } from '../../src/config';
 
 // A conversation. Text, voice notes and photo replies; a like on a
 // photo or prompt shows as a quote at the top of the thread. The
@@ -308,7 +309,7 @@ export default function ThreadScreen() {
                   }}
                 />
               </YStack>
-              {note.trim() ? (
+              {note.trim() || !FEATURES.voiceNotes ? (
                 <IconButton tone="solid" size={44} onPress={sendText} accessibilityLabel="Send">
                   <Icon name="send" size={18} color={colors.onAccent} />
                 </IconButton>
@@ -396,7 +397,15 @@ function Bubble({
         />
       ) : null}
 
-      {m.voiceSec ? <VoiceNote sec={m.voiceSec} mine={mine} /> : null}
+      {m.voiceSec ? (
+        FEATURES.voiceNotes ? (
+          <VoiceNote sec={m.voiceSec} mine={mine} />
+        ) : (
+          <Text fontSize={14} color="$muted">
+            Voice note
+          </Text>
+        )
+      ) : null}
 
       {m.text || plan ? (
         <YStack

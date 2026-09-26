@@ -17,6 +17,7 @@ import { useMe } from '../../src/data/session';
 import { ATHLETE_PHOTOS, ME_AVATAR } from '../../src/data/photos';
 import { useColors } from '../../src/theme/appearance';
 import { brand, shadow } from '../../src/theme/tokens';
+import { demo } from '../../src/config';
 
 // Ported from the "MATCH CELEBRATION OVERLAY" in `../../Pace App.dc.html`
 // — shown when a like becomes mutual (a swipe right or a like with a
@@ -58,7 +59,7 @@ export default function MatchScreen() {
       <YStack width="100%" items="center" z={1}>
         <XStack items="center" justify="center" mb={8} height={210}>
           <Portrait
-            source={me.photos[0] ? { uri: me.photos[0] } : ME_AVATAR}
+            source={me.photos[0] ? { uri: me.photos[0] } : demo(ME_AVATAR, undefined)}
             label="You"
             tilt="-7deg"
           />

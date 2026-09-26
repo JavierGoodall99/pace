@@ -290,7 +290,7 @@ export default function InviteScreen() {
               onPress={() => router.push('/verify')}
               style={{ width: '100%' }}
             >
-              Verify to send invites
+              Do the selfie check to invite
             </Button>
           )}
         </YStack>

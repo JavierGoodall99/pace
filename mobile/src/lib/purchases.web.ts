@@ -14,3 +14,7 @@ export async function offeringFor(_placement: string, _userId: string): Promise<
 export async function buy(_pkg: unknown): Promise<PurchaseResult> {
   return 'failed';
 }
+export async function currentOffering(_userId: string): Promise<null> {
+  return null;
+}
+export async function manageSubscription() {}

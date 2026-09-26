@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { Image, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,10 +24,17 @@ import { confirmAction } from '../../src/lib/dialogs';
 import { successHaptic } from '../../src/lib/haptics';
 import { useColors } from '../../src/theme/appearance';
 import { formatLabel } from '../../src/theme/tokens';
+import { FEATURES } from '../../src/config';
 
 // Full-screen session moment. Tap right for the next one; kudos is the
 // one-tap reaction, and Reply drops a line into your chat.
-export default function MomentScreen() {
+// Moments are parked for v1 (config FEATURES.moments): the route stays
+// but sends anyone who lands here back to Today.
+export default function MomentScreenRoute() {
+  return FEATURES.moments ? <MomentScreen /> : <Redirect href="/(tabs)/today" />;
+}
+
+function MomentScreen() {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();

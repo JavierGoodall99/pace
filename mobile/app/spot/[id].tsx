@@ -30,6 +30,7 @@ import { useMe } from '../../src/data/session';
 import { useSocial } from '../../src/data/social';
 import { successHaptic } from '../../src/lib/haptics';
 import { useColors } from '../../src/theme/appearance';
+import { FEATURES } from '../../src/config';
 
 // One Cape Town spot: why it's good, when to go, how to stay safe, which
 // crews meet here — and a passport stamp when you've trained here.
@@ -38,7 +39,7 @@ export default function SpotScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
-  const { blocked } = useSocial();
+  const { blocked, matches } = useSocial();
   const explore = useExplore();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [now] = useState(() => new Date());
@@ -132,7 +133,11 @@ export default function SpotScreen() {
           {regulars.length ? (
             <YStack gap={8}>
               <DisplayTitle size={24}>{`Who trains *here*`}</DisplayTitle>
-              <PacersGoing people={regulars} verb={['trains here', 'train here']} />
+              <PacersGoing
+                people={regulars}
+                verb={['trains here', 'train here']}
+                nameOnly={matches}
+              />
             </YStack>
           ) : null}
 
@@ -209,15 +214,17 @@ export default function SpotScreen() {
         borderTopColor="$border"
         style={{ paddingBottom: insets.bottom + 12 }}
       >
-        <Button
-          variant="secondary"
-          icon={stamped ? 'check' : 'map-pin'}
-          disabled={stamped}
-          onPress={checkIn}
-          style={{ flex: 1 }}
-        >
-          {stamped ? 'Checked in' : 'Check in'}
-        </Button>
+        {FEATURES.passport ? (
+          <Button
+            variant="secondary"
+            icon={stamped ? 'check' : 'map-pin'}
+            disabled={stamped}
+            onPress={checkIn}
+            style={{ flex: 1 }}
+          >
+            {stamped ? 'Checked in' : 'Check in'}
+          </Button>
+        ) : null}
         <Button
           icon="plus"
           onPress={() => router.push({ pathname: '/session-new', params: { place: spot.name } })}

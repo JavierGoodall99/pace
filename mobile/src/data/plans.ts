@@ -5,6 +5,7 @@ import { dateFromWhenLabel, daysFrom, dropKey, nextDateFor } from './dates';
 import type { Discipline, PlanCard, PlanStatus as CardStatus } from './mockData';
 import { isMatched } from './social';
 import type { IlloName } from '../components/Illustrations';
+import { DEMO_DATA, demo } from '../config';
 
 // Sessions are the core of Pace: once two people match (they liked each
 // other), the relationship moves forward through sessions, not chat.
@@ -69,7 +70,7 @@ interface PlansState {
 }
 
 // Athletes who say yes to invites in the demo (others stay pending).
-const RESPONDERS = [1, 2, 3, 5, 7, 8];
+const RESPONDERS = demo([1, 2, 3, 5, 7, 8], []);
 // How each athlete answers a post-session check-in in the demo.
 const THEIR_CHECKIN: Record<number, CheckIn> = {
   1: 'again',
@@ -81,6 +82,8 @@ const THEIR_CHECKIN: Record<number, CheckIn> = {
 };
 
 function seed(now: Date = new Date()): PlansState {
+  if (!DEMO_DATA)
+    return { plans: [], open: [], drop: { week: dropKey(now), actions: {} }, celebrate: null };
   const iso = (d: Date) => d.toISOString();
   return {
     plans: [

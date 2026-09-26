@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon, IconName } from '../src/components/Icon';
 import { PhotoSlot } from '../src/components/PhotoSlot';
-import { Card, ScreenHeader, SectionTitle, TextAction } from '../src/components/ui';
+import { Card, EmptyState, ScreenHeader, SectionTitle, TextAction } from '../src/components/ui';
 import { athleteById, AppNotification } from '../src/data/mockData';
 import {
   isUnread as unreadIn,
@@ -62,6 +62,16 @@ export default function NotificationsScreen() {
           unreadCount > 0 ? <TextAction onPress={markAllRead}>Mark all read</TextAction> : null
         }
       />
+
+      {notifications.length === 0 ? (
+        <YStack mt={60}>
+          <EmptyState
+            mood="happy"
+            title="Nothing new"
+            body="Likes, matches and invites will show up here."
+          />
+        </YStack>
+      ) : null}
 
       {GROUPS.map((group) => {
         const items = notifications.filter((n) => n.group === group);

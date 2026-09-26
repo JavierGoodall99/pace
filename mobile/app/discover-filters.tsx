@@ -22,6 +22,7 @@ import {
 } from '../src/data/filters';
 import { useMe } from '../src/data/session';
 import { ACTIVE_DAYS } from '../src/data/trust';
+import { LAUNCH_MODE } from '../src/config';
 
 export default function DiscoverFiltersScreen() {
   const insets = useSafeAreaInsets();
@@ -120,7 +121,9 @@ export default function DiscoverFiltersScreen() {
         </YStack>
 
         <Callout icon="shield-check" title="Always on">
-          {`Everyone is verified and trained in the last ${ACTIVE_DAYS} days.`}
+          {LAUNCH_MODE
+            ? 'People with a live selfie check who trained recently show first.'
+            : `Everyone has a live selfie check and trained in the last ${ACTIVE_DAYS} days.`}
         </Callout>
 
         <Button icon="check" onPress={() => router.back()} style={{ width: '100%' }}>

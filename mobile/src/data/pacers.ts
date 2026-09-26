@@ -1,6 +1,7 @@
 import { depthFor } from './athleteDepth';
 import { seeking } from './identity';
-import { inRange, isActive } from './trust';
+import { LAUNCH_MODE, RANK_WEIGHTS } from '../config';
+import { ACTIVE_DAYS, inRange, isActive } from './trust';
 import { Compat, compatibility } from './compat';
 import { dayIndex, nextDateFor } from './dates';
 import { ATHLETES, Athlete, Discipline } from './mockData';
@@ -84,26 +85,60 @@ export function matchKind(me: MeProfile, a: Athlete): 'date' | 'partner' {
   return me.intent === 'partner' || d.intent === 'partner' ? 'partner' : 'date';
 }
 
-// Only verified people who've actually trained recently make the drop.
+// The strict rule: verified people who've actually trained recently.
 export function isShowable(a: Athlete): boolean {
   return a.verified && isActive(depthFor(a));
 }
 
-function candidates(me: MeProfile, excluded: number[]): Athlete[] {
+// Who can appear in decks and "who's going" lists. In launch mode
+// everyone does, and verification / recent training rank them higher
+// instead (see rankScore); otherwise the strict rule applies.
+export function isEligible(a: Athlete, launch: boolean = LAUNCH_MODE): boolean {
+  return launch || isShowable(a);
+}
+
+// Deck order. Outside launch mode it's the sync score alone; in launch
+// mode verified and recently active people get the RANK_WEIGHTS boosts.
+export function rankScore(syncScore: number, a: Athlete, launch: boolean = LAUNCH_MODE): number {
+  if (!launch) return syncScore;
+  const days = depthFor(a).lastTrainedDays;
+  const { verified, active, activeFadeDays } = RANK_WEIGHTS;
+  const fade =
+    days <= ACTIVE_DAYS
+      ? 1
+      : days >= activeFadeDays
+        ? 0
+        : 1 - (days - ACTIVE_DAYS) / (activeFadeDays - ACTIVE_DAYS);
+  return syncScore + (a.verified ? verified : 0) + active * fade;
+}
+
+function candidates(me: MeProfile, excluded: number[], launch: boolean): Athlete[] {
   const myFirst = me.name.trim().split(' ')[0];
   return ATHLETES.filter(
-    (a) => !excluded.includes(a.id) && a.name !== myFirst && isShowable(a) && wantEachOther(me, a)
+    (a) =>
+      !excluded.includes(a.id) &&
+      a.name !== myFirst &&
+      isEligible(a, launch) &&
+      wantEachOther(me, a)
   );
 }
 
 // The whole deck, ranked by training fit. `excluded` is everyone who
 // shouldn't appear: blocked, matched, already liked, recently passed, or
 // outside your filters.
-export function pacerDeck(me: MeProfile, excluded: number[], now: Date = new Date()): Pacer[] {
-  return candidates(me, excluded)
+export function pacerDeck(
+  me: MeProfile,
+  excluded: number[],
+  now: Date = new Date(),
+  launch: boolean = LAUNCH_MODE
+): Pacer[] {
+  return candidates(me, excluded, launch)
     .map((athlete) => {
       const compat = compatibility(me, athlete);
       return { athlete, compat, suggestion: suggestSession(me, athlete, compat, now) };
     })
-    .sort((x, y) => y.compat.score - x.compat.score);
+    .sort(
+      (x, y) =>
+        rankScore(y.compat.score, y.athlete, launch) - rankScore(x.compat.score, x.athlete, launch)
+    );
 }

@@ -156,7 +156,7 @@ export function LikeSheet({
                       }}
                       style={{ width: '100%' }}
                     >
-                      Verify to send likes
+                      Do the selfie check to like
                     </Button>
                   ) : (
                     <Button
@@ -174,7 +174,7 @@ export function LikeSheet({
                   )}
                   <Text fontFamily="$body" fontSize={12} color="$muted" text="center">
                     {!me.verified
-                      ? 'Only verified members can like.'
+                      ? 'Liking needs a live selfie check.'
                       : left <= 0
                         ? 'Likes reset at midnight.'
                         : `${left} of ${LIKES_PER_DAY} likes left today`}

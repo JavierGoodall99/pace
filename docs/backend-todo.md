@@ -18,8 +18,8 @@ AI-generated faces.
 - Profile photos are scanned for faces when added: the main photo must show exactly one face,
   and at least two photos must show one.
 - Adding a photo after verifying removes the verified badge until the selfie check is redone.
-- The badge says "Selfie verified", not "Selfie matches photos", because nothing compares faces
-  yet.
+- The badge says "Live selfie check" (short: "Selfie checked"), because it only proves a live
+  person is holding the phone; nothing compares faces yet.
 
 **Still needs a server:**
 
@@ -31,8 +31,10 @@ AI-generated faces.
 4. **Human review** — a moderation queue for anything flagged, plus the existing "Fake profile"
    report reason (`ReportReason` in `mobile/src/data/social.ts`).
 
-Once this exists, the badge can go back to saying the selfie matches the photos, and the
-privacy policy (`mobile/src/data/legal.ts`) must say what is uploaded and for how long.
+**Server-side face match between the selfie and the profile photos** — once this exists, the
+badge can become "Photo verified". The privacy policy (`mobile/src/data/legal.ts`) and the
+biometric consent wording (`mobile/src/components/Consent.tsx`, bump its version in
+`mobile/src/data/consent.ts`) must then say what is uploaded and for how long.
 
 ## 2. Other work waiting on a backend
 
@@ -61,6 +63,17 @@ privacy policy (`mobile/src/data/legal.ts`) must say what is uploaded and for ho
   everyone gets a fair share of attention in a small city.
 - **Invite link** — `mobile/src/lib/inviteFriend.ts` shares a placeholder (`https://pace.fit`);
   swap for the store / referral link.
+- **Privacy settings for other people's view** — "Show me on events I join" and "Spot check-ins
+  visible to" are saved on the phone; the server must leave people out of other members'
+  "who's going" lists and spot views accordingly. Names on spots and crews are already limited to
+  matches on the phone.
+- **Consent records** — health and biometric consent (what, when, wording version) are stored on
+  the phone in `mobile/src/data/consent.ts`; migrate them to the account when it exists.
+- **Disconnect** — Settings → Connected apps deletes imported data on the phone; the server must
+  also revoke the provider token and delete server copies.
+- **Launch mode and feature flags** — `LAUNCH_MODE`, `FEATURES` and `DEMO_DATA` live in
+  `mobile/src/config.ts` and need an app release to change; a remote config would let them flip
+  without one.
 - **Location** — distances come from mock data, not the phone's location.
 - **Waitlist** — sign-ups for other cities are stored on the phone
   (`mobile/src/data/waitlist.ts`).

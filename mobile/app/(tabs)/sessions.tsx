@@ -44,13 +44,14 @@ import { OpenSession, usePlans } from '../../src/data/plans';
 import { useMe } from '../../src/data/session';
 import { useSocial } from '../../src/data/social';
 import { useColors } from '../../src/theme/appearance';
+import { FEATURES } from '../../src/config';
 
 // Explore Cape Town. There's always something to do here, even on a
 // day with no new pacers: established events and run crews, the city's
 // best spots to train and meet, and monthly challenges. Pace points to
 // what Cape Town already loves rather than running its own clubs.
 
-const TABS = ['This week', 'Spots', 'Crews', 'Challenges'];
+const TABS = ['This week', 'Spots', 'Crews', ...(FEATURES.challenges ? ['Challenges'] : [])];
 const KINDS: ('all' | SpotKind)[] = ['all', 'run', 'trail', 'ride', 'swim', 'surf', 'gym'];
 
 export function sessionMeta(o: OpenSession): string {
@@ -214,7 +215,7 @@ export default function ExploreScreen() {
                 key={s.id}
                 spot={s}
                 crews={crewsAt(s.id)}
-                stamped={stampedToday(explore, s.id, now)}
+                stamped={FEATURES.passport && stampedToday(explore, s.id, now)}
                 onPress={() => router.push({ pathname: '/spot/[id]', params: { id: s.id } })}
               />
             ))}
@@ -242,7 +243,7 @@ export default function ExploreScreen() {
           </>
         ) : null}
 
-        {tab === 'Challenges' ? (
+        {FEATURES.challenges && tab === 'Challenges' ? (
           <>
             <YStack
               p={16}

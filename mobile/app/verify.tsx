@@ -18,6 +18,8 @@ import { updateMe, useMe } from '../src/data/session';
 import { track } from '../src/lib/analytics';
 import { successHaptic, tapHaptic } from '../src/lib/haptics';
 import { useColors } from '../src/theme/appearance';
+import { ConsentPrompt } from '../src/components/Consent';
+import { hasConsent, useConsents } from '../src/data/consent';
 
 // Selfie liveness check: the front camera streams face readings into
 // src/data/liveness.ts, which walks the person through a random order of
@@ -35,9 +37,11 @@ export default function VerifyScreen() {
   const livenessRef = useRef(liveness);
 
   const { hasPermission, canRequestPermission, requestPermission } = permission;
+  // Face processing needs consent first; the camera waits for it.
+  const consented = hasConsent('biometric', useConsents());
   useEffect(() => {
-    if (!done && !hasPermission && canRequestPermission) requestPermission();
-  }, [done, hasPermission, canRequestPermission, requestPermission]);
+    if (!done && consented && !hasPermission && canRequestPermission) requestPermission();
+  }, [done, consented, hasPermission, canRequestPermission, requestPermission]);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (s) => setForeground(s === 'active'));
@@ -67,17 +71,17 @@ export default function VerifyScreen() {
     setCameraError(false);
   };
 
-  const scanning = !done && scannerSupported && hasPermission && !cameraError;
+  const scanning = !done && consented && scannerSupported && hasPermission && !cameraError;
   const blocked = !done && !scanning;
   const failed = liveness.status === 'failed';
 
   let title: string;
   let body: string;
   if (done) {
-    title = "You're verified";
-    body = 'Your card now has the verified badge.';
+    title = 'Selfie check passed';
+    body = 'Your card now shows “Live selfie check”.';
   } else if (!scannerSupported) {
-    title = 'Verify on your phone';
+    title = 'Do this on your phone';
     body = 'Open Pace on your phone to finish.';
   } else if (cameraError) {
     title = 'Camera didn’t start';
@@ -92,11 +96,27 @@ export default function VerifyScreen() {
     body = failed ? 'Find good light and try again.' : 'Follow the prompts. Nothing is saved.';
   }
 
+  if (!done && !consented) {
+    return (
+      <YStack flex={1} bg="$canvas" style={{ paddingBottom: insets.bottom + 20 }}>
+        <ScreenHeader title="Live selfie *check*" onBack={() => router.back()} />
+        <YStack flex={1} justify="center" px={20}>
+          <ConsentPrompt
+            kind="biometric"
+            // Start the prompts fresh so reading this doesn't eat the timer.
+            onAllow={retry}
+            onDecline={() => router.back()}
+          />
+        </YStack>
+      </YStack>
+    );
+  }
+
   const ringColor = done ? colors.success : failed ? colors.muted : colors.accent;
 
   return (
     <YStack flex={1} bg="$canvas" style={{ paddingBottom: insets.bottom + 20 }}>
-      <ScreenHeader title="Verify it’s *you*" onBack={() => router.back()} />
+      <ScreenHeader title="Live selfie *check*" onBack={() => router.back()} />
 
       <YStack flex={1} justify="center" items="center" gap={24} px={20}>
         <YStack
@@ -138,6 +158,10 @@ export default function VerifyScreen() {
           </Text>
           <Text color="$muted" fontSize={16} lineHeight={24} text="center">
             {body}
+          </Text>
+          {/* Say exactly what the badge means, no more. */}
+          <Text color="$muted" fontSize={13} lineHeight={19} text="center" mt={4}>
+            Checks that a real person is holding the phone. It doesn’t compare you to your photos.
           </Text>
         </YStack>
 

@@ -23,6 +23,7 @@ import { useMe } from '../../src/data/session';
 import { useSocial } from '../../src/data/social';
 import { successHaptic } from '../../src/lib/haptics';
 import { useColors } from '../../src/theme/appearance';
+import { useSettings } from '../../src/data/settings';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -33,6 +34,7 @@ export default function EventScreen() {
   const me = useMe();
   const { blocked, matches } = useSocial();
   const explore = useExplore();
+  const { privacy } = useSettings();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [now] = useState(() => new Date());
   const event = eventById(id);
@@ -264,9 +266,11 @@ export default function EventScreen() {
             if (!going) {
               successHaptic();
               showPip(
-                pacers.length
-                  ? `You’re on the list! ${pacers.length} pacer${pacers.length === 1 ? '' : 's'} you might like will see you’re going.`
-                  : 'You’re on the list! Pace members going will see you there.',
+                !privacy.showOnEvents
+                  ? 'You’re going. Only you can see this.'
+                  : pacers.length
+                    ? `You’re on the list! ${pacers.length} pacer${pacers.length === 1 ? '' : 's'} you might like will see you’re going.`
+                    : 'You’re on the list! Pace members going will see you there.',
                 'excited'
               );
             }

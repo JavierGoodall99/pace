@@ -69,7 +69,7 @@ test('passport stamps count once per spot per day and feed challenges', () => {
 test('"pacers you might like" only counts people you would actually see', () => {
   const woman = { ...freshMe('Ana', 'a@x.co'), gender: 'woman' as const, age: '29' };
   // Lerato (woman), Kagiso (man), Sipho (man), Dean (man, inactive).
-  const names = pacersAmong(woman, [1, 8, 2, 6]).map((a) => a.name);
+  const names = pacersAmong(woman, [1, 8, 2, 6], [], false).map((a) => a.name);
   expect(names).toEqual(['Kagiso', 'Sipho']);
   expect(pacersAmong(woman, [8], [8])).toHaveLength(0);
 });

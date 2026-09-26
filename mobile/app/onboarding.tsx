@@ -50,7 +50,7 @@ import {
   TRAINING_TIMES,
 } from '../src/data/rhythm';
 import { compatibility } from '../src/data/compat';
-import { isShowable, wantEachOther } from '../src/data/pacers';
+import { isEligible, wantEachOther } from '../src/data/pacers';
 import {
   CITIES,
   distanceTo,
@@ -297,7 +297,7 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
           };
     case 'verify':
       return done
-        ? { text: 'Verified! You just unlocked Gold.', mood: 'excited' }
+        ? { text: 'Selfie check passed! You just unlocked Gold.', mood: 'excited' }
         : {
             text: 'Last one: a quick selfie check.',
             mood: 'happy',
@@ -366,7 +366,7 @@ function OnboardingFlow({ steps, startIndex }: { steps: StepId[]; startIndex: nu
   const myRhythm = rhythmForMe(me.cadence, me.trainingDays);
   const pip = pipLine(step, me);
 
-  const badgeTierLabel = me.verified ? 'Gold · Verified' : hasSync(me) ? 'Silver' : 'Bronze';
+  const badgeTierLabel = me.verified ? 'Gold · Live selfie' : hasSync(me) ? 'Silver' : 'Bronze';
 
   function next() {
     if (QUESTIONS.includes(step) && answered(step, me)) successHaptic();
@@ -773,7 +773,7 @@ function OnboardingFlow({ steps, startIndex }: { steps: StepId[]; startIndex: nu
                     style={{ width: '100%' }}
                     disabled={me.verified}
                   >
-                    {me.verified ? 'Verified' : 'Start selfie check'}
+                    {me.verified ? 'Selfie checked' : 'Start selfie check'}
                   </Button>
                   <Text fontSize={13} color="$muted" text="center">
                     Takes 10 seconds.
@@ -1148,7 +1148,7 @@ function RevealStep({ me, rhythm }: { me: MeProfile; rhythm: Rhythm }) {
       ATHLETES.filter(
         (a) =>
           a.name !== me.name.trim().split(' ')[0] &&
-          isShowable(a) &&
+          isEligible(a) &&
           wantEachOther(me, a) &&
           distanceTo(me.city, a.city, depthFor(a).nearKm) <= DEFAULT_RADIUS_KM
       )

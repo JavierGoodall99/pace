@@ -15,6 +15,12 @@ describe('daily picks', () => {
     );
   });
 
+  test('upgrading to Pro mid-day tops up to the bigger allowance', () => {
+    expect(choosePicks([1, 2, 3], { day: 'today', ids: [7, 8], size: 5 }, 'today', 7)).toEqual([
+      7, 8, 1, 2,
+    ]);
+  });
+
   test('the same day keeps its picks, even as the deck changes', () => {
     expect(choosePicks([1, 2, 3], { day: 'today', ids: [7, 8] }, 'today')).toEqual([7, 8]);
   });

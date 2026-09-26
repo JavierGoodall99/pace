@@ -1,5 +1,5 @@
 import { ATHLETES } from './mockData';
-import { pacerDeck, isShowable, wantEachOther } from './pacers';
+import { pacerDeck, isShowable, rankScore, wantEachOther } from './pacers';
 import { freshMe } from './session';
 import {
   defaultAgeRange,
@@ -27,7 +27,7 @@ test('only verified, recently active people make the drop', () => {
   expect(isShowable(byName('Dean'))).toBe(false); // hasn't trained in 23 days
   expect(isShowable(byName('Kagiso'))).toBe(true);
   const me = { ...freshMe('Ana', 'a@x.co'), gender: 'woman' as const, age: '29' };
-  expect(pacerDeck(me, []).map((p) => p.athlete.name)).not.toContain('Dean');
+  expect(pacerDeck(me, [], new Date(), false).map((p) => p.athlete.name)).not.toContain('Dean');
 });
 
 test('men see women, women see men, and age ranges are mutual', () => {
@@ -52,4 +52,26 @@ test('silent matches expire after three days', () => {
   expect(expiryLabel(matchHoursLeft('2026-09-26T00:00:00Z', now))).toBe('3d left');
   expect(expiryLabel(matchHoursLeft('2026-09-23T20:00:00Z', now))).toBe('8h left');
   expect(matchHoursLeft('2026-09-20T00:00:00Z', now)).toBeLessThan(0);
+});
+
+describe('launch mode', () => {
+  const me = { ...freshMe('Ana', 'a@x.co'), gender: 'woman' as const, age: '29' };
+
+  test('inactive and unverified people are in the deck, ranked below', () => {
+    const names = pacerDeck(me, [], new Date(), true).map((p) => p.athlete.name);
+    expect(names).toContain('Dean');
+    // Dean hasn't trained in 23 days: he loses most of the activity boost.
+    expect(names.indexOf('Dean')).toBeGreaterThan(names.indexOf('Kagiso'));
+  });
+
+  test('boosts only apply in launch mode', () => {
+    const dean = byName('Dean');
+    expect(rankScore(70, dean, false)).toBe(70);
+    expect(rankScore(70, byName('Kagiso'), true)).toBe(70 + 15 + 10);
+  });
+
+  test('the gender and age rules still apply', () => {
+    const names = pacerDeck(me, [], new Date(), true).map((p) => p.athlete.name);
+    expect(names).not.toContain('Lerato');
+  });
 });

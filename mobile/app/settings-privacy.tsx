@@ -5,7 +5,14 @@ import { PhotoSlot } from '../src/components/PhotoSlot';
 import { athleteById } from '../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../src/data/photos';
 import { updateMe, useMe } from '../src/data/session';
-import { PrivacySettings, setPrivacy, useSettings, Visibility } from '../src/data/settings';
+import {
+  PrivacySettings,
+  setPrivacy,
+  SpotCheckInVisibility,
+  useSettings,
+  Visibility,
+} from '../src/data/settings';
+import { track } from '../src/lib/analytics';
 import { unblockAthlete, useSocial } from '../src/data/social';
 import {
   Callout,
@@ -17,6 +24,7 @@ import {
 } from '../src/components/ui';
 
 const VISIBILITY_OPTIONS: Visibility[] = ['EVERYONE', 'MATCHES ONLY'];
+const SPOT_OPTIONS: SpotCheckInVisibility[] = ['MATCHES ONLY', 'NOBODY'];
 
 type CardToggle = 'showStats' | 'showCity' | 'publicTrainingPhotos';
 
@@ -69,6 +77,27 @@ export default function SettingsPrivacyScreen() {
           </Card>
         </YStack>
 
+        <YStack>
+          <SectionTitle>Where you train</SectionTitle>
+          <Card>
+            <ToggleRow
+              label="Show me on events I join"
+              hint="People going can see you’re going"
+              last
+              value={privacy.showOnEvents}
+              onChange={(v) => setPrivacy({ showOnEvents: v })}
+            />
+          </Card>
+          <Text fontFamily="$medium" fontSize={14} color="$muted" mt={16} mb={8}>
+            Spot check-ins visible to
+          </Text>
+          <SegmentedControl
+            options={SPOT_OPTIONS}
+            value={privacy.spotCheckIns}
+            onChange={(v) => setPrivacy({ spotCheckIns: v as SpotCheckInVisibility })}
+          />
+        </YStack>
+
         {me.gender !== 'man' ? (
           <YStack>
             <SectionTitle>Messaging</SectionTitle>
@@ -78,7 +107,10 @@ export default function SettingsPrivacyScreen() {
                 hint="Matches wait for you to say hi"
                 last
                 value={me.womenFirst}
-                onChange={(v) => updateMe({ womenFirst: v })}
+                onChange={(v) => {
+                  updateMe({ womenFirst: v });
+                  track('privacy_setting_changed', { setting: 'womenFirst', value: v });
+                }}
               />
             </Card>
           </YStack>

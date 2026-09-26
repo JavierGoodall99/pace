@@ -31,6 +31,7 @@ import { useMe } from '../../src/data/session';
 import { useColors } from '../../src/theme/appearance';
 import { useNow } from '../../src/lib/useNow';
 import { formatLabel } from '../../src/theme/tokens';
+import { FEATURES } from '../../src/config';
 
 // Home. Pace is built around sessions, so Today answers "what am I
 // training this week, and with whom?" — plus anything waiting on you.
@@ -102,9 +103,11 @@ export default function TodayScreen() {
         </XStack>
       </XStack>
 
-      <YStack mt={18}>
-        <MomentsRow />
-      </YStack>
+      {FEATURES.moments ? (
+        <YStack mt={18}>
+          <MomentsRow />
+        </YStack>
+      ) : null}
 
       {/* This week */}
       <XStack

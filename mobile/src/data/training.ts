@@ -133,6 +133,15 @@ export function removeTraining(id: string) {
   persist();
 }
 
+// Disconnecting an app deletes everything imported from it.
+export function removeSynced(provider: Provider) {
+  const next = entries.filter((e) => e.source !== provider);
+  if (next.length === entries.length) return;
+  entries = next;
+  emit();
+  persist();
+}
+
 // Mock import: turns a sync summary's 4-week heatmap into dated entries.
 // Week 3 is the current week (Monday first); future days are skipped. A
 // real build maps the provider's activity list instead.

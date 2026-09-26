@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import { AppNotification, NOTIFICATIONS } from './mockData';
+import { FEATURES } from '../config';
 
 // In-app notifications feed. The list itself is still mock data (a real
 // build gets it from the server); which ones you've read is remembered
@@ -37,8 +38,13 @@ export function useReadNotifications(): number[] {
   return useSyncExternalStore(subscribe, () => read);
 }
 
+// Kudos and comments react to moments: gone while moments are parked.
+const MOMENT_KINDS: AppNotification['kind'][] = ['kudos', 'comment'];
+
 export function visibleNotifications(blocked: number[]): AppNotification[] {
-  return NOTIFICATIONS.filter((n) => !blocked.includes(n.athleteId));
+  return NOTIFICATIONS.filter(
+    (n) => !blocked.includes(n.athleteId) && (FEATURES.moments || !MOMENT_KINDS.includes(n.kind))
+  );
 }
 
 export function isUnread(n: AppNotification, readIds: number[]): boolean {

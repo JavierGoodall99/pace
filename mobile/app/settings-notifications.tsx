@@ -6,9 +6,10 @@ import { Card, ScreenHeader, SectionTitle, ToggleRow } from '../src/components/u
 import { EmailKey, PushKey, setEmail, setPush, useSettings } from '../src/data/settings';
 import { notify } from '../src/lib/dialogs';
 import { allowNotifications } from '../src/lib/reminders';
+import { FEATURES } from '../src/config';
 
 const PUSH_ITEMS: { key: PushKey; label: string; hint?: string }[] = [
-  { key: 'likes', label: 'Likes & kudos' },
+  { key: 'likes', label: FEATURES.moments ? 'Likes & kudos' : 'Likes' },
   { key: 'messages', label: 'Messages' },
   { key: 'matches', label: 'New matches' },
   { key: 'invites', label: 'Session invites' },

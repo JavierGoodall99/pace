@@ -6,7 +6,7 @@ import { Icon, IconName } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { useTabBarSpace } from '../../src/components/TabBar';
 import { useNow } from '../../src/lib/useNow';
-import { DisplayTitle } from '../../src/components/ui';
+import { Button, DisplayTitle, EmptyState } from '../../src/components/ui';
 import { depthFor } from '../../src/data/athleteDepth';
 import { activeMatches, messagesWith, previewOf, useChat } from '../../src/data/chat';
 import { agoShort } from '../../src/data/dates';
@@ -135,6 +135,21 @@ export default function ChatScreen() {
               );
             })}
           </ScrollView>
+        </YStack>
+      ) : null}
+
+      {threads.length === 0 && fresh.length === 0 ? (
+        <YStack mt={40}>
+          <EmptyState
+            mood="happy"
+            title="No chats yet"
+            body="When you match with someone, your conversation starts here."
+            action={
+              <Button icon="sparkles" onPress={() => router.push('/(tabs)/discover')}>
+                See today’s picks
+              </Button>
+            }
+          />
         </YStack>
       ) : null}
 

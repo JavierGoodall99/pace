@@ -29,7 +29,7 @@ export default function CrewScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
-  const { blocked } = useSocial();
+  const { blocked, matches } = useSocial();
   const explore = useExplore();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [now] = useState(() => new Date());
@@ -95,11 +95,17 @@ export default function CrewScreen() {
           {pacers.length ? (
             <YStack gap={8}>
               <DisplayTitle size={24}>{`From Pace`}</DisplayTitle>
-              <PacersGoing people={pacers} verb={['runs with them', 'run with them']} />
+              <PacersGoing
+                people={pacers}
+                verb={['runs with them', 'run with them']}
+                nameOnly={matches}
+              />
             </YStack>
           ) : members.length ? (
             <XStack items="center" gap={10}>
-              <AvatarStack people={members} />
+              {members.some((m) => matches.includes(m.id)) ? (
+                <AvatarStack people={members.filter((m) => matches.includes(m.id))} />
+              ) : null}
               <Text fontSize={13} color="$muted">
                 {members.length} Pace member{members.length === 1 ? '' : 's'} run with them
               </Text>

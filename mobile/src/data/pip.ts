@@ -7,6 +7,7 @@ import type { MeProfile } from './session';
 import { availableProviders, hasSync } from './sync';
 import { upcomingEvents } from './capeTown';
 import { EVENT_ATTENDEES, ExploreState, pacersAmong } from './explore';
+import { LAUNCH_MODE } from '../config';
 
 // What Pip says around the app. Pip is Pace's voice — onboarding
 // introduces it, and it keeps showing up at the moments that matter:
@@ -111,15 +112,17 @@ export function profileTip(me: MeProfile, now: Date = new Date()): PipLine {
   if (!me.verified) {
     return {
       key: 'tip-verify',
-      text: 'Verified athletes get twice the matches.',
+      text: 'A 10-second live selfie check unlocks likes and invites.',
       mood: 'excited',
-      cta: { label: 'Get verified', href: '/verify' },
+      cta: { label: 'Do the selfie check', href: '/verify' },
     };
   }
   if (!hasSync(me)) {
     return {
       key: 'tip-sync',
-      text: 'Sync your training app to stay visible.',
+      text: LAUNCH_MODE
+        ? 'Sync your training app to show you’re active.'
+        : 'Sync your training app to stay visible.',
       mood: 'thinking',
       cta: { label: 'Connect', href: `/connect/${availableProviders()[0]}` },
     };

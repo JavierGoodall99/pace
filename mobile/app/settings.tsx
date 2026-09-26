@@ -6,7 +6,9 @@ import { PhotoSlot } from '../src/components/PhotoSlot';
 import { Badge, Card, ScreenHeader, SegmentedControl } from '../src/components/ui';
 import { ME_AVATAR } from '../src/data/photos';
 import { daysPerWeek } from '../src/data/rhythm';
-import { deleteAccountAndData } from '../src/data/account';
+import { deleteAccountAndData, disconnectProvider } from '../src/data/account';
+import { availableProviders, Provider, PROVIDER_INFO, PROVIDER_LABEL } from '../src/data/sync';
+import { useIsPro } from '../src/data/pro';
 import type { LegalDoc } from '../src/data/legal';
 import { getAccount, MeProfile, signInLabel, signOut, useMe } from '../src/data/session';
 import { confirmAction } from '../src/lib/dialogs';
@@ -18,6 +20,7 @@ import {
   useColors,
 } from '../src/theme/appearance';
 import { formatLabel, shadow } from '../src/theme/tokens';
+import { demo } from '../src/config';
 
 interface SettingsRow {
   icon: IconName;
@@ -40,7 +43,7 @@ const PREFERENCE_ROWS: SettingsRow[] = [
   { icon: 'lock', label: 'Privacy', route: '/settings-privacy' },
   { icon: 'shield-check', label: 'Safety centre', route: '/safety' },
   { icon: 'activity', label: 'Race mode', route: '/races' },
-  { icon: 'credit-card', label: 'Subscription', value: 'Free', route: '/settings-subscription' },
+  { icon: 'credit-card', label: 'Subscription', route: '/settings-subscription' },
 ];
 
 const APPEARANCE_LABEL: Record<AppearancePreference, string> = {
@@ -59,9 +62,10 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
+  const isPro = useIsPro();
   const { preference } = useAppearance();
 
-  const avatar = me.photos[0] ? { uri: me.photos[0] } : ME_AVATAR;
+  const avatar = me.photos[0] ? { uri: me.photos[0] } : demo(ME_AVATAR, undefined);
 
   async function confirmSignOut() {
     const ok = await confirmAction({
@@ -73,6 +77,16 @@ export default function SettingsScreen() {
     if (!ok) return;
     await signOut();
     router.replace('/sign-in');
+  }
+
+  async function confirmDisconnect(p: Provider) {
+    const ok = await confirmAction({
+      title: `Disconnect ${PROVIDER_LABEL[p]}?`,
+      message: 'This deletes the workouts and personal-best badges imported from it.',
+      confirmLabel: 'Disconnect',
+      destructive: true,
+    });
+    if (ok) await disconnectProvider(p);
   }
 
   async function confirmDelete() {
@@ -122,7 +136,7 @@ export default function SettingsScreen() {
           tone={me.verified ? 'success' : 'neutral'}
           icon={me.verified ? 'shield-check' : undefined}
         >
-          {me.verified ? 'Verified' : 'Unverified'}
+          {me.verified ? 'Selfie checked' : 'No selfie check'}
         </Badge>
       </XStack>
 
@@ -143,11 +157,38 @@ export default function SettingsScreen() {
               key={row.label}
               icon={row.icon}
               label={row.label}
-              value={row.route === '/settings-preferences' ? trainingSummary(me) : row.value}
+              value={
+                row.route === '/settings-preferences'
+                  ? trainingSummary(me)
+                  : row.route === '/settings-subscription'
+                    ? isPro
+                      ? 'Pro'
+                      : 'Free'
+                    : row.value
+              }
               last={i === PREFERENCE_ROWS.length - 1}
               onPress={() => router.push(row.route)}
             />
           ))}
+        </Card>
+      </YStack>
+
+      <GroupLabel>Connected apps</GroupLabel>
+      <YStack mx={20}>
+        <Card>
+          {availableProviders().map((p, i, all) => {
+            const on = me.connected.includes(p);
+            return (
+              <Row
+                key={p}
+                icon={PROVIDER_INFO[p].icon}
+                label={PROVIDER_LABEL[p]}
+                value={on ? 'Disconnect' : 'Connect'}
+                last={i === all.length - 1}
+                onPress={() => (on ? confirmDisconnect(p) : router.push(`/connect/${p}`))}
+              />
+            );
+          })}
         </Card>
       </YStack>
 

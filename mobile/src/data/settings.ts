@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
+import { track } from '../lib/analytics';
 
 // Privacy and notification preferences. Persisted locally so they survive
 // a restart; a backend has to read these same fields to enforce them for
@@ -7,11 +8,17 @@ import { useSyncExternalStore } from 'react';
 
 export type Visibility = 'EVERYONE' | 'MATCHES ONLY';
 
+export type SpotCheckInVisibility = 'MATCHES ONLY' | 'NOBODY';
+
 export interface PrivacySettings {
   visibility: Visibility;
   showStats: boolean;
   showCity: boolean;
   publicTrainingPhotos: boolean;
+  // Appear in "who's going" on events and sessions you join.
+  showOnEvents: boolean;
+  // Who can see the spots you check in at.
+  spotCheckIns: SpotCheckInVisibility;
 }
 
 export type PushKey = 'likes' | 'messages' | 'matches' | 'invites' | 'reminders';
@@ -29,6 +36,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     showStats: true,
     showCity: true,
     publicTrainingPhotos: false,
+    showOnEvents: true,
+    spotCheckIns: 'MATCHES ONLY',
   },
   push: { likes: true, messages: true, matches: true, invites: true, reminders: false },
   email: { digest: true, matchEmails: false, product: false },
@@ -101,6 +110,9 @@ export function useSettings(): AppSettings {
 
 export function setPrivacy(patch: Partial<PrivacySettings>) {
   apply((s) => ({ ...s, privacy: { ...s.privacy, ...patch } }));
+  Object.entries(patch).forEach(([setting, value]) =>
+    track('privacy_setting_changed', { setting, value: value as string | boolean })
+  );
 }
 
 export function setPush(key: PushKey, on: boolean) {

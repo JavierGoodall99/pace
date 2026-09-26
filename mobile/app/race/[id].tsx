@@ -10,7 +10,7 @@ import { Button, Callout, DisplayTitle, ScreenHeader } from '../../src/component
 import { compatibility } from '../../src/data/compat';
 import { formatWhen, nextDateFor } from '../../src/data/dates';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
-import { isShowable } from '../../src/data/pacers';
+import { isEligible } from '../../src/data/pacers';
 import { hostOpen, usePlans } from '../../src/data/plans';
 import {
   athletesTrainingFor,
@@ -44,7 +44,7 @@ export default function RaceScreen() {
   const mine = me.goalRaceId === race.id;
   // Same start line: verified, active people you haven't blocked.
   const runners = athletesTrainingFor(race.id).filter(
-    (a) => isShowable(a) && !blocked.includes(a.id)
+    (a) => isEligible(a) && !blocked.includes(a.id)
   );
   const days = daysUntil(race.date);
   const buildUp = buildUpRuns(race, now);

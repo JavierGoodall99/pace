@@ -19,7 +19,7 @@ export default function LikesScreen() {
   function respond(id: number, like: boolean) {
     // Same rule as the deck: only selfie-verified members can like.
     if (like && !me.verified) {
-      showPip('Verify your selfie to like back. It keeps fakes out.', 'thinking');
+      showPip('Do the live selfie check to like back.', 'thinking');
       router.push('/verify');
       return;
     }
@@ -101,7 +101,7 @@ export default function LikesScreen() {
                   onPress={() => respond(a.id, true)}
                   style={{ flex: 1, height: 46 }}
                 >
-                  {me.verified ? 'Like back' : 'Verify to like'}
+                  {me.verified ? 'Like back' : 'Selfie check to like'}
                 </Button>
               </XStack>
             </YStack>

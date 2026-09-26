@@ -6,6 +6,7 @@ import { ageWindow, DiscoverFilterState, useFilters } from './filters';
 import { ATHLETES } from './mockData';
 import { Pacer, pacerDeck } from './pacers';
 import { choosePicks, savePicks, usePicksState } from './picks';
+import { picksPerDay, useIsPro } from './pro';
 import { distanceTo } from './places';
 import { activeCity, MeProfile, useMe } from './session';
 import { recentlyPassed, useSocial } from './social';
@@ -43,6 +44,7 @@ export function usePacerDeck(now: Date): {
   const social = useSocial();
   const chat = useChat();
   const picks = usePicksState();
+  const perDay = picksPerDay(useIsPro());
   const day = now.toDateString();
   const today = dropKey(now);
 
@@ -64,12 +66,15 @@ export function usePacerDeck(now: Date): {
     ? choosePicks(
         ranked.deck.map((p) => p.athlete.id),
         picks,
-        today
+        today,
+        perDay
       )
     : [];
   useEffect(() => {
-    if (picks.ready && picks.day !== today) savePicks(today, ids);
-  }, [picks.ready, picks.day, today]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (picks.ready && (picks.day !== today || picks.size < perDay)) {
+      savePicks(today, ids, perDay);
+    }
+  }, [picks.ready, picks.day, picks.size, today, perDay]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const idsKey = ids.join();
   return useMemo(

@@ -17,14 +17,19 @@ export type AnalyticsEvent =
   | 'paywall_viewed'
   | 'paywall_skipped'
   | 'purchase_completed'
-  | 'onboarding_completed';
+  | 'onboarding_completed'
+  | 'consent_shown'
+  | 'consent_accepted'
+  | 'consent_declined'
+  | 'sync_disconnected'
+  | 'privacy_setting_changed';
 
 export type AnalyticsProps = Record<string, string | number | boolean | null>;
 
 type Sink = (event: AnalyticsEvent, props: AnalyticsProps) => void;
 
 let sink: Sink = (event, props) => {
-  if (__DEV__) console.log('[analytics]', event, props);
+  if (__DEV__ && process.env.NODE_ENV !== 'test') console.log('[analytics]', event, props);
 };
 
 export function track(event: AnalyticsEvent, props: AnalyticsProps = {}) {

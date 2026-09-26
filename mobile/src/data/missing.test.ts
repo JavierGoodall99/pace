@@ -77,7 +77,7 @@ describe('notification read state', () => {
   beforeEach(resetNotifications);
 
   test('reading one clears it; mark all clears the rest', () => {
-    const first = NOTIFICATIONS.find((n) => n.unread)!;
+    const first = visibleNotifications([]).find((n) => n.unread)!;
     const before = unreadCount([], []);
     markRead(first.id);
     const read = [first.id];

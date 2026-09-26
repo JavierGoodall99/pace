@@ -3,8 +3,9 @@ import { useSyncExternalStore } from 'react';
 import { Challenge, CHALLENGES, CT_SPOTS } from './capeTown';
 import { localDayKey } from './dates';
 import { ATHLETES, Athlete } from './mockData';
-import { isShowable, wantEachOther } from './pacers';
+import { isEligible, wantEachOther } from './pacers';
 import type { MeProfile } from './session';
+import { demo } from '../config';
 
 // What you do in Explore: events you're going to, crews you follow,
 // spots you've trained at (your Pace passport) and challenges you've
@@ -120,53 +121,64 @@ export function completedChallenges(s: ExploreState, now: Date = new Date()): Ch
 // Which Pace members said they're going / follow a crew. A backend
 // would return these; the demo seeds a few so lists aren't empty.
 
-export const EVENT_ATTENDEES: Record<string, number[]> = {
-  'green-point-parkrun': [1, 8, 2, 5],
-  'rondebosch-parkrun': [7, 4],
-  'rlc-wednesday': [1, 8, 5, 3],
-  'tuesday-trails-weekly': [3, 6, 8],
-  'ppa-saturday': [2, 7],
-  'utct-2026': [3, 6],
-  'cycle-tour-2027': [2, 7, 4],
-  'two-oceans-2027': [1, 8, 3, 5],
-};
+export const EVENT_ATTENDEES: Record<string, number[]> = demo<Record<string, number[]>>(
+  {
+    'green-point-parkrun': [1, 8, 2, 5],
+    'rondebosch-parkrun': [7, 4],
+    'rlc-wednesday': [1, 8, 5, 3],
+    'tuesday-trails-weekly': [3, 6, 8],
+    'ppa-saturday': [2, 7],
+    'utct-2026': [3, 6],
+    'cycle-tour-2027': [2, 7, 4],
+    'two-oceans-2027': [1, 8, 3, 5],
+  },
+  {}
+);
 
-export const CREW_MEMBERS: Record<string, number[]> = {
-  'running-late-club': [1, 8, 5, 3],
-  'tuesday-trails': [3, 6, 8],
-  mustlovehills: [8, 1],
-  notsofast: [5],
-  'couch-potato': [],
-  'social-runners': [2, 1],
-  'atlantic-athletic': [8],
-  'cold-water-social': [4, 7, 3],
-  'swim-cape-town': [4, 7],
-  'pedal-power': [2],
-  'cycling-friends': [2, 7],
-};
+export const CREW_MEMBERS: Record<string, number[]> = demo<Record<string, number[]>>(
+  {
+    'running-late-club': [1, 8, 5, 3],
+    'tuesday-trails': [3, 6, 8],
+    mustlovehills: [8, 1],
+    notsofast: [5],
+    'couch-potato': [],
+    'social-runners': [2, 1],
+    'atlantic-athletic': [8],
+    'cold-water-social': [4, 7, 3],
+    'swim-cape-town': [4, 7],
+    'pedal-power': [2],
+    'cycling-friends': [2, 7],
+  },
+  {}
+);
 
-export const CHALLENGE_MEMBERS: Record<string, number[]> = {
-  'lions-head-4': [3, 1, 6],
-  'spot-hopper': [8, 2, 5],
-  'parkrun-3': [1, 8, 4],
-  'cold-water-4': [4, 7],
-  'mountain-3': [3, 6],
-};
+export const CHALLENGE_MEMBERS: Record<string, number[]> = demo<Record<string, number[]>>(
+  {
+    'lions-head-4': [3, 1, 6],
+    'spot-hopper': [8, 2, 5],
+    'parkrun-3': [1, 8, 4],
+    'cold-water-4': [4, 7],
+    'mountain-3': [3, 6],
+  },
+  {}
+);
 
 export function athletesIn(ids: number[] | undefined): Athlete[] {
   return (ids ?? []).map((id) => ATHLETES.find((a) => a.id === id)!).filter(Boolean);
 }
 
-// People going who you'd actually see as pacers (verified, active, the
-// right gender and mutual age range) — the "pacers you might like"
+// People going who you'd actually see as pacers (eligible for your deck,
+// the right gender and mutual age range) — the "pacers you might like"
 // line that turns an events list into dating without swiping.
 export function pacersAmong(
   me: MeProfile,
   ids: number[] | undefined,
-  blocked: number[] = []
+  blocked: number[] = [],
+  launch?: boolean
 ): Athlete[] {
   const myFirst = me.name.trim().split(' ')[0];
   return athletesIn(ids).filter(
-    (a) => !blocked.includes(a.id) && a.name !== myFirst && isShowable(a) && wantEachOther(me, a)
+    (a) =>
+      !blocked.includes(a.id) && a.name !== myFirst && isEligible(a, launch) && wantEachOther(me, a)
   );
 }

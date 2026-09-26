@@ -181,7 +181,7 @@ export default function AthleteDetailScreen() {
             <Icon name="map-pin" size={14} color={colors.muted} />
             <Text fontFamily="$medium" fontSize={14} color="$muted">
               {athlete.city}
-              {athlete.verified ? ' · Verified athlete' : ' · Not verified yet'}
+              {athlete.verified ? ' · Live selfie check' : ' · Not verified yet'}
             </Text>
           </XStack>
           <XStack gap={8} mt={16} flexWrap="wrap">
@@ -196,7 +196,7 @@ export default function AthleteDetailScreen() {
             <Icon name="camera" size={14} color={colors.muted} />
             <Text fontSize={13} color="$muted">
               {freshnessLabel(depth.photosDaysAgo)}
-              {athlete.verified ? ' · Selfie verified' : ''}
+              {athlete.verified ? ' · Selfie checked' : ''}
             </Text>
           </XStack>
           <XStack items="center" gap={6} mt={6}>

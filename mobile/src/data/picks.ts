@@ -19,12 +19,14 @@ export const DAILY_PICKS = 5;
 interface PicksState {
   day: string | null; // dropKey the picks belong to
   ids: number[];
+  // The allowance they were picked with (more with Pro).
+  size: number;
   ready: boolean;
 }
 
 const STORAGE_KEY = 'pace.picks.v1';
 
-let state: PicksState = { day: null, ids: [], ready: false };
+let state: PicksState = { day: null, ids: [], size: DAILY_PICKS, ready: false };
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -33,8 +35,13 @@ function emit() {
 
 AsyncStorage.getItem(STORAGE_KEY)
   .then((raw) => {
-    const saved = raw ? (JSON.parse(raw) as Pick<PicksState, 'day' | 'ids'>) : null;
-    state = { day: saved?.day ?? null, ids: saved?.ids ?? [], ready: true };
+    const saved = raw ? (JSON.parse(raw) as Partial<PicksState>) : null;
+    state = {
+      day: saved?.day ?? null,
+      ids: saved?.ids ?? [],
+      size: saved?.size ?? DAILY_PICKS,
+      ready: true,
+    };
     emit();
   })
   .catch(() => {
@@ -51,11 +58,11 @@ export function usePicksState(): PicksState {
   return useSyncExternalStore(subscribe, () => state);
 }
 
-export function savePicks(day: string, ids: number[]) {
-  if (state.day === day && state.ids.join() === ids.join()) return;
-  state = { ...state, day, ids };
+export function savePicks(day: string, ids: number[], size: number = state.size) {
+  if (state.day === day && state.ids.join() === ids.join() && state.size === size) return;
+  state = { ...state, day, ids, size };
   emit();
-  AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ day, ids })).catch(() => {});
+  AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ day, ids, size })).catch(() => {});
 }
 
 // Bring people back into today's picks (e.g. "See the people you passed").
@@ -65,19 +72,24 @@ export function addToPicks(day: string, ids: number[]) {
 }
 
 export function resetPicks() {
-  state = { day: null, ids: [], ready: true };
+  state = { day: null, ids: [], size: DAILY_PICKS, ready: true };
   emit();
 }
 
 // Today's picks: the saved ones if they're for today, otherwise the top
-// of the ranked deck.
+// of the ranked deck. Only a bigger allowance (upgrading to Pro mid-day)
+// tops them up; people joining later wait for tomorrow's drop.
 export function choosePicks(
   rankedIds: number[],
-  saved: { day: string | null; ids: number[] },
+  saved: { day: string | null; ids: number[]; size?: number },
   today: string,
   n: number = DAILY_PICKS
 ): number[] {
-  return saved.day === today ? saved.ids : rankedIds.slice(0, n);
+  if (saved.day !== today) return rankedIds.slice(0, n);
+  const extra = n - (saved.size ?? DAILY_PICKS);
+  if (extra <= 0) return saved.ids;
+  const more = rankedIds.filter((id) => !saved.ids.includes(id));
+  return [...saved.ids, ...more.slice(0, extra)];
 }
 
 const TIME_REASON: Record<string, string> = {

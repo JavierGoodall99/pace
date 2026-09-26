@@ -1,5 +1,11 @@
 import { Platform } from 'react-native';
-import Purchases, { type PurchasesOffering, type PurchasesPackage } from 'react-native-purchases';
+import Purchases, {
+  type CustomerInfo,
+  type PurchasesOffering,
+  type PurchasesPackage,
+} from 'react-native-purchases';
+import { PRO_ENTITLEMENT } from '../config';
+import { setPro } from '../data/pro';
 
 // RevenueCat. Configured with our own user id when the account exists
 // (or lazily for a returning signed-in user) — never with an anonymous
@@ -27,10 +33,16 @@ export async function configurePurchases(userId: string): Promise<boolean> {
   try {
     if (configuredFor === null) {
       Purchases.configure({ apiKey: API_KEY!, appUserID: userId });
+      // RevenueCat keeps customer info cached and tells us when it changes
+      // (purchase, renewal, expiry, restore).
+      Purchases.addCustomerInfoUpdateListener(applyCustomerInfo);
     } else if (configuredFor !== userId) {
       await Purchases.logIn(userId);
     }
     configuredFor = userId;
+    Purchases.getCustomerInfo()
+      .then(applyCustomerInfo)
+      .catch(() => {});
     return true;
   } catch (e) {
     console.warn('RevenueCat setup failed:', e);
@@ -53,11 +65,38 @@ export async function offeringFor(
   }
 }
 
+function applyCustomerInfo(info: CustomerInfo) {
+  setPro(info.entitlements.active[PRO_ENTITLEMENT] !== undefined);
+}
+
+// The default offering (Your plan screen), or null.
+export async function currentOffering(userId: string): Promise<PurchasesOffering | null> {
+  if (!(await configurePurchases(userId))) return null;
+  try {
+    const offerings = await Purchases.getOfferings();
+    const current = offerings.current;
+    return current && current.availablePackages.length > 0 ? current : null;
+  } catch (e) {
+    console.warn('Could not load offerings:', e);
+    return null;
+  }
+}
+
+// The store's own subscription management (cancel, change plan).
+export async function manageSubscription() {
+  try {
+    await Purchases.showManageSubscriptions();
+  } catch (e) {
+    console.warn('Could not open subscription management:', e);
+  }
+}
+
 export type PurchaseResult = 'purchased' | 'cancelled' | 'failed';
 
 export async function buy(pkg: PurchasesPackage): Promise<PurchaseResult> {
   try {
-    await Purchases.purchasePackage(pkg);
+    const { customerInfo } = await Purchases.purchasePackage(pkg);
+    applyCustomerInfo(customerInfo);
     return 'purchased';
   } catch (e) {
     if ((e as { userCancelled?: boolean }).userCancelled) return 'cancelled';

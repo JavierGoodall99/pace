@@ -12,7 +12,7 @@ const me = {
 };
 
 test('the deck holds everyone eligible, ranked, without you or excluded people', () => {
-  const drop = pacerDeck(me, [8]);
+  const drop = pacerDeck(me, [8], new Date(), false);
   const eligible = ATHLETES.filter(
     (a) => a.id !== 8 && a.name !== 'Naledi' && isShowable(a) && wantEachOther(me, a)
   );

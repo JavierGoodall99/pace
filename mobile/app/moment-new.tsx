@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { Image } from 'react-native';
@@ -16,10 +16,17 @@ import { successHaptic } from '../src/lib/haptics';
 import { useColors } from '../src/theme/appearance';
 import { formatLabel } from '../src/theme/tokens';
 import { keepPhoto } from '../src/lib/photoStore';
+import { FEATURES } from '../src/config';
 
 // Post a session moment: one photo from today's training, visible to
 // your matches for 24 hours.
-export default function NewMomentScreen() {
+// Moments are parked for v1 (config FEATURES.moments): the route stays
+// but sends anyone who lands here back to Today.
+export default function NewMomentScreenRoute() {
+  return FEATURES.moments ? <NewMomentScreen /> : <Redirect href="/(tabs)/today" />;
+}
+
+function NewMomentScreen() {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();

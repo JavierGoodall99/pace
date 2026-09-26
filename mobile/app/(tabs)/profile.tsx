@@ -25,6 +25,7 @@ import { useNow } from '../../src/lib/useNow';
 import { useColors } from '../../src/theme/appearance';
 import { shadow } from '../../src/theme/tokens';
 import { inviteFriend } from '../../src/lib/inviteFriend';
+import { demo, FEATURES, LAUNCH_MODE } from '../../src/config';
 
 export default function ProfileScreen() {
   const colors = useColors();
@@ -34,10 +35,14 @@ export default function ProfileScreen() {
   const me = useMe();
   const explore = useExplore();
   const now = useNow();
+  // Challenge badges are parked with challenges (config FEATURES).
+  const badges = FEATURES.challenges ? completedChallenges(explore) : [];
   const training = useMyTraining(now);
   const { activity } = training;
 
-  const avatar = me.photos[0] ? { uri: me.photos[0] } : ME_AVATAR;
+  // Stock images stand in only with demo data; otherwise empty slots.
+  const avatar = me.photos[0] ? { uri: me.photos[0] } : demo(ME_AVATAR, undefined);
+  const cover = me.photos[1] ? { uri: me.photos[1] } : demo(ME_COVER, undefined);
   const primary = me.disciplines[0] ?? 'ATHLETE';
   const myRhythm = rhythmForMe(me.cadence, me.trainingDays);
   const myDays = myRhythm.map((on, i) => (on ? WEEK_DAY_NAMES[i] : null)).filter(Boolean);
@@ -61,7 +66,7 @@ export default function ProfileScreen() {
         <PhotoSlot
           label="Cover photo"
           shape="rect"
-          source={ME_COVER}
+          source={cover}
           style={{ width: '100%', height: 180 + insets.top }}
         />
         <XStack
@@ -114,7 +119,7 @@ export default function ProfileScreen() {
           <Icon name="map-pin" size={14} color={colors.muted} />
           <Text fontFamily="$medium" fontSize={14} color="$muted">
             {me.city || 'Add your city'}
-            {me.verified ? ' · Verified' : ' · Not verified yet'}
+            {me.verified ? ' · Selfie checked' : ' · Not verified yet'}
           </Text>
         </XStack>
         <XStack
@@ -134,7 +139,8 @@ export default function ProfileScreen() {
             {activityText(activity)}
           </Text>
         </XStack>
-        {!activity.active ? (
+        {/* Launch mode ranks instead of hiding, so there's nothing to warn about. */}
+        {!activity.active && !LAUNCH_MODE ? (
           <YStack mt={12}>
             <Callout icon="activity" title="You’re hidden from decks">
               {`No training in ${ACTIVE_DAYS} days. Log a session to show up again.`}
@@ -273,15 +279,17 @@ export default function ProfileScreen() {
         >
           <XStack items="center" justify="space-between">
             <Text fontFamily="$semibold" fontSize={15} color="$text">
-              Pace passport
+              {FEATURES.passport ? 'Pace passport' : 'Your crews'}
             </Text>
-            <Text fontFamily="$bold" fontSize={15} color="$accentText">
-              {passport(explore).visited}/{passport(explore).total} Cape Town spots
-            </Text>
+            {FEATURES.passport ? (
+              <Text fontFamily="$bold" fontSize={15} color="$accentText">
+                {passport(explore).visited}/{passport(explore).total} Cape Town spots
+              </Text>
+            ) : null}
           </XStack>
-          {completedChallenges(explore).length || explore.crews.length ? (
+          {badges.length || explore.crews.length ? (
             <XStack gap={8} flexWrap="wrap">
-              {completedChallenges(explore).map((c) => (
+              {badges.map((c) => (
                 <Badge key={c.id} tone="accent" illo="medal">
                   {c.badge}
                 </Badge>
@@ -293,7 +301,9 @@ export default function ProfileScreen() {
             </XStack>
           ) : (
             <Text fontSize={13} color="$muted">
-              Follow crews and check in at spots to show them here.
+              {FEATURES.passport
+                ? 'Follow crews and check in at spots to show them here.'
+                : 'Follow crews in Explore to show them here.'}
             </Text>
           )}
         </YStack>
@@ -412,7 +422,7 @@ export default function ProfileScreen() {
               label="Photo"
               shape="rounded"
               radius={16}
-              source={uri ? { uri } : TRAINING_PHOTOS[i]}
+              source={uri ? { uri } : demo(TRAINING_PHOTOS[i], undefined)}
               style={{ flex: 1, aspectRatio: 0.8 }}
             />
           ))}

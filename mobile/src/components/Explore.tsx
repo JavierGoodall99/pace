@@ -19,6 +19,7 @@ import { SPORT_ILLO } from '../data/mockData';
 import { ATHLETE_PHOTOS } from '../data/photos';
 import { tapHaptic } from '../lib/haptics';
 import { useColors } from '../theme/appearance';
+import { useSocial } from '../data/social';
 
 export const KIND_ILLO: Record<SpotKind, IlloName> = {
   run: 'run',
@@ -64,25 +65,36 @@ export function AvatarStack({ people, size = 28 }: { people: Athlete[]; size?: n
 }
 
 // The line that turns browsing into dating.
+//
+// `nameOnly` limits who can be named or shown: places (spots, crews) tie
+// people to where they train, so there only your matches are named and
+// everyone else is a count ("12 Pacers train here"). Events and sessions
+// leave it out — people opted in by saying they're going.
 export function PacersGoing({
   people,
   verb = ['is going', 'are going'],
+  nameOnly,
 }: {
   people: Athlete[];
   // [singular, plural]
   verb?: [string, string];
+  nameOnly?: number[];
 }) {
   const c = useColors();
   if (!people.length) return null;
-  const names = people.slice(0, 2).map((a) => a.name);
+  const nameable = nameOnly ? people.filter((a) => nameOnly.includes(a.id)) : people;
+  const names = nameable.slice(0, 2).map((a) => a.name);
   const more = people.length - names.length;
+  const counted = names.length === 0;
   return (
     <XStack items="center" gap={8}>
-      <AvatarStack people={people} size={24} />
+      {nameable.length ? <AvatarStack people={nameable} size={24} /> : null}
       <Icon name="heart" size={13} color={c.accentText} filled />
       <Text flex={1} fontFamily="$semibold" fontSize={13} color="$accentText" numberOfLines={1}>
-        {names.join(' & ')}
-        {more > 0 ? ` +${more}` : ''} {people.length === 1 ? verb[0] : verb[1]}
+        {counted
+          ? `${people.length} ${people.length === 1 ? 'Pacer' : 'Pacers'}`
+          : `${names.join(' & ')}${more > 0 ? ` +${more}` : ''}`}{' '}
+        {people.length === 1 ? verb[0] : verb[1]}
       </Text>
     </XStack>
   );
@@ -295,6 +307,7 @@ export function CrewCard({
   following: boolean;
   onPress: () => void;
 }) {
+  const { matches } = useSocial();
   return (
     <YStack
       onPress={onPress}
@@ -341,10 +354,17 @@ export function CrewCard({
         </Text>
       </XStack>
       {pacers.length ? (
-        <PacersGoing people={pacers} verb={['is in this crew', 'are in this crew']} />
+        <PacersGoing
+          people={pacers}
+          verb={['is in this crew', 'are in this crew']}
+          nameOnly={matches}
+        />
       ) : members.length ? (
         <XStack items="center" gap={8}>
-          <AvatarStack people={members} size={22} />
+          {/* Faces only for your matches; everyone else is a count. */}
+          {members.some((m) => matches.includes(m.id)) ? (
+            <AvatarStack people={members.filter((m) => matches.includes(m.id))} size={22} />
+          ) : null}
           <Text fontSize={12} color="$muted">
             {members.length} Pace member{members.length === 1 ? '' : 's'} run with them
           </Text>

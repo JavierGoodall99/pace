@@ -1,4 +1,6 @@
+import { track } from '../lib/analytics';
 import { resetChat } from './chat';
+import { resetConsents } from './consent';
 import { resetExplore } from './explore';
 import { resetFilters } from './filters';
 import { resetMoments } from './moments';
@@ -7,10 +9,11 @@ import { resetOnboardingProgress } from './onboardingFlow';
 import { resetPicks } from './picks';
 import { getPlansState, removePlansWith, resetPlans } from './plans';
 import type { Gender } from './identity';
-import { deleteAccount } from './session';
+import { deleteAccount, getMe, updateMe } from './session';
 import { resetSettings } from './settings';
 import { getSocialState, resetSocial, seedSocialFor } from './social';
-import { resetTraining } from './training';
+import type { Provider } from './sync';
+import { removeSynced, resetTraining } from './training';
 import { resetWaitlist } from './waitlist';
 
 // Deleting an account clears storage, but every store also keeps its
@@ -32,6 +35,7 @@ export async function deleteAccountAndData() {
   resetNotifications();
   resetOnboardingProgress();
   resetPicks();
+  resetConsents();
 }
 
 // When onboarding finishes: give the new account a demo cast that fits
@@ -43,4 +47,18 @@ export async function seedDemoFor(gender: Gender | null) {
   new Set(getPlansState().plans.map((p) => p.athleteId)).forEach((id) => {
     if (!matches.includes(id)) removePlansWith(id);
   });
+}
+
+// Settings → Connected apps → Disconnect: drop the connection and delete
+// what it imported (training entries, the sync summary, "verified by"
+// marks on PBs). A real build also revokes the provider token.
+export async function disconnectProvider(provider: Provider) {
+  const me = getMe();
+  removeSynced(provider);
+  await updateMe({
+    connected: me.connected.filter((p) => p !== provider),
+    sync: me.sync?.provider === provider ? null : me.sync,
+    pbs: me.pbs.map((pb) => (pb.source === provider ? { label: pb.label, value: pb.value } : pb)),
+  });
+  track('sync_disconnected', { provider });
 }

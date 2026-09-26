@@ -10,6 +10,8 @@ import { importActivities, isProvider, PROVIDER_INFO, PROVIDER_LABEL } from '../
 import { importSynced } from '../../src/data/training';
 import { track } from '../../src/lib/analytics';
 import { useColors } from '../../src/theme/appearance';
+import { ConsentPrompt } from '../../src/components/Consent';
+import { hasConsent, useConsents } from '../../src/data/consent';
 
 export default function ConnectScreen() {
   const colors = useColors();
@@ -21,6 +23,7 @@ export default function ConnectScreen() {
   const p = { ...PROVIDER_INFO[providerKey], label: PROVIDER_LABEL[providerKey] };
   const connected = me.connected.includes(providerKey);
   const [connecting, setConnecting] = useState(false);
+  const consents = useConsents();
 
   function connect() {
     setConnecting(true);
@@ -41,6 +44,18 @@ export default function ConnectScreen() {
       showPip(`Imported ${sync.activities} activities. Stats verified!`, 'excited');
       setConnecting(false);
     }, 1400);
+  }
+
+  // Health data: ask first (once per consent version).
+  if (!connected && !hasConsent('health', consents)) {
+    return (
+      <YStack flex={1} bg="$canvas" style={{ paddingBottom: insets.bottom + 20 }}>
+        <ScreenHeader title={`Connect *${p.label}*`} onBack={() => router.back()} />
+        <YStack flex={1} justify="center" px={20}>
+          <ConsentPrompt kind="health" onAllow={() => {}} onDecline={() => router.back()} />
+        </YStack>
+      </YStack>
+    );
   }
 
   return (

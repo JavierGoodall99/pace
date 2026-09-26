@@ -1,10 +1,14 @@
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { notify } from '../src/lib/dialogs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../src/components/Icon';
 import { Badge, Button, Card, ScreenHeader } from '../src/components/ui';
-import { PRO_FEATURES } from '../src/data/pro';
+import { picksPerDay, PRO_FEATURES, useIsPro } from '../src/data/pro';
+import { getAccount } from '../src/data/session';
+import { track } from '../src/lib/analytics';
+import { buy, currentOffering, manageSubscription } from '../src/lib/purchases';
 import { useColors } from '../src/theme/appearance';
 
 // Never paywalled. Other apps hide messages until you pay — Pace doesn't.
@@ -15,10 +19,31 @@ const ALWAYS_FREE = [
   'Safety tools and singles run clubs',
 ];
 
+type Offering = NonNullable<Awaited<ReturnType<typeof currentOffering>>>;
+
 export default function SettingsSubscriptionScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const isPro = useIsPro();
+  const [offering, setOffering] = useState<Offering | null>(null);
+  const [busy, setBusy] = useState(false);
+  const pkg = offering?.availablePackages[0];
+
+  useEffect(() => {
+    const account = getAccount();
+    if (account) currentOffering(account.userId).then(setOffering);
+  }, []);
+
+  async function upgrade() {
+    if (!pkg) return;
+    setBusy(true);
+    const result = await buy(pkg);
+    setBusy(false);
+    if (result === 'purchased') track('purchase_completed', { product: pkg.product.identifier });
+    else if (result === 'failed')
+      notify('Pace Pro', 'That didn’t go through. You haven’t been charged.');
+  }
 
   return (
     <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
@@ -35,10 +60,10 @@ export default function SettingsSubscriptionScreen() {
                 R0 / month · forever
               </Text>
             </YStack>
-            <Badge>Current plan</Badge>
+            {isPro ? null : <Badge>Current plan</Badge>}
           </XStack>
           <Text color="$muted" fontSize={15} lineHeight={22} mt={12}>
-            10 likes a day and everything that matters for meeting someone.
+            {`${picksPerDay(false)} picks a day and everything that matters for meeting someone.`}
           </Text>
           <YStack mt={14} gap={10}>
             {ALWAYS_FREE.map((f) => (
@@ -97,15 +122,14 @@ export default function SettingsSubscriptionScreen() {
                 Pace Pro
               </Text>
             </YStack>
-            <XStack items="baseline" mt={40}>
-              <Text fontFamily="$bold" fontSize={28} color="$accentText">
-                R79
+            {/* Price comes from the store via RevenueCat, never hard-coded. */}
+            {isPro ? (
+              <Badge tone="accent">Current plan</Badge>
+            ) : pkg ? (
+              <Text fontFamily="$bold" fontSize={22} color="$accentText" mt={40}>
+                {pkg.product.priceString}
               </Text>
-              <Text fontFamily="$medium" fontSize={14} color="$muted">
-                {' '}
-                / month
-              </Text>
-            </XStack>
+            ) : null}
           </XStack>
 
           <YStack mt={18} gap={12}>
@@ -128,24 +152,23 @@ export default function SettingsSubscriptionScreen() {
             ))}
           </YStack>
 
-          <Button
-            style={{ width: '100%', marginTop: 22 }}
-            onPress={() =>
-              notify(
-                'Pace Pro',
-                'Upgrade flow coming soon — this is a shipping milestone, not a live payment screen.'
-              )
-            }
-          >
-            Upgrade to Pro
-          </Button>
-          <Button
-            variant="ghost"
-            style={{ width: '100%', marginTop: 10, backgroundColor: colors.card }}
-            onPress={() => notify('Manage payment', 'Payment method and receipts will live here.')}
-          >
-            Manage payment
-          </Button>
+          {isPro ? (
+            <Button
+              variant="ghost"
+              style={{ width: '100%', marginTop: 22, backgroundColor: colors.card }}
+              onPress={manageSubscription}
+            >
+              Manage subscription
+            </Button>
+          ) : (
+            <Button
+              style={{ width: '100%', marginTop: 22 }}
+              disabled={!pkg || busy}
+              onPress={upgrade}
+            >
+              {pkg ? (busy ? 'One moment…' : 'Upgrade to Pro') : 'Pro isn’t available yet'}
+            </Button>
+          )}
         </YStack>
       </YStack>
     </ScrollView>

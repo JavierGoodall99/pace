@@ -60,6 +60,7 @@ import {
   PROVIDER_LABEL,
   providerList,
 } from '../src/data/sync';
+import { seedDemoFor } from '../src/data/account';
 import {
   completeOnboarding,
   createAccount,
@@ -401,7 +402,7 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
-  const { signedIn } = useSession();
+  const { signedIn, onboarded } = useSession();
 
   // First-timers create their account inside the flow; anyone who signed
   // up first skips that step. Fixed at mount so the step list doesn't
@@ -871,6 +872,8 @@ export default function OnboardingScreen() {
               onPress={async () => {
                 if (step === 'launch') {
                   successHaptic();
+                  // Only a first run seeds; re-running onboarding keeps real matches.
+                  if (!onboarded) await seedDemoFor(me.gender);
                   await completeOnboarding();
                   router.replace('/(tabs)/today');
                 } else if (step === 'account') {

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
+import type { Gender } from './identity';
 
 // Mock of the social graph: who liked you and who you matched with.
 // Seeded from the design's fixed match set; both lists are editable in
@@ -108,6 +109,24 @@ export async function clearPasses() {
 
 export function useSocial(): SocialState {
   return useSyncExternalStore(subscribe, getSnapshot);
+}
+
+export function resetSocial() {
+  setState(DEFAULT_STATE);
+}
+
+// The demo cast a new account starts with. Pace matches women with men,
+// so it depends on who you are: the default lists (women matched, men
+// liking you) only fit a man.
+export function demoGraphFor(gender: Gender | null): { likes: number[]; matches: number[] } {
+  if (gender === 'woman') return { likes: [6, 8], matches: [2, 4] };
+  if (gender === 'man') return { likes: [7], matches: [1, 3, 5] };
+  return { likes: [], matches: [] };
+}
+
+export async function seedSocialFor(gender: Gender | null) {
+  setState({ ...DEFAULT_STATE, ...demoGraphFor(gender) });
+  await persist();
 }
 
 async function persist() {

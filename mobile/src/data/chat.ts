@@ -4,7 +4,7 @@ import { depthFor } from './athleteDepth';
 import { athleteById, THREAD_MESSAGES, ThreadMessage } from './mockData';
 import type { MeProfile } from './session';
 import { getSocialState, likeBack } from './social';
-import { dayKeyOf, likesLeft } from './trust';
+import { dayKeyOf, likesLeft, matchHoursLeft } from './trust';
 
 // Chat threads and first-move likes. A like can target a specific photo
 // or prompt and carry a comment; if it's mutual, the comment opens the
@@ -86,6 +86,31 @@ export function sendMessage(athleteId: number, msg: Omit<ChatMessage, 'at'>) {
       [athleteId]: [...list, { ...msg, at: new Date().toISOString() }],
     },
   });
+}
+
+type MatchInfo = { matches: number[]; blocked: number[]; matchedAt: Record<number, string> };
+
+// A match you can still act on: not blocked, and not a silent match
+// past MATCH_TTL_DAYS (nobody said anything in time). Chats, Matches,
+// the thread, profile and invites all use this so they agree.
+export function isActiveMatch(
+  athleteId: number,
+  social: MatchInfo,
+  chat: ChatState,
+  now: Date = new Date()
+): boolean {
+  if (!social.matches.includes(athleteId) || social.blocked.includes(athleteId)) return false;
+  const at = social.matchedAt[athleteId];
+  if (!at || messagesWith(chat, athleteId).length > 0) return true;
+  return matchHoursLeft(at, now) > 0;
+}
+
+export function activeMatches(
+  social: MatchInfo,
+  chat: ChatState,
+  now: Date = new Date()
+): number[] {
+  return social.matches.filter((id) => isActiveMatch(id, social, chat, now));
 }
 
 // Women-first: if she has it on, a man can't open the chat — she makes

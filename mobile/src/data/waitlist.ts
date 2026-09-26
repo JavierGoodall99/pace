@@ -23,6 +23,11 @@ function emit() {
   listeners.forEach((l) => l());
 }
 
+export function resetWaitlist() {
+  entries = [];
+  emit();
+}
+
 export const waitlistReady: Promise<void> = AsyncStorage.getItem(STORAGE_KEY)
   .then((raw) => {
     if (raw) {

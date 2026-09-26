@@ -2,9 +2,11 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { PhotoSlot } from '../src/components/PhotoSlot';
+import { showPip } from '../src/components/PipKit';
 import { Button, EmptyState, ScreenHeader } from '../src/components/ui';
 import { athleteById } from '../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../src/data/photos';
+import { useMe } from '../src/data/session';
 import { likeBack, passOn, useSocial } from '../src/data/social';
 import { formatLabel, shadow } from '../src/theme/tokens';
 
@@ -12,8 +14,15 @@ export default function LikesScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { likes } = useSocial();
+  const me = useMe();
 
   function respond(id: number, like: boolean) {
+    // Same rule as the deck: only selfie-verified members can like.
+    if (like && !me.verified) {
+      showPip('Verify your selfie to like back. It keeps fakes out.', 'thinking');
+      router.push('/verify');
+      return;
+    }
     if (like) {
       likeBack(id);
       // They already liked you — liking back is an instant match.
@@ -88,11 +97,11 @@ export default function LikesScreen() {
                   Pass
                 </Button>
                 <Button
-                  icon="heart"
+                  icon={me.verified ? 'heart' : 'shield-check'}
                   onPress={() => respond(a.id, true)}
                   style={{ flex: 1, height: 46 }}
                 >
-                  Like back
+                  {me.verified ? 'Like back' : 'Verify to like'}
                 </Button>
               </XStack>
             </YStack>

@@ -18,6 +18,7 @@ import { ATHLETE_PHOTOS } from '../../src/data/photos';
 import { spotsFor } from '../../src/data/places';
 import { sendInvite } from '../../src/data/plans';
 import { useMe } from '../../src/data/session';
+import { isActiveMatch, useChat } from '../../src/data/chat';
 import { useSocial } from '../../src/data/social';
 import { successHaptic, tapHaptic } from '../../src/lib/haptics';
 import { useColors } from '../../src/theme/appearance';
@@ -40,7 +41,8 @@ export default function InviteScreen() {
     activity?: string;
   }>();
   const athlete = athleteById(Number(params.athleteId));
-  const { matches } = useSocial();
+  const social = useSocial();
+  const chat = useChat();
 
   const now = useMemo(() => new Date(), []);
   const compat = useMemo(() => (athlete ? compatibility(me, athlete) : null), [me, athlete]);
@@ -80,7 +82,7 @@ export default function InviteScreen() {
     );
   }
 
-  if (!matches.includes(athlete.id)) {
+  if (!isActiveMatch(athlete.id, social, chat, now)) {
     return (
       <YStack flex={1} bg="$canvas">
         <ScreenHeader title={`Invite *${athlete.name}*`} onBack={() => router.back()} />

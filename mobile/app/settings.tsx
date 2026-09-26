@@ -6,7 +6,8 @@ import { PhotoSlot } from '../src/components/PhotoSlot';
 import { Badge, Card, ScreenHeader, SegmentedControl } from '../src/components/ui';
 import { ME_AVATAR } from '../src/data/photos';
 import { daysPerWeek } from '../src/data/rhythm';
-import { deleteAccount, MeProfile, signOut, useMe } from '../src/data/session';
+import { deleteAccountAndData } from '../src/data/account';
+import { MeProfile, signOut, useMe } from '../src/data/session';
 import { confirmAction } from '../src/lib/dialogs';
 import {
   AppearancePreference,
@@ -75,7 +76,7 @@ export default function SettingsScreen() {
       destructive: true,
     });
     if (!ok) return;
-    await deleteAccount();
+    await deleteAccountAndData();
     router.replace('/onboarding');
   }
 

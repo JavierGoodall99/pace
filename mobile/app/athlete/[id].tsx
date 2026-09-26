@@ -17,7 +17,7 @@ import { athleteById, SPORT_ILLO } from '../../src/data/mockData';
 import { LikeSheet } from '../../src/components/LikeSheet';
 import { PhotoStory, StoryPage } from '../../src/components/PhotoStory';
 import { SafetySheet } from '../../src/components/SafetySheet';
-import { hasLiked, LikeTarget, useChat } from '../../src/data/chat';
+import { hasLiked, isActiveMatch, LikeTarget, useChat } from '../../src/data/chat';
 import { freshnessLabel, genderLabel, lifestyleChips } from '../../src/data/identity';
 import { sharedDaysLabel } from '../../src/data/rhythm';
 import { depthFor } from '../../src/data/athleteDepth';
@@ -41,7 +41,8 @@ export default function AthleteDetailScreen() {
   const athlete = athleteById(Number(id));
   const me = useMe();
   const plansState = usePlans();
-  const { matches, likes: likedMe } = useSocial();
+  const social = useSocial();
+  const { likes: likedMe } = social;
   const chat = useChat();
   const explore = useExplore();
   const { height } = useWindowDimensions();
@@ -65,7 +66,7 @@ export default function AthleteDetailScreen() {
   const sync = compat.score;
   const depth = depthFor(athlete);
   const goal = raceById(depth.goalRaceId);
-  const matched = matches.includes(athlete.id);
+  const matched = isActiveMatch(athlete.id, social, chat, new Date());
   const stage = stageWith(plansState, athlete.id, matched);
   const together = sessionsTogether(plansState, athlete.id);
   const gallery = galleryFor(athlete.slotId);

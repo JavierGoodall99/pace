@@ -80,6 +80,17 @@ export function shortDay(d: Date): string {
   return `${DAY[dayIndex(d)]} ${d.getDate()}`;
 }
 
+// Chat-list timestamp: "Now", "5m", "3h", "2d", then "Mon 8".
+export function agoShort(iso: string, now: Date = new Date()): string {
+  const mins = Math.floor((now.getTime() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return 'Now';
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  return days < 7 ? `${days}d` : shortDay(new Date(iso));
+}
+
 // Pacers drop daily at 07:00. A "drop day" starts at 07:00, so at 02:00
 // you're still on yesterday's drop.
 export const DROP_HOUR = 7;

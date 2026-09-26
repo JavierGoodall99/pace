@@ -14,6 +14,7 @@ import { Icon } from '../../src/components/Icon';
 import { PipTip } from '../../src/components/PipKit';
 import { PickRow, SessionCard } from '../../src/components/Sessions';
 import { useTabBarSpace } from '../../src/components/TabBar';
+import { useNow } from '../../src/lib/useNow';
 import { Button, Chip, DisplayTitle } from '../../src/components/ui';
 import { levelLabel } from '../../src/data/athleteDepth';
 import {
@@ -78,7 +79,7 @@ export default function ExploreScreen() {
   const explore = useExplore();
   const [tab, setTab] = useState(TABS[0]);
   const [kind, setKind] = useState<'all' | SpotKind>('all');
-  const [now] = useState(() => new Date());
+  const now = useNow();
 
   const events = useMemo(
     () => upcomingEvents(now).filter((e) => e.at.getTime() - now.getTime() < 200 * 86400000),

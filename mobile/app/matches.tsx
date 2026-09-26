@@ -6,7 +6,9 @@ import { PhotoSlot } from '../src/components/PhotoSlot';
 import { EmptyState, IconButton, ScreenHeader } from '../src/components/ui';
 import { athleteById } from '../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../src/data/photos';
+import { activeMatches, useChat } from '../src/data/chat';
 import { useSocial } from '../src/data/social';
+import { useNow } from '../src/lib/useNow';
 import { useColors } from '../src/theme/appearance';
 import { formatLabel } from '../src/theme/tokens';
 
@@ -14,7 +16,8 @@ export default function MatchesScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { matches } = useSocial();
+  // Blocked people and expired silent matches drop out, as in Chats.
+  const matches = activeMatches(useSocial(), useChat(), useNow());
 
   return (
     <YStack flex={1} bg="$canvas">

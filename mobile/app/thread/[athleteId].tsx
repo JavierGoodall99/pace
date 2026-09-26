@@ -16,6 +16,7 @@ import {
   messagesWith,
   sendMessage,
   updateMessage,
+  isActiveMatch,
   useChat,
 } from '../../src/data/chat';
 import { athleteById, PlanStatus as CardStatus } from '../../src/data/mockData';
@@ -28,7 +29,8 @@ import {
   usePlans,
 } from '../../src/data/plans';
 import { useMe } from '../../src/data/session';
-import { scamSignal, sharesContact } from '../../src/data/trust';
+import { MATCH_TTL_DAYS, scamSignal, sharesContact } from '../../src/data/trust';
+import { useNow } from '../../src/lib/useNow';
 import { useSocial } from '../../src/data/social';
 import { tapHaptic } from '../../src/lib/haptics';
 import { useColors } from '../../src/theme/appearance';
@@ -47,7 +49,8 @@ export default function ThreadScreen() {
   const me = useMe();
   const chat = useChat();
   const plansState = usePlans();
-  const { matches } = useSocial();
+  const social = useSocial();
+  const now = useNow();
   const [note, setNote] = useState(draft ?? '');
   const [recording, setRecording] = useState<number | null>(null); // seconds
   const [safety, setSafety] = useState(false);
@@ -77,10 +80,14 @@ export default function ThreadScreen() {
     );
   }
 
-  const matched = matches.includes(athlete.id);
+  const matched = isActiveMatch(athlete.id, social, chat, now);
   const stage = stageWith(plansState, athlete.id, matched);
   const together = sessionsTogether(plansState, athlete.id);
-  const lock = composerLock(me, athlete.id, chat);
+  const lock = !matched
+    ? social.matches.includes(athlete.id) && !social.blocked.includes(athlete.id)
+      ? `This match expired — nobody said hi within ${MATCH_TTL_DAYS} days.`
+      : `You can only message matches. Like ${athlete.name} and if they like you back, you can chat.`
+    : composerLock(me, athlete.id, chat);
   const gallery = galleryFor(athlete.slotId);
   const inviteToTrain = () =>
     router.push({ pathname: '/invite/[athleteId]', params: { athleteId: String(athlete.id) } });

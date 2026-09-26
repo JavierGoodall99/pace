@@ -47,6 +47,12 @@ function emit() {
   listeners.forEach((l) => l());
 }
 
+export function resetSettings() {
+  state = DEFAULT_SETTINGS;
+  pending = [];
+  emit();
+}
+
 function merge(saved: Partial<AppSettings> | null): AppSettings {
   return {
     privacy: { ...DEFAULT_SETTINGS.privacy, ...saved?.privacy },

@@ -1,13 +1,14 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon, IconName } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { useTabBarSpace } from '../../src/components/TabBar';
+import { useNow } from '../../src/lib/useNow';
 import { DisplayTitle, IconButton } from '../../src/components/ui';
 import { depthFor } from '../../src/data/athleteDepth';
-import { messagesWith, previewOf, useChat } from '../../src/data/chat';
+import { activeMatches, messagesWith, previewOf, useChat } from '../../src/data/chat';
+import { agoShort } from '../../src/data/dates';
 import { athleteById, CHAT_THREADS } from '../../src/data/mockData';
 import { useMe } from '../../src/data/session';
 import { expiryLabel, matchHoursLeft } from '../../src/data/trust';
@@ -21,13 +22,14 @@ export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const tabBarSpace = useTabBarSpace();
   const router = useRouter();
-  const { blocked, likes, matches, matchedAt } = useSocial();
-  const [now] = useState(() => new Date());
+  const social = useSocial();
+  const { likes, matchedAt } = social;
+  const now = useNow();
   const chat = useChat();
   const me = useMe();
   // Every match with messages is a thread; matches without any sit in
   // the "New matches" row until someone says hi.
-  const ids = matches.filter((id) => !blocked.includes(id));
+  const ids = activeMatches(social, chat, now);
   const threads = ids
     .filter((id) => messagesWith(chat, id).length > 0)
     .map((athleteId) => {
@@ -39,7 +41,7 @@ export default function ChatScreen() {
         athleteId,
         lastMsg: previewOf(last),
         at: last.at ?? '',
-        time: last.at ? 'Now' : (seeded?.time ?? ''),
+        time: last.at ? agoShort(last.at, now) : (seeded?.time ?? ''),
         unread: last.at ? last.from === 'them' : !!seeded?.unread,
         yourTurn: last.from === 'them',
       };
@@ -49,8 +51,7 @@ export default function ChatScreen() {
   // of matches that never talk.
   const fresh = ids
     .filter((id) => messagesWith(chat, id).length === 0)
-    .map((id) => ({ id, hours: matchedAt[id] ? matchHoursLeft(matchedAt[id], now) : null }))
-    .filter((m) => m.hours === null || m.hours > 0);
+    .map((id) => ({ id, hours: matchedAt[id] ? matchHoursLeft(matchedAt[id], now) : null }));
 
   return (
     <ScrollView

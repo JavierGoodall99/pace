@@ -2,6 +2,7 @@ import React from 'react';
 import { Share } from 'react-native';
 import { Text, XStack, YStack } from 'tamagui';
 import { Icon } from './Icon';
+import { Mascot } from './Mascot';
 import { PhotoSlot } from './PhotoSlot';
 import { Badge, Toggle } from './ui';
 import { athleteById, Discipline, SPORT_EMOJI } from '../data/mockData';
@@ -245,6 +246,13 @@ const OUTCOME_COPY: Record<CheckIn | 'waiting', { title: string; body: string }>
   },
 };
 
+const OUTCOME_MOOD = {
+  coffee: 'excited',
+  again: 'happy',
+  buddies: 'wink',
+  waiting: 'thinking',
+} as const;
+
 // Private post-session check-in. Answers are only revealed when mutual,
 // so nobody is left hanging on a one-sided "coffee?".
 export function CheckInCard({ plan, onAnswer }: { plan: Plan; onAnswer: (c: CheckIn) => void }) {
@@ -261,12 +269,17 @@ export function CheckInCard({ plan, onAnswer }: { plan: Plan; onAnswer: (c: Chec
       borderColor="$accentBorder"
     >
       <XStack gap={12} items="center">
-        <PhotoSlot
-          label={a.name}
-          shape="circle"
-          source={ATHLETE_PHOTOS[a.slotId]}
-          style={{ width: 44, height: 44 }}
-        />
+        {outcome ? (
+          // Pip reacts to the mutual result.
+          <Mascot size={52} mood={OUTCOME_MOOD[outcome]} reactKey={outcome} />
+        ) : (
+          <PhotoSlot
+            label={a.name}
+            shape="circle"
+            source={ATHLETE_PHOTOS[a.slotId]}
+            style={{ width: 44, height: 44 }}
+          />
+        )}
         <YStack flex={1}>
           <Text fontFamily="$bold" fontSize={16} color="$text">
             {outcome

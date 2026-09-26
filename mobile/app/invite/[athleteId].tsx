@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
+import { showPip } from '../../src/components/PipKit';
 import { SyncBadge } from '../../src/components/Rhythm';
 import { PickRow, SafetyPanel } from '../../src/components/Sessions';
 import { Badge, Button, Input, ScreenHeader, SectionTitle } from '../../src/components/ui';
@@ -31,7 +32,13 @@ export default function InviteScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
-  const params = useLocalSearchParams<{ athleteId: string; date?: string; place?: string; activity?: string; fromDrop?: string }>();
+  const params = useLocalSearchParams<{
+    athleteId: string;
+    date?: string;
+    place?: string;
+    activity?: string;
+    fromDrop?: string;
+  }>();
   const athlete = athleteById(Number(params.athleteId));
 
   const now = useMemo(() => new Date(), []);
@@ -52,9 +59,13 @@ export default function InviteScreen() {
     [now]
   );
 
-  const [activity, setActivity] = useState<Discipline>((params.activity as Discipline) || athlete?.discipline || 'RUNNING');
+  const [activity, setActivity] = useState<Discipline>(
+    (params.activity as Discipline) || athlete?.discipline || 'RUNNING'
+  );
   const [dayKey, setDayKey] = useState(startOfDay(initialDate).toISOString());
-  const [time, setTime] = useState(TIMES.includes(formatTime(initialDate)) ? formatTime(initialDate) : '06:00');
+  const [time, setTime] = useState(
+    TIMES.includes(formatTime(initialDate)) ? formatTime(initialDate) : '06:00'
+  );
   const [place, setPlace] = useState(params.place || suggestion?.place || '');
   const [note, setNote] = useState('');
   const [share, setShare] = useState(false);
@@ -90,18 +101,39 @@ export default function InviteScreen() {
     });
     if (params.fromDrop) dropAction(athlete.id, 'invited');
     successHaptic();
+    showPip(`Invite sent! I’ll let you know when ${athlete.name} replies. 📨`);
     router.back();
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <YStack flex={1} bg="$canvas">
         <ScrollView flex={1} contentContainerStyle={{ pb: 24 }} keyboardShouldPersistTaps="handled">
-          <ScreenHeader title={`Invite *${athlete.name}*`} subtitle="Suggested from both your weeks — change anything." onBack={() => router.back()} />
+          <ScreenHeader
+            title={`Invite *${athlete.name}*`}
+            subtitle="Suggested from both your weeks — change anything."
+            onBack={() => router.back()}
+          />
 
           <YStack px={20} gap={22} mt={14}>
-            <XStack items="center" gap={12} p={12} rounded={20} bg="$card" borderWidth={1} borderColor="$border">
-              <PhotoSlot label={athlete.name} shape="circle" source={ATHLETE_PHOTOS[athlete.slotId]} style={{ width: 48, height: 48 }} />
+            <XStack
+              items="center"
+              gap={12}
+              p={12}
+              rounded={20}
+              bg="$card"
+              borderWidth={1}
+              borderColor="$border"
+            >
+              <PhotoSlot
+                label={athlete.name}
+                shape="circle"
+                source={ATHLETE_PHOTOS[athlete.slotId]}
+                style={{ width: 48, height: 48 }}
+              />
               <YStack flex={1}>
                 <Text fontFamily="$semibold" fontSize={15} color="$text">
                   {athlete.name} · {formatLabel(athlete.discipline)}
@@ -115,7 +147,12 @@ export default function InviteScreen() {
 
             <YStack>
               <SectionTitle>Activity</SectionTitle>
-              <PickRow options={activities} value={activity} onChange={setActivity} render={(a) => `${SPORT_EMOJI[a]} ${formatLabel(a)}`} />
+              <PickRow
+                options={activities}
+                value={activity}
+                onChange={setActivity}
+                render={(a) => `${SPORT_EMOJI[a]} ${formatLabel(a)}`}
+              />
             </YStack>
 
             <YStack>
@@ -138,7 +175,9 @@ export default function InviteScreen() {
             </YStack>
 
             <YStack>
-              <SectionTitle hint="Busy, public places — ideal for a first session.">Where</SectionTitle>
+              <SectionTitle hint="Busy, public places — ideal for a first session.">
+                Where
+              </SectionTitle>
               <YStack gap={8}>
                 {spots.slice(0, 4).map((s) => {
                   const active = s.name === place;
@@ -159,7 +198,11 @@ export default function InviteScreen() {
                       borderColor={active ? '$accent' : '$border'}
                       bg={active ? '$accentSoft' : '$card'}
                     >
-                      <Icon name="map-pin" size={18} color={active ? colors.accentText : colors.muted} />
+                      <Icon
+                        name="map-pin"
+                        size={18}
+                        color={active ? colors.accentText : colors.muted}
+                      />
                       <YStack flex={1}>
                         <Text fontFamily="$semibold" fontSize={15} color="$text">
                           {s.name}
@@ -179,14 +222,32 @@ export default function InviteScreen() {
 
             <YStack>
               <SectionTitle>Add a note</SectionTitle>
-              <Input placeholder="e.g. Easy pace, coffee after?" value={note} onChangeText={setNote} />
+              <Input
+                placeholder="e.g. Easy pace, coffee after?"
+                value={note}
+                onChangeText={setNote}
+              />
             </YStack>
 
-            <SafetyPanel share={share} onShare={setShare} timer={timer} onTimer={setTimer} summary={summary} />
+            <SafetyPanel
+              share={share}
+              onShare={setShare}
+              timer={timer}
+              onTimer={setTimer}
+              summary={summary}
+            />
           </YStack>
         </ScrollView>
 
-        <YStack px={20} pt={12} gap={6} bg="$card" borderTopWidth={1} borderTopColor="$border" style={{ paddingBottom: insets.bottom + 12 }}>
+        <YStack
+          px={20}
+          pt={12}
+          gap={6}
+          bg="$card"
+          borderTopWidth={1}
+          borderTopColor="$border"
+          style={{ paddingBottom: insets.bottom + 12 }}
+        >
           <Text fontSize={13} color="$muted" text="center">
             {inPast ? 'That time has passed — pick a later slot.' : formatWhen(when.toISOString())}
           </Text>

@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, XStack, YStack } from 'tamagui';
 import { buildConfettiPieces, Confetti } from '../../src/components/Confetti';
-import { Icon } from '../../src/components/Icon';
+import { Mascot } from '../../src/components/Mascot';
 import { Aurora, PulseLine } from '../../src/components/Motif';
 import { RhythmStrip, SyncBadge } from '../../src/components/Rhythm';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
@@ -63,20 +63,10 @@ export default function MatchScreen() {
           <YStack position="absolute" l={-24} r={-24} t={86} pointerEvents="none">
             <PulseLine width="100%" height={44} color={colors.accent} strokeWidth={3} />
           </YStack>
-          <XStack
-            position="absolute"
-            b={-6}
-            width={52}
-            height={52}
-            rounded={26}
-            bg="$accent"
-            borderWidth={4}
-            borderColor="$canvas"
-            items="center"
-            justify="center"
-          >
-            <Icon name="heart" size={22} color={colors.onAccent} filled />
-          </XStack>
+          {/* Pip — a heart itself — joins the two of you. */}
+          <YStack position="absolute" b={-26}>
+            <Mascot size={78} mood="excited" reactKey="match" />
+          </YStack>
         </XStack>
 
         <YStack mt={18}>

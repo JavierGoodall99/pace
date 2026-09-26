@@ -83,7 +83,7 @@ export default function SessionsScreen() {
         {list.length === 0 ? (
           <YStack mt={30}>
             <EmptyState
-              icon="map"
+              mood="thinking"
               title="Nothing here yet"
               body="Try another filter, or host your own — people nearby will see it."
             />

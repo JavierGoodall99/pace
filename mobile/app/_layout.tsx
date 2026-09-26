@@ -19,6 +19,7 @@ import { TamaguiProvider, Theme } from 'tamagui';
 import { useAppearance } from '../src/theme/appearance';
 import { palettes } from '../src/theme/tokens';
 import tamaguiConfig from '../tamagui.config';
+import { PipToastHost } from '../src/components/PipKit';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -82,6 +83,7 @@ export default function RootLayout() {
             <Stack.Screen name="race/[id]" />
             <Stack.Screen name="safety" />
           </Stack>
+          <PipToastHost />
         </Theme>
       </TamaguiProvider>
     </SafeAreaProvider>

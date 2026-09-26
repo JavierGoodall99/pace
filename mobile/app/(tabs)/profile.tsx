@@ -3,7 +3,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon, IconName } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
+import { PipTip } from '../../src/components/PipKit';
 import { GoalCard, Heatmap, PersonalBests, PromptCard } from '../../src/components/Proof';
+import { profileTip } from '../../src/data/pip';
 import { RhythmStrip } from '../../src/components/Rhythm';
 import { useTabBarSpace } from '../../src/components/TabBar';
 import { Badge, Button, DisplayTitle } from '../../src/components/ui';
@@ -158,6 +160,10 @@ export default function ProfileScreen() {
           <Text fontSize={13} color="$muted">
             We match you with people who train on {myDays.slice(0, 3).join(', ')} and more.
           </Text>
+        </YStack>
+
+        <YStack mt={16} mb={4}>
+          <PipTip line={profileTip(me)} />
         </YStack>
 
         <YStack mt={12}>

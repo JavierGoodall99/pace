@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, YStack } from 'tamagui';
+import { showPip } from '../src/components/PipKit';
 import { PickRow } from '../src/components/Sessions';
 import { Button, Callout, Input, ScreenHeader, SectionTitle } from '../src/components/ui';
 import { Level, LEVELS } from '../src/data/athleteDepth';
@@ -64,6 +65,7 @@ export default function NewSessionScreen() {
       note: note.trim() || undefined,
     });
     successHaptic();
+    showPip('Session posted! I’ll tell you when people join. 📣');
     router.replace({ pathname: '/session/[id]', params: { id: s.id } });
   }
 

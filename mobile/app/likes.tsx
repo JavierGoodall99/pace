@@ -41,7 +41,7 @@ export default function LikesScreen() {
         {likes.length === 0 ? (
           <YStack mt={60}>
             <EmptyState
-              icon="heart"
+              mood="happy"
               title="You're all caught up"
               body="Nobody new has liked you yet. Keep training — your next match is one session away."
             />

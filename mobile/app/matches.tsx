@@ -32,7 +32,7 @@ export default function MatchesScreen() {
         {matches.length === 0 ? (
           <YStack mt={60}>
             <EmptyState
-              icon="heart"
+              mood="happy"
               title="No matches yet"
               body="Like people who train like you. When they like you back, they’ll show up here."
             />

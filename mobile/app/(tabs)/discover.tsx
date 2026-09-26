@@ -10,7 +10,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
+import { Mascot } from '../../src/components/Mascot';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
+import { showPip } from '../../src/components/PipKit';
 import { WhyChips } from '../../src/components/Proof';
 import { RhythmStrip, SyncBadge } from '../../src/components/Rhythm';
 import { useTabBarSpace } from '../../src/components/TabBar';
@@ -153,7 +155,10 @@ export default function PacersScreen() {
                     router.push({ pathname: '/athlete/[id]', params: { id: String(p.athlete.id) } })
                   }
                   onInvite={() => invite(p)}
-                  onSkip={() => dropAction(p.athlete.id, 'skipped', now)}
+                  onSkip={() => {
+                    dropAction(p.athlete.id, 'skipped', now);
+                    showPip(`No worries — ${p.athlete.name} might show up another week.`, 'wink');
+                  }}
                 />
               ))}
             </ScrollView>
@@ -297,7 +302,7 @@ function PacerCard({
 function DropDone({ days, onBrowse }: { days: number; onBrowse: () => void }) {
   return (
     <YStack flex={1} items="center" justify="center" px={32} gap={10}>
-      <Text fontSize={48}>🏁</Text>
+      <Mascot size={120} mood="wink" />
       <DisplayTitle size={34} center>
         That’s this week’s *drop*
       </DisplayTitle>

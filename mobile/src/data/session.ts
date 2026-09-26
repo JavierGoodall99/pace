@@ -57,7 +57,10 @@ export interface StoredAccount {
 }
 
 interface SessionState {
+  // Credentials stay on the device after sign-out so the user can sign
+  // back in; `signedIn` says whether a session is active.
   account: StoredAccount | null;
+  signedIn: boolean;
   me: MeProfile;
   onboarded: boolean;
   loading: boolean;
@@ -65,44 +68,12 @@ interface SessionState {
 
 const STORAGE_KEY = 'pace.session.v1';
 
-const DEFAULT_ME: MeProfile = {
-  name: 'Naledi Khumalo',
-  age: '29',
-  city: 'Cape Town',
-  email: 'naledi@pace.fit',
-  bio: 'Competing at regionals next year. Coffee after WODs, always.',
-  disciplines: ['CROSSFIT'],
-  cadence: '4-5X/WK',
-  times: ['EARLY MORNING'],
-  photos: [],
-  stravaConnected: false,
-  garminConnected: false,
-  verified: true,
-  intent: 'both',
-  trainingDays: null,
-  level: 3,
-  goalRaceId: 'two-oceans',
-  prompts: [
-    { q: 'Coffee after…', a: 'Every WOD. Every single one.' },
-    { q: 'My ideal first date', a: 'A sunrise run, then breakfast somewhere with a view.' },
-  ],
-  pbs: [
-    { label: 'Back squat', value: '105 kg' },
-    { label: '5 km', value: '22:40' },
-  ],
-  routes: [{ name: 'Sea Point Promenade', detail: '8 km · flat, sunrise' }],
-  gender: 'woman',
-  heightCm: 167,
-  lifestyle: { drinks: 'social', diet: 'highprotein', restDay: 'brunch' },
-  photoLabels: [],
-  photosUpdatedAt: null,
-  womenFirst: false,
-  sync: null,
-};
-
+// First launch starts from a blank profile: onboarding fills it in
+// before any account exists.
 const DEFAULT_STATE: SessionState = {
   account: null,
-  me: DEFAULT_ME,
+  signedIn: false,
+  me: freshMe('', ''),
   onboarded: false,
   loading: true,
 };
@@ -138,6 +109,7 @@ async function persist() {
       STORAGE_KEY,
       JSON.stringify({
         account: state.account,
+        signedIn: state.signedIn,
         me: state.me,
         onboarded: state.onboarded,
       })
@@ -161,7 +133,10 @@ AsyncStorage.getItem(STORAGE_KEY)
       const saved = JSON.parse(raw) as Partial<SessionState>;
       setState({
         account: saved.account ?? null,
-        me: normaliseMe({ ...DEFAULT_ME, ...saved.me }),
+        // Saves from before `signedIn` existed were signed in whenever
+        // they held an account.
+        signedIn: saved.signedIn ?? !!saved.account,
+        me: normaliseMe({ ...freshMe('', ''), ...saved.me }),
         onboarded: saved.onboarded ?? false,
         loading: false,
       });
@@ -209,18 +184,38 @@ export function activeCity(me: MeProfile): string {
 
 export type AuthResult = { ok: true } | { ok: false; error: string };
 
+function validateCredentials(email: string, password: string): string | null {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Enter a valid email.';
+  if (password.length < 6) return 'Password must be at least 6 characters.';
+  if (state.signedIn) return 'You are already signed in.';
+  return null;
+}
+
 export async function signUp(name: string, email: string, password: string): Promise<AuthResult> {
   const trimmedEmail = email.trim().toLowerCase();
   if (name.trim().length === 0) return { ok: false, error: 'Enter your name.' };
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-    return { ok: false, error: 'Enter a valid email.' };
-  }
-  if (password.length < 6) return { ok: false, error: 'Password must be at least 6 characters.' };
-  if (state.account) return { ok: false, error: 'You are already signed in.' };
+  const error = validateCredentials(trimmedEmail, password);
+  if (error) return { ok: false, error };
   setState({
     account: { email: trimmedEmail, password },
+    signedIn: true,
     me: freshMe(name.trim(), trimmedEmail),
     onboarded: false,
+  });
+  await persist();
+  return { ok: true };
+}
+
+// Onboarding's account step: saves the profile built so far under a new
+// account instead of starting over like signUp does.
+export async function createAccount(email: string, password: string): Promise<AuthResult> {
+  const trimmedEmail = email.trim().toLowerCase();
+  const error = validateCredentials(trimmedEmail, password);
+  if (error) return { ok: false, error };
+  setState({
+    account: { email: trimmedEmail, password },
+    signedIn: true,
+    me: { ...state.me, email: trimmedEmail },
   });
   await persist();
   return { ok: true };
@@ -235,14 +230,15 @@ export async function signIn(email: string, password: string): Promise<AuthResul
   if (account.email !== trimmedEmail || account.password !== password) {
     return { ok: false, error: 'Incorrect email or password.' };
   }
-  setState({});
+  setState({ signedIn: true });
   await persist();
   return { ok: true };
 }
 
 export async function signOut() {
-  // Keep the profile + onboarded flags, just end the session (mock).
-  setState({ account: null });
+  // Keep the account, profile + onboarded flags so the user can sign
+  // back in; just end the session (mock).
+  setState({ signedIn: false });
   await persist();
 }
 
@@ -255,7 +251,7 @@ export async function deleteAccount() {
   } catch (e) {
     console.warn('Failed to clear account data:', e);
   }
-  setState({ account: null, me: freshMe('', ''), onboarded: false });
+  setState({ account: null, signedIn: false, me: freshMe('', ''), onboarded: false });
 }
 
 export async function updateMe(patch: Partial<MeProfile>) {

@@ -10,12 +10,12 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import type { IlloName } from '../src/components/Illustrations';
 import { buildConfettiPieces, Confetti } from '../src/components/Confetti';
 import { Icon } from '../src/components/Icon';
 import { Mascot, Mood, SpeechBubble } from '../src/components/Mascot';
+import { MyCard } from '../src/components/MyCard';
 import { Aurora, PulseLine } from '../src/components/Motif';
 import {
   OnboardingProgress,
@@ -53,7 +53,15 @@ import { isOnWaitlist, joinWaitlist, useWaitlist } from '../src/data/waitlist';
 import { DEFAULT_RADIUS_KM } from '../src/data/trust';
 import { depthFor, LEVELS } from '../src/data/athleteDepth';
 import { athletesTrainingFor, formatRaceDate, raceById, upcomingRaces } from '../src/data/races';
-import { completeOnboarding, Intent, MeProfile, updateMe, useMe } from '../src/data/session';
+import {
+  completeOnboarding,
+  createAccount,
+  Intent,
+  MeProfile,
+  updateMe,
+  useMe,
+  useSession,
+} from '../src/data/session';
 import { DIETS, DRINKS, GENDERS, REST_DAYS } from '../src/data/identity';
 import { useColors } from '../src/theme/appearance';
 import { brand, formatLabel, shadow } from '../src/theme/tokens';
@@ -84,6 +92,7 @@ type StepId =
   | 'photos'
   | 'sync'
   | 'verify'
+  | 'account'
   | 'building'
   | 'reveal'
   | 'launch';
@@ -105,6 +114,7 @@ const STEPS: StepId[] = [
   'photos',
   'sync',
   'verify',
+  'account',
   'building',
   'reveal',
   'launch',
@@ -367,6 +377,11 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
             text: 'Last one: a quick selfie check. Everyone here is verified — you’ll need it to like or invite.',
             mood: 'happy',
           };
+    case 'account':
+      return {
+        text: `Your card’s ready${first ? `, ${first}` : ''}! Add an email and password so it’s saved.`,
+        mood: 'excited',
+      };
     case 'building':
       return { text: 'Hold tight — finding people who move like you…', mood: 'thinking' };
     default:
@@ -379,15 +394,26 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
+  const { signedIn } = useSession();
 
+  // First-timers create their account inside the flow; anyone who signed
+  // up first skips that step. Fixed at mount so the step list doesn't
+  // shift under the index once the account exists.
+  const [steps] = useState(() => (signedIn ? STEPS.filter((s) => s !== 'account') : STEPS));
   const [index, setIndex] = useState(0);
-  const step = STEPS[index];
+  const step = steps[index];
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [accountError, setAccountError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const questionIndex = QUESTIONS.indexOf(step);
   const doneCount = QUESTIONS.filter((q) => answered(q, me)).length;
   const profileStrength = Math.round((doneCount / QUESTIONS.length) * 100);
   const progressPct =
-    questionIndex >= 0
+    step === 'account'
+      ? 100
+      : questionIndex >= 0
       ? ((questionIndex + (answered(step, me) ? 1 : 0.35)) / QUESTIONS.length) * 100
       : 0;
 
@@ -402,10 +428,21 @@ export default function OnboardingScreen() {
 
   function next() {
     if (QUESTIONS.includes(step) && answered(step, me)) successHaptic();
-    setIndex((i) => Math.min(i + 1, STEPS.length - 1));
+    setIndex((i) => Math.min(i + 1, steps.length - 1));
   }
   function back() {
     setIndex((i) => Math.max(i - 1, 0));
+  }
+  async function submitAccount() {
+    setAccountError(null);
+    setBusy(true);
+    const result = await createAccount(email, password);
+    setBusy(false);
+    if (!result.ok) {
+      setAccountError(result.error);
+      return;
+    }
+    next();
   }
 
   function toggleDiscipline(d: Discipline) {
@@ -435,7 +472,10 @@ export default function OnboardingScreen() {
 
   // Footer CTA per step.
   const skippable = step === 'sync' || step === 'verify';
-  const canContinue = !QUESTIONS.includes(step) || answered(step, me) || skippable;
+  const canContinue =
+    step === 'account'
+      ? !!email.trim() && !!password && !busy
+      : !QUESTIONS.includes(step) || answered(step, me) || skippable;
   const ctaLabel =
     step === 'welcome'
       ? 'Get started'
@@ -445,11 +485,15 @@ export default function OnboardingScreen() {
           ? 'See my card'
           : step === 'launch'
             ? 'Start exploring'
+            : step === 'account'
+              ? busy
+                ? 'Saving…'
+                : 'Create account'
             : skippable && !answered(step, me)
               ? 'Maybe later'
               : 'Continue';
 
-  const showHeader = QUESTIONS.includes(step);
+  const showHeader = QUESTIONS.includes(step) || step === 'account';
 
   return (
     <KeyboardAvoidingView
@@ -772,6 +816,41 @@ export default function OnboardingScreen() {
                 </YStack>
               )}
 
+              {step === 'account' && (
+                <YStack gap={14}>
+                  <Input
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={(v) => {
+                      setEmail(v);
+                      setAccountError(null);
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    returnKeyType="next"
+                  />
+                  <Input
+                    placeholder="Password (6+ characters)"
+                    value={password}
+                    onChangeText={(v) => {
+                      setPassword(v);
+                      setAccountError(null);
+                    }}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoComplete="new-password"
+                    returnKeyType="go"
+                    onSubmitEditing={() => canContinue && submitAccount()}
+                  />
+                  {accountError ? (
+                    <Text fontFamily="$medium" fontSize={14} color="$accentText" lineHeight={20}>
+                      {accountError}
+                    </Text>
+                  ) : null}
+                </YStack>
+              )}
+
               {step === 'building' && <BuildingStep text={pip.text} onDone={next} />}
 
               {step === 'reveal' && <RevealStep me={me} rhythm={myRhythm} />}
@@ -780,12 +859,8 @@ export default function OnboardingScreen() {
                 <LaunchStep
                   profileStrength={profileStrength}
                   badgeTierLabel={badgeTierLabel}
-                  name={me.name}
-                  age={me.age}
-                  city={me.city}
-                  disciplines={me.disciplines}
+                  me={me}
                   rhythm={myRhythm}
-                  photo={me.photos[0]}
                 />
               )}
             </StepEnter>
@@ -809,6 +884,8 @@ export default function OnboardingScreen() {
                   successHaptic();
                   await completeOnboarding();
                   router.replace('/(tabs)/today');
+                } else if (step === 'account') {
+                  await submitAccount();
                 } else {
                   next();
                 }
@@ -1201,21 +1278,13 @@ const CONFETTI_PIECES = buildConfettiPieces(CONFETTI_COLORS);
 function LaunchStep({
   profileStrength,
   badgeTierLabel,
-  name,
-  age,
-  city,
-  disciplines,
+  me,
   rhythm,
-  photo,
 }: {
   profileStrength: number;
   badgeTierLabel: string;
-  name: string;
-  age: string;
-  city: string;
-  disciplines: Discipline[];
+  me: MeProfile;
   rhythm: Rhythm;
-  photo?: string;
 }) {
   const colors = useColors();
   const badgeAnim = useRef(new Animated.Value(0)).current;
@@ -1232,8 +1301,6 @@ function LaunchStep({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const badges = disciplines.length ? disciplines : ['Athlete'];
-
   return (
     <YStack items="center" pt={20}>
       <Badge tone="accent" icon="zap">{`Profile strength ${profileStrength}%`}</Badge>
@@ -1242,86 +1309,40 @@ function LaunchStep({
           Welcome to *Pace*
         </DisplayTitle>
       </YStack>
+      <Text color="$muted" fontSize={15} lineHeight={22} text="center">
+        This is your card, exactly as other people will see it.
+      </Text>
 
       <Confetti pieces={CONFETTI_PIECES} />
 
-      <YStack
-        width="100%"
-        mt={20}
-        rounded={24}
-        overflow="hidden"
-        borderWidth={1}
-        borderColor="$border"
-        bg="$card"
-        style={shadow.raised}
-      >
-        <YStack height={300} bg="$accentSoft" justify="space-between" p={16} overflow="hidden">
-          {photo ? (
-            <>
-              <RNImage
-                source={{ uri: photo }}
-                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                resizeMode="cover"
-              />
-              <YStack position="absolute" l={0} r={0} b={0} height={220} pointerEvents="none">
-                <Svg width="100%" height="100%">
-                  <Defs>
-                    <LinearGradient id="launchFade" x1="0" y1="0" x2="0" y2="1">
-                      <Stop offset="0" stopColor="#140F10" stopOpacity={0} />
-                      <Stop offset="1" stopColor="#140F10" stopOpacity={0.85} />
-                    </LinearGradient>
-                  </Defs>
-                  <Rect width="100%" height="100%" fill="url(#launchFade)" />
-                </Svg>
-              </YStack>
-            </>
-          ) : null}
-          <Animated.View
-            style={{
-              alignSelf: 'flex-end',
-              opacity: badgeAnim,
-              transform: [
-                {
-                  scale: badgeAnim.interpolate({
-                    inputRange: [0, 0.6, 1],
-                    outputRange: [0.5, 1.12, 1],
-                  }),
-                },
-              ],
-            }}
-          >
-            <Badge tone="accent" icon="shield-check" style={{ backgroundColor: colors.card }}>
-              {badgeTierLabel}
-            </Badge>
-          </Animated.View>
-          <YStack>
-            <DisplayTitle size={36} color={photo ? '$onPhoto' : '$text'}>
-              {`${name || 'You'} *${age || '—'}*`}
-            </DisplayTitle>
-            <XStack items="center" gap={5} mt={2}>
-              <Icon name="map-pin" size={14} color={photo ? colors.onPhoto : colors.muted} />
-              <Text fontFamily="$medium" fontSize={14} color={photo ? '$onPhoto' : '$muted'}>
-                {city || 'South Africa'}
-              </Text>
-            </XStack>
-            <YStack mt={14}>
-              <RhythmStrip
-                mine={rhythm}
-                theirs={rhythm}
-                height={30}
-                variant={photo ? 'photo' : 'card'}
-              />
-            </YStack>
-          </YStack>
-        </YStack>
-        <XStack p={14} gap={8} flexWrap="wrap">
-          {badges.map((d) => (
-            <Badge key={d}>{d}</Badge>
-          ))}
-        </XStack>
+      <YStack width="100%" mt={20}>
+        <MyCard
+          me={me}
+          rhythm={rhythm}
+          height={500}
+          topRight={
+            <Animated.View
+              style={{
+                opacity: badgeAnim,
+                transform: [
+                  {
+                    scale: badgeAnim.interpolate({
+                      inputRange: [0, 0.6, 1],
+                      outputRange: [0.5, 1.12, 1],
+                    }),
+                  },
+                ],
+              }}
+            >
+              <Badge tone="accent" icon="shield-check" style={{ backgroundColor: colors.card }}>
+                {badgeTierLabel}
+              </Badge>
+            </Animated.View>
+          }
+        />
       </YStack>
-      <Text color="$muted" fontSize={15} lineHeight={22} mt={20} text="center">
-        Your card looks great. Every step you took helps us find people who really get you.
+      <Text color="$muted" fontSize={14} lineHeight={20} mt={16} text="center">
+        Tap the sides of your card to flip through it.
       </Text>
     </YStack>
   );

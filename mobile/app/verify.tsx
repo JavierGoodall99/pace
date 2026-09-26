@@ -1,58 +1,98 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, YStack } from 'tamagui';
+import { FaceScanner, scannerSupported, useScannerPermission } from '../src/components/FaceScanner';
 import { Icon } from '../src/components/Icon';
-import { Button, ScreenHeader } from '../src/components/ui';
+import { Button, ProgressBar, ScreenHeader } from '../src/components/ui';
+import {
+  type FaceReading,
+  instruction,
+  type LivenessState,
+  progressPct,
+  startLiveness,
+  stepLiveness,
+} from '../src/data/liveness';
 import { updateMe, useMe } from '../src/data/session';
+import { successHaptic, tapHaptic } from '../src/lib/haptics';
 import { useColors } from '../src/theme/appearance';
 
-// Mock liveness check — a selfie-style scan that "verifies" after a
-// couple of seconds. A real build swaps the timer + state flip for the
-// identity provider's SDK result.
+// Selfie liveness check: the front camera streams face readings into
+// src/data/liveness.ts, which walks the person through a random order of
+// blink / smile / look both ways. Passing sets `verified` on the profile.
 export default function VerifyScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
+  const permission = useScannerPermission();
   const [done, setDone] = useState(me.verified);
-  const scanLine = useRef(new Animated.Value(0)).current;
+  const [liveness, setLiveness] = useState<LivenessState>(() => startLiveness(Date.now()));
+  const [cameraError, setCameraError] = useState(false);
+  const [foreground, setForeground] = useState(AppState.currentState === 'active');
+  const livenessRef = useRef(liveness);
+
+  const { hasPermission, canRequestPermission, requestPermission } = permission;
+  useEffect(() => {
+    if (!done && !hasPermission && canRequestPermission) requestPermission();
+  }, [done, hasPermission, canRequestPermission, requestPermission]);
 
   useEffect(() => {
-    if (me.verified) return;
-
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(scanLine, {
-          toValue: 1,
-          duration: 1000,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(scanLine, {
-          toValue: 0,
-          duration: 1000,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    loop.start();
-    const timer = setTimeout(async () => {
-      loop.stop();
-      await updateMe({ verified: true });
-      setDone(true);
-    }, 2400);
-    return () => {
-      loop.stop();
-      clearTimeout(timer);
-    };
-    // Mount-once scan cycle — deliberately no deps.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const sub = AppState.addEventListener('change', (s) => setForeground(s === 'active'));
+    return () => sub.remove();
   }, []);
 
-  const translateY = scanLine.interpolate({ inputRange: [0, 1], outputRange: [-72, 72] });
+  const onFaces = useCallback((faces: FaceReading[]) => {
+    const prev = livenessRef.current;
+    const next = stepLiveness(prev, faces, Date.now());
+    if (next === prev) return;
+    livenessRef.current = next;
+    setLiveness(next);
+    if (next.index > prev.index) tapHaptic();
+    if (next.status === 'passed') {
+      successHaptic();
+      updateMe({ verified: true }).then(() => setDone(true));
+    }
+  }, []);
+
+  const onError = useCallback(() => setCameraError(true), []);
+
+  const retry = () => {
+    const fresh = startLiveness(Date.now());
+    livenessRef.current = fresh;
+    setLiveness(fresh);
+    setCameraError(false);
+  };
+
+  const scanning = !done && scannerSupported && hasPermission && !cameraError;
+  const blocked = !done && !scanning;
+  const failed = liveness.status === 'failed';
+
+  let title: string;
+  let body: string;
+  if (done) {
+    title = "You're verified";
+    body = 'Your card carries the verified badge. Matches can trust it is really you.';
+  } else if (!scannerSupported) {
+    title = 'Verify on your phone';
+    body = 'The selfie check uses your phone’s front camera. Open Pace on your phone to finish.';
+  } else if (cameraError) {
+    title = 'Camera didn’t start';
+    body = 'Something else may be using the camera. Close other camera apps and try again.';
+  } else if (!hasPermission) {
+    title = 'Camera access needed';
+    body = canRequestPermission
+      ? 'We use your front camera for a few seconds. Nothing is saved or uploaded.'
+      : 'Camera access is off for Pace. Turn it on in Settings to take the selfie check.';
+  } else {
+    title = instruction(liveness);
+    body = failed
+      ? 'No stress. Find good light, hold the phone at eye level, and go again.'
+      : 'Follow the prompts so we know it’s really you. Nothing is saved or uploaded.';
+  }
+
+  const ringColor = done ? colors.success : failed ? colors.muted : colors.accent;
 
   return (
     <YStack flex={1} bg="$canvas" style={{ paddingBottom: insets.bottom + 20 }}>
@@ -60,43 +100,44 @@ export default function VerifyScreen() {
 
       <YStack flex={1} justify="center" items="center" gap={24} px={20}>
         <YStack
-          width={240}
-          height={240}
-          rounded={120}
+          width={260}
+          height={260}
+          rounded={130}
           bg={done ? '$successSoft' : '$surface'}
-          borderWidth={3}
-          borderColor={done ? '$success' : '$accentBorder'}
+          borderWidth={4}
+          style={{ borderColor: ringColor }}
           items="center"
           justify="center"
           overflow="hidden"
         >
-          <Icon
-            name={done ? 'shield-check' : 'user'}
-            size={72}
-            color={done ? colors.success : colors.muted}
-            strokeWidth={1.5}
-          />
-          {!done ? (
-            <YStack
-              position="absolute"
-              l={0}
-              r={0}
-              height={3}
-              bg="$accent"
-              opacity={0.8}
-              style={{ transform: [{ translateY }] }}
+          {scanning ? (
+            <FaceScanner
+              active={foreground && liveness.status === 'running'}
+              onFaces={onFaces}
+              onError={onError}
             />
-          ) : null}
+          ) : (
+            <Icon
+              name={done ? 'shield-check' : blocked ? 'camera' : 'user'}
+              size={72}
+              color={done ? colors.success : colors.muted}
+              strokeWidth={1.5}
+            />
+          )}
         </YStack>
+
+        {scanning && !failed ? (
+          <YStack width={200}>
+            <ProgressBar pct={progressPct(liveness)} />
+          </YStack>
+        ) : null}
 
         <YStack items="center" gap={8} px={10}>
           <Text fontFamily="$bold" fontSize={24} lineHeight={30} color="$text" text="center">
-            {done ? "You're verified" : 'Hold still…'}
+            {title}
           </Text>
           <Text color="$muted" fontSize={16} lineHeight={24} text="center">
-            {done
-              ? 'Your card carries the verified badge. Matches can trust it is really you.'
-              : 'We are matching your face against your photo. Keep your eyes on the circle.'}
+            {body}
           </Text>
         </YStack>
 
@@ -110,11 +151,23 @@ export default function VerifyScreen() {
           >
             Done
           </Button>
-        ) : (
+        ) : failed || cameraError ? (
+          <Button style={{ width: '100%' }} icon="rotate-ccw" onPress={retry}>
+            Try again
+          </Button>
+        ) : scannerSupported && !hasPermission ? (
+          <Button
+            style={{ width: '100%' }}
+            icon="camera"
+            onPress={() => (canRequestPermission ? requestPermission() : Linking.openSettings())}
+          >
+            {canRequestPermission ? 'Allow camera' : 'Open Settings'}
+          </Button>
+        ) : scanning ? (
           <Text fontFamily="$medium" fontSize={14} color="$muted">
-            Takes about 2 seconds
+            Takes about 10 seconds
           </Text>
-        )}
+        ) : null}
       </YStack>
     </YStack>
   );

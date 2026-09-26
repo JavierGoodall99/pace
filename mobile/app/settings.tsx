@@ -76,7 +76,7 @@ export default function SettingsScreen() {
     });
     if (!ok) return;
     await deleteAccount();
-    router.replace('/sign-up');
+    router.replace('/onboarding');
   }
 
   return (

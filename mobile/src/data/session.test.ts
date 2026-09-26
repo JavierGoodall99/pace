@@ -65,3 +65,54 @@ describe('signIn', () => {
     expect(result).toEqual({ ok: true });
   });
 });
+
+describe('createAccount', () => {
+  test('succeeds after onboarding answers without a name prompt', async () => {
+    await session.updateMe({ name: 'Ada', city: 'Cape Town' });
+    const result = await session.createAccount('Ada@Example.com', 'password1');
+    expect(result).toEqual({ ok: true });
+  });
+
+  test('rejects creating a second account while signed in', async () => {
+    await session.createAccount('a@example.com', 'password1');
+    const result = await session.createAccount('b@example.com', 'password2');
+    expect(result).toEqual({ ok: false, error: 'You are already signed in.' });
+  });
+
+  test('rejects a short password', async () => {
+    const result = await session.createAccount('a@example.com', '123');
+    expect(result).toEqual({ ok: false, error: 'Password must be at least 6 characters.' });
+  });
+
+  test('lets the new account sign in', async () => {
+    await session.createAccount('a@example.com', 'password1');
+    const result = await session.signIn('a@example.com', 'password1');
+    expect(result).toEqual({ ok: true });
+  });
+});
+
+describe('signOut', () => {
+  test('keeps the account so the user can sign back in', async () => {
+    await session.signUp('Ada', 'a@example.com', 'password1');
+    await session.signOut();
+    const result = await session.signIn('a@example.com', 'password1');
+    expect(result).toEqual({ ok: true });
+  });
+
+  test('still rejects the wrong password after signing out', async () => {
+    await session.signUp('Ada', 'a@example.com', 'password1');
+    await session.signOut();
+    const result = await session.signIn('a@example.com', 'nope-nope');
+    expect(result).toEqual({ ok: false, error: 'Incorrect email or password.' });
+  });
+
+  test('deleting the account forgets the credentials', async () => {
+    await session.signUp('Ada', 'a@example.com', 'password1');
+    await session.deleteAccount();
+    const result = await session.signIn('a@example.com', 'password1');
+    expect(result).toEqual({
+      ok: false,
+      error: 'No account for this email yet. Create one first.',
+    });
+  });
+});

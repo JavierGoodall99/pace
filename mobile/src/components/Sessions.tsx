@@ -1,5 +1,5 @@
 import React from 'react';
-import { Share } from 'react-native';
+import { Platform, Share } from 'react-native';
 import { Text, XStack, YStack } from 'tamagui';
 import { Icon } from './Icon';
 import { Illo, IlloName } from './Illustrations';
@@ -11,7 +11,9 @@ import { ATHLETE_PHOTOS } from '../data/photos';
 import { formatWhen } from '../data/dates';
 import { CheckIn, checkInOutcome, Plan, PlanStatus } from '../data/plans';
 import { SPOTS } from '../data/places';
+import { notify } from '../lib/dialogs';
 import { tapHaptic } from '../lib/haptics';
+import { allowNotifications } from '../lib/reminders';
 import { useColors } from '../theme/appearance';
 import { formatLabel } from '../theme/tokens';
 
@@ -181,7 +183,16 @@ export function SafetyPanel({
         label="Check-in timer"
         hint="We’ll ask if you’re OK 90 minutes after the start"
         value={timer}
-        onChange={onTimer}
+        onChange={async (v) => {
+          onTimer(v);
+          // The check-in is a notification on this phone, so it needs permission.
+          if (v && Platform.OS !== 'web' && !(await allowNotifications())) {
+            notify(
+              'Notifications are off',
+              'Turn on notifications for Pace in your phone settings to get the check-in.'
+            );
+          }
+        }}
         last
       />
     </YStack>

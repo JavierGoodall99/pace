@@ -21,7 +21,7 @@ const VISIBILITY_OPTIONS: Visibility[] = ['EVERYONE', 'MATCHES ONLY'];
 type CardToggle = 'showStats' | 'showCity' | 'publicTrainingPhotos';
 
 const TOGGLES: { key: CardToggle; label: string; hint?: string }[] = [
-  { key: 'showStats', label: 'Show pace & stats' },
+  { key: 'showStats', label: 'Show my effort level' },
   { key: 'showCity', label: 'Show my city', hint: 'Used for match radius' },
   {
     key: 'publicTrainingPhotos',

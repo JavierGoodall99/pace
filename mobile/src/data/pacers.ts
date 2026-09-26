@@ -76,9 +76,12 @@ export function wantEachOther(me: MeProfile, a: Athlete): boolean {
   return true;
 }
 
-// How you'd meet: same gender is always as training partners.
+// How you'd meet: as training partners when you're the same gender, or
+// when either of you is only here for a training partner.
 export function matchKind(me: MeProfile, a: Athlete): 'date' | 'partner' {
-  return me.gender && depthFor(a).gender === me.gender ? 'partner' : 'date';
+  const d = depthFor(a);
+  if (me.gender && d.gender === me.gender) return 'partner';
+  return me.intent === 'partner' || d.intent === 'partner' ? 'partner' : 'date';
 }
 
 // Only verified people who've actually trained recently make the drop.

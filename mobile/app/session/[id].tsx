@@ -198,7 +198,7 @@ export default function SessionDetailScreen() {
               icon={full ? undefined : 'check'}
               disabled={full}
               onPress={() => {
-                joinOpen(s.id);
+                joinOpen(s.id, { checkInTimer: timer });
                 showPip(`You’re in! See you at ${s.place}.`);
               }}
               style={{ flex: 1 }}

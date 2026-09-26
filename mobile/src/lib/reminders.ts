@@ -2,6 +2,8 @@ import { useRouter, type Href } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
+import { athleteById } from '../data/mockData';
+import { checkInsDue, usePlans } from '../data/plans';
 import { useSettings } from '../data/settings';
 import { nextStreakReminder, Streak, useMyTraining } from '../data/training';
 import { useNow } from './useNow';
@@ -77,4 +79,44 @@ export function useStreakReminder() {
     });
     return () => sub.remove();
   }, [router]);
+}
+
+// Safety check-ins: 90 minutes after a session with the check-in timer on,
+// ask if all went well; tapping opens the Safety centre (emergency
+// numbers, report, block). Kept in line with plans: cancelling, declining
+// or leaving a session drops its check-in.
+const CHECK_IN_PREFIX = 'checkin-';
+
+export function useCheckInReminders() {
+  const { plans, open } = usePlans();
+
+  useEffect(() => {
+    if (!supported) return;
+    const due = checkInsDue({ plans, open }, (id) =>
+      typeof id === 'number' ? (athleteById(id)?.name ?? 'your partner') : 'your group'
+    );
+    (async () => {
+      const perm = await Notifications.getPermissionsAsync();
+      const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+      const wanted = new Set(due.map((d) => CHECK_IN_PREFIX + d.key));
+      // Drop check-ins for sessions that were cancelled, declined or left.
+      await Promise.all(
+        scheduled
+          .map((n) => n.identifier)
+          .filter((id) => id.startsWith(CHECK_IN_PREFIX) && !wanted.has(id))
+          .map((id) => Notifications.cancelScheduledNotificationAsync(id))
+      );
+      if (!perm.granted) return;
+      const have = new Set(scheduled.map((n) => n.identifier));
+      for (const d of due) {
+        const identifier = CHECK_IN_PREFIX + d.key;
+        if (have.has(identifier)) continue;
+        await Notifications.scheduleNotificationAsync({
+          identifier,
+          content: { title: d.title, body: d.body, data: { url: '/safety' } },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: d.at },
+        });
+      }
+    })().catch((e) => console.warn('Could not schedule check-ins:', e));
+  }, [plans, open]);
 }

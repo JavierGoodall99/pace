@@ -8,14 +8,13 @@ import { LikeSheet } from '../../src/components/LikeSheet';
 import { Mascot } from '../../src/components/Mascot';
 import { PhotoStory, StoryPage } from '../../src/components/PhotoStory';
 import { showPip } from '../../src/components/PipKit';
-import { WhyChips } from '../../src/components/Proof';
 import { RhythmStrip, SyncBadge } from '../../src/components/Rhythm';
 import { SwipeDeck, SwipeDeckHandle, SwipeDir } from '../../src/components/SwipeDeck';
 import { useTabBarSpace } from '../../src/components/TabBar';
 import { Button, DisplayTitle, IconButton } from '../../src/components/ui';
 import { depthFor } from '../../src/data/athleteDepth';
 import { hasLiked, LikeTarget, likesLeftToday, sendLike, useChat } from '../../src/data/chat';
-import { formatWhen } from '../../src/data/dates';
+import { dropKey, formatWhen, nextDrop, untilLabel } from '../../src/data/dates';
 import { usePacerDeck } from '../../src/data/deck';
 import { useFilters } from '../../src/data/filters';
 import { ACTIVE_DAYS, activityLabel, DEFAULT_RADIUS_KM, LIKES_PER_DAY } from '../../src/data/trust';
@@ -25,10 +24,17 @@ import { matchKind, type Pacer } from '../../src/data/pacers';
 import { galleryFor } from '../../src/data/photos';
 import { formatKm } from '../../src/data/places';
 import { useMe } from '../../src/data/session';
-import { clearPasses, passPacer, undoLastPass, useSocial } from '../../src/data/social';
+import { addToPicks, pickReason } from '../../src/data/picks';
+import {
+  clearPasses,
+  passPacer,
+  recentlyPassed,
+  undoLastPass,
+  useSocial,
+} from '../../src/data/social';
 import { successHaptic, tapHaptic } from '../../src/lib/haptics';
 import { upcomingEvents } from '../../src/data/capeTown';
-import { EVENT_ATTENDEES, pacersAmong } from '../../src/data/explore';
+import { EVENT_ATTENDEES, pacersAmong, useExplore } from '../../src/data/explore';
 import { useColors } from '../../src/theme/appearance';
 import { useNow } from '../../src/lib/useNow';
 import { shadow } from '../../src/theme/tokens';
@@ -48,7 +54,8 @@ export default function PacersScreen() {
   const tabBarSpace = useTabBarSpace();
   const router = useRouter();
   const me = useMe();
-  const { blocked } = useSocial();
+  const social = useSocial();
+  const { blocked } = social;
   const filters = useFilters();
   const chat = useChat();
   const [areaHeight, setAreaHeight] = useState(0);
@@ -59,7 +66,7 @@ export default function PacersScreen() {
   const deckRef = useRef<SwipeDeckHandle | null>(null);
 
   const now = useNow();
-  const { deck: ranked, passedCount } = usePacerDeck(now);
+  const { deck: ranked, passedCount, poolSize } = usePacerDeck(now);
   const deck = useMemo(() => {
     const i = ranked.findIndex((p) => p.athlete.id === rewound);
     return i > 0 ? [ranked[i], ...ranked.slice(0, i), ...ranked.slice(i + 1)] : ranked;
@@ -134,7 +141,7 @@ export default function PacersScreen() {
           <DisplayTitle size={40}>Nearby *pacers*</DisplayTitle>
           <Text fontFamily="$medium" fontSize={14} color="$muted" mt={4}>
             {deck.length
-              ? `${deck.length} near you · ${likesLeft} of ${LIKES_PER_DAY} likes left today`
+              ? `${deck.length} ${deck.length === 1 ? 'pick' : 'picks'} today · ${likesLeft} of ${LIKES_PER_DAY} likes left`
               : `${likesLeft} of ${LIKES_PER_DAY} likes left today`}
           </Text>
         </YStack>
@@ -173,10 +180,15 @@ export default function PacersScreen() {
       >
         {deck.length === 0 ? (
           <DeckDone
-            empty={ranked.length === 0 && passedCount === 0}
+            empty={poolSize === 0 && passedCount === 0}
+            nextIn={untilLabel(nextDrop(now), now)}
             passedCount={passedCount}
             radius={filters.radiusKm}
-            onReviewPassed={() => clearPasses()}
+            onReviewPassed={() => {
+              // Back into today's picks, not just out of the passed list.
+              addToPicks(dropKey(now), recentlyPassed(social, now));
+              clearPasses();
+            }}
             onFilters={() => router.push('/discover-filters')}
             onClubs={() => router.push('/(tabs)/sessions')}
             goingNote={goingNote}
@@ -292,6 +304,7 @@ function PacerCard({
 }) {
   const colors = useColors();
   const me = useMe();
+  const explore = useExplore();
   const { athlete: a, compat } = pacer;
   const d = depthFor(a);
   const pages = useMemo(() => pagesFor(pacer), [pacer]);
@@ -340,7 +353,18 @@ function PacerCard({
                   {activityLabel(d)}
                 </Text>
               </XStack>
-              <WhyChips compat={compat} onPhoto />
+              <XStack items="center" gap={6}>
+                <Icon name="sparkles" size={14} color="#FFFFFF" />
+                <Text
+                  flex={1}
+                  fontFamily="$semibold"
+                  fontSize={14}
+                  color="#FFFFFF"
+                  numberOfLines={2}
+                >
+                  {pickReason(me, a, compat, explore.crews)}
+                </Text>
+              </XStack>
             </YStack>
           ) : pg.kind === 'prompt' ? (
             <Text fontFamily="$semibold" fontSize={14} color="$muted">
@@ -460,7 +484,9 @@ function DeckDone({
   onFilters,
   onClubs,
   goingNote,
+  nextIn,
 }: {
+  nextIn: string;
   empty: boolean;
   passedCount: number;
   radius: number | null;
@@ -502,10 +528,10 @@ function DeckDone({
     <YStack flex={1} items="center" justify="center" px={32} gap={10}>
       <Mascot size={120} mood="wink" />
       <DisplayTitle size={34} center>
-        You’re all *caught up*
+        That’s today’s *picks*
       </DisplayTitle>
       <Text fontSize={15} lineHeight={22} color="$muted" text="center">
-        New pacers show up as they join.
+        {`New picks ${nextIn}.`}
       </Text>
       {goingNote ? (
         <Text fontFamily="$semibold" fontSize={14} color="$accentText" text="center" mt={4}>

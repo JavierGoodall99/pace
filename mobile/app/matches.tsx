@@ -71,7 +71,7 @@ export default function MatchesScreen() {
                   {a.name}
                 </Text>
                 <Text fontSize={14} color="$muted" mt={2} numberOfLines={1}>
-                  {formatLabel(a.discipline)} · {formatLabel(a.pace)}
+                  {formatLabel(a.discipline)} · {a.city}
                 </Text>
               </YStack>
               <IconButton size={40} tone="accent" accessibilityLabel={`Message ${a.name}`}>

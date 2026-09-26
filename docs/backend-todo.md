@@ -52,6 +52,15 @@ privacy policy (`mobile/src/data/legal.ts`) must say what is uploaded and for ho
   reminders already work as local notifications.)
 - **Activity sync** — Strava / Garmin OAuth and Apple Health (HealthKit) / Samsung Health (Health
   Connect) are simulated in `mobile/app/connect/[provider].tsx`.
+- **Card privacy for other people** — "Show my effort level" and "Show my city" apply to the
+  card preview; "Public training photos" and hiding stats from other people's view need the
+  server to filter what it sends.
+- **Safety check-in escalation** — the 90-minute check-in is a local notification that opens
+  the Safety centre. Alerting a trusted contact when there's no answer needs a server.
+- **Daily picks** — chosen on the phone from the local deck; the server should pick them so
+  everyone gets a fair share of attention in a small city.
+- **Invite link** — `mobile/src/lib/inviteFriend.ts` shares a placeholder (`https://pace.fit`);
+  swap for the store / referral link.
 - **Location** — distances come from mock data, not the phone's location.
 - **Waitlist** — sign-ups for other cities are stored on the phone
   (`mobile/src/data/waitlist.ts`).

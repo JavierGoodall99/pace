@@ -126,3 +126,26 @@ export function upcomingRaces(now: Date = new Date()): Race[] {
     a.date.localeCompare(b.date)
   );
 }
+
+export const BUILD_UP_WEEKS = 4;
+
+// Weekly group long runs in the build-up: the next few Saturdays before
+// race day (race week itself gets the shake-out meetup instead).
+export function buildUpRuns(
+  race: Pick<Race, 'date'>,
+  now: Date = new Date(),
+  n: number = BUILD_UP_WEEKS
+): { date: Date; weeksToGo: number }[] {
+  const raceDay = new Date(`${race.date}T00:00:00`);
+  const sat = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 0, 0, 0);
+  sat.setDate(sat.getDate() + ((6 - sat.getDay() + 7) % 7));
+  if (sat.getTime() <= now.getTime()) sat.setDate(sat.getDate() + 7);
+  const runs: { date: Date; weeksToGo: number }[] = [];
+  while (runs.length < n) {
+    const daysLeft = (raceDay.getTime() - sat.getTime()) / 86400000;
+    if (daysLeft < 7) break;
+    runs.push({ date: new Date(sat), weeksToGo: Math.ceil(daysLeft / 7) });
+    sat.setDate(sat.getDate() + 7);
+  }
+  return runs;
+}

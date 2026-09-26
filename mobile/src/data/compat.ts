@@ -109,7 +109,7 @@ export function paceFactor(myLevel: Level | null, theirLevel: Level): Factor {
       ? `Same effort level — both ${levelLabel(theirLevel).toLowerCase()}`
       : diff === 1
         ? 'Within one level — easy to match pace'
-        : `Big gap: you’re ${levelLabel(myLevel).toLowerCase()}, they’re ${levelLabel(theirLevel).toLowerCase()}`;
+        : `Different effort: you’re ${levelLabel(myLevel).toLowerCase()}, they’re ${levelLabel(theirLevel).toLowerCase()}`;
   return { key: 'pace', label: 'Pace & effort', detail, score };
 }
 

@@ -10,6 +10,7 @@ import { deleteAccountAndData } from '../src/data/account';
 import type { LegalDoc } from '../src/data/legal';
 import { getAccount, MeProfile, signInLabel, signOut, useMe } from '../src/data/session';
 import { confirmAction } from '../src/lib/dialogs';
+import { inviteFriend } from '../src/lib/inviteFriend';
 import {
   AppearancePreference,
   setAppearance,
@@ -147,6 +148,13 @@ export default function SettingsScreen() {
               onPress={() => router.push(row.route)}
             />
           ))}
+        </Card>
+      </YStack>
+
+      <GroupLabel>Share Pace</GroupLabel>
+      <YStack mx={20}>
+        <Card>
+          <Row icon="users" label="Invite a training friend" last onPress={inviteFriend} />
         </Card>
       </YStack>
 

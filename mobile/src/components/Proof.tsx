@@ -241,10 +241,14 @@ export function PromptCard({ prompt }: { prompt: Prompt }) {
   );
 }
 
+// Pace isn't a contest: other people see which PBs you have, not your
+// times. Times only show on your own profile (`showTimes`).
 export function PersonalBests({
   pbs,
+  showTimes = false,
 }: {
   pbs: { label: string; value: string; source?: Provider }[];
+  showTimes?: boolean;
 }) {
   if (!pbs.length) return null;
   return (
@@ -261,10 +265,10 @@ export function PersonalBests({
           borderColor="$border"
         >
           <Text fontFamily="$display" fontSize={28} lineHeight={32} color="$text">
-            {pb.value}
+            {showTimes ? pb.value : pb.label}
           </Text>
           <Text fontSize={13} color="$muted" mt={2}>
-            PB · {pb.label}
+            {showTimes ? `PB · ${pb.label}` : 'Personal best'}
           </Text>
           {pb.source ? (
             <Text fontFamily="$semibold" fontSize={11} color="$success" mt={4}>

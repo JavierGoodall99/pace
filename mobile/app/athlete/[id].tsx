@@ -188,7 +188,6 @@ export default function AthleteDetailScreen() {
             <Badge tone="accent" illo={SPORT_ILLO[athlete.discipline]}>
               {athlete.discipline}
             </Badge>
-            <Badge>{athlete.pace}</Badge>
             {basics.map((b) => (
               <Badge key={b}>{b}</Badge>
             ))}
@@ -262,7 +261,8 @@ export default function AthleteDetailScreen() {
           </YStack>
         ) : null}
 
-        {depth.routes.length ? (
+        {/* Routes say where someone runs: only matches see them. */}
+        {depth.routes.length && matched ? (
           <Section>
             <Text fontFamily="$semibold" fontSize={17} color="$text">
               Favourite routes

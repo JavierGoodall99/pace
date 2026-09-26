@@ -6,6 +6,7 @@ import { RhythmStrip } from './Rhythm';
 import { DisplayTitle } from './ui';
 import { levelLabel } from '../data/athleteDepth';
 import { lifestyleChips } from '../data/identity';
+import { useSettings } from '../data/settings';
 import type { Rhythm } from '../data/rhythm';
 import type { MeProfile } from '../data/session';
 import { useColors } from '../theme/appearance';
@@ -25,9 +26,14 @@ export function MyCard({
   topRight?: React.ReactNode;
 }) {
   const colors = useColors();
-  const pages = useMemo(() => myPages(me, rhythm), [me, rhythm]);
+  // Card privacy settings apply to how others see you.
+  const { privacy } = useSettings();
+  const pages = useMemo(
+    () => myPages(me, rhythm, privacy.showStats),
+    [me, rhythm, privacy.showStats]
+  );
   const sports = me.disciplines.map(formatLabel);
-  const details = me.city;
+  const details = privacy.showCity ? me.city : '';
 
   return (
     <YStack
@@ -63,7 +69,7 @@ export function MyCard({
               <XStack items="center" gap={5}>
                 <Icon name="zap" size={13} color="#FFFFFF" filled />
                 <Text fontFamily="$semibold" fontSize={13} color="#FFFFFF">
-                  {me.level ? `${levelLabel(me.level)} pace` : 'Just joined'}
+                  {me.level && privacy.showStats ? `${levelLabel(me.level)} pace` : 'On Pace'}
                 </Text>
               </XStack>
               {sports.length ? (
@@ -97,7 +103,7 @@ export function MyCard({
 }
 
 // Same order as the Discover card: photo, prompt, photo, about, prompt, rest.
-function myPages(me: MeProfile, rhythm: Rhythm): StoryPage[] {
+function myPages(me: MeProfile, rhythm: Rhythm, showStats: boolean): StoryPage[] {
   const photo = (k: number): StoryPage | null =>
     me.photos[k]
       ? { kind: 'photo', source: { uri: me.photos[k] }, label: me.photoLabels[k] ?? 'action' }
@@ -106,7 +112,7 @@ function myPages(me: MeProfile, rhythm: Rhythm): StoryPage[] {
     photo(0),
     me.prompts[0] ? { kind: 'prompt', prompt: me.prompts[0] } : null,
     photo(1),
-    { kind: 'info', content: <AboutPage me={me} rhythm={rhythm} /> },
+    { kind: 'info', content: <AboutPage me={me} rhythm={rhythm} showStats={showStats} /> },
     me.prompts[1] ? { kind: 'prompt', prompt: me.prompts[1] } : null,
     ...me.photos.slice(2).map((_, k) => photo(k + 2)),
   ];
@@ -115,12 +121,20 @@ function myPages(me: MeProfile, rhythm: Rhythm): StoryPage[] {
 
 // Stands in for the "You & them" page: there's no one to compare with
 // yet, so it shows what your matches will compare against.
-function AboutPage({ me, rhythm }: { me: MeProfile; rhythm: Rhythm }) {
+function AboutPage({
+  me,
+  rhythm,
+  showStats,
+}: {
+  me: MeProfile;
+  rhythm: Rhythm;
+  showStats: boolean;
+}) {
   const colors = useColors();
   const chips = lifestyleChips(me.lifestyle);
   const facts = [
     me.disciplines.length ? me.disciplines.map(formatLabel).join(', ') : null,
-    me.level ? `${levelLabel(me.level)} pace` : null,
+    me.level && showStats ? `${levelLabel(me.level)} pace` : null,
     me.times.length ? `Trains ${me.times.map(formatLabel).join(' & ').toLowerCase()}` : null,
   ].filter((x): x is string => !!x);
 

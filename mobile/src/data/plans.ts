@@ -56,6 +56,8 @@ export interface OpenSession {
   // guest list so nobody walks into a room of 9 guys and one woman.
   singles?: boolean;
   balance?: { women: number; men: number }; // spots held per side
+  // You joined with the check-in timer on.
+  myCheckIn?: boolean;
 }
 
 interface PlansState {
@@ -380,6 +382,43 @@ export function chatCardStatus(s: PlansState, card: PlanCard): CardStatus {
   return 'INVITE';
 }
 
+export const CHECK_IN_AFTER_MIN = 90;
+
+export interface CheckInDue {
+  key: string; // stable per plan/session
+  at: Date;
+  title: string;
+  body: string;
+}
+
+// Sessions with the check-in timer on that are still ahead: invites that
+// are sent or confirmed, and group sessions you joined. The reminder
+// schedule is kept in line with this list.
+export function checkInsDue(
+  s: Pick<PlansState, 'plans' | 'open'>,
+  nameOf: (id: Attendee) => string,
+  now: Date = new Date()
+): CheckInDue[] {
+  const after = (iso: string) => new Date(new Date(iso).getTime() + CHECK_IN_AFTER_MIN * 60000);
+  const one = s.plans
+    .filter((p) => p.checkInTimer && (p.status === 'sent' || p.status === 'confirmed'))
+    .map((p) => ({
+      key: `plan-${p.id}`,
+      at: after(p.date),
+      title: 'All good?',
+      body: `How was your session with ${nameOf(p.athleteId)}? Tap if you need help.`,
+    }));
+  const group = s.open
+    .filter((o) => o.myCheckIn && o.joined.includes('me'))
+    .map((o) => ({
+      key: `open-${o.id}`,
+      at: after(o.date),
+      title: 'All good?',
+      body: `How was ${o.title}? Tap if you need help.`,
+    }));
+  return [...one, ...group].filter((c) => c.at.getTime() > now.getTime());
+}
+
 // Unmatch / block: drop every 1:1 plan with that person.
 export function removePlansWith(athleteId: number) {
   setState({ plans: state.plans.filter((p) => p.athleteId !== athleteId) });
@@ -403,10 +442,12 @@ export function clearCelebrate() {
   if (state.celebrate) setState({ celebrate: null });
 }
 
-export function joinOpen(id: string) {
+export function joinOpen(id: string, opts: { checkInTimer?: boolean } = {}) {
   setState({
     open: state.open.map((o) =>
-      o.id === id && !o.joined.includes('me') ? { ...o, joined: [...o.joined, 'me'] } : o
+      o.id === id && !o.joined.includes('me')
+        ? { ...o, joined: [...o.joined, 'me'], myCheckIn: !!opts.checkInTimer }
+        : o
     ),
   });
 }
@@ -414,7 +455,7 @@ export function joinOpen(id: string) {
 export function leaveOpen(id: string) {
   setState({
     open: state.open.map((o) =>
-      o.id === id ? { ...o, joined: o.joined.filter((j) => j !== 'me') } : o
+      o.id === id ? { ...o, joined: o.joined.filter((j) => j !== 'me'), myCheckIn: false } : o
     ),
   });
 }

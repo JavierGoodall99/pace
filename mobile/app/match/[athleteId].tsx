@@ -11,6 +11,7 @@ import { athleteById, SPORT_ILLO } from '../../src/data/mockData';
 import { rhythmForAthlete, rhythmForMe, sharedDaysLabel } from '../../src/data/rhythm';
 import { compatibility } from '../../src/data/compat';
 import { formatWhen } from '../../src/data/dates';
+import { matchKind } from '../../src/data/pacers';
 import { usePlans } from '../../src/data/plans';
 import { useMe } from '../../src/data/session';
 import { ATHLETE_PHOTOS, ME_AVATAR } from '../../src/data/photos';
@@ -45,6 +46,7 @@ export default function MatchScreen() {
     );
   }
 
+  const partners = matchKind(me, athlete) === 'partner';
   const mine = rhythmForMe(me.cadence, me.trainingDays);
   const theirs = rhythmForAthlete(athlete);
 
@@ -72,13 +74,15 @@ export default function MatchScreen() {
 
         <YStack mt={18}>
           <DisplayTitle size={60} center>
-            It’s a *match*
+            {partners ? 'Training *partners*' : 'It’s a *match*'}
           </DisplayTitle>
         </YStack>
         <Text color="$muted" fontSize={16} lineHeight={24} mt={8} maxW={300} text="center">
           {plan
             ? `${athlete.name} said yes to training together. That’s your first session — see you out there.`
-            : `You and ${athlete.name} move to the same beat.`}
+            : partners
+              ? `You and ${athlete.name} train on the same days. Plan your first session.`
+              : `You and ${athlete.name} move to the same beat.`}
         </Text>
 
         <YStack

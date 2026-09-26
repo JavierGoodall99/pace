@@ -24,6 +24,7 @@ import { ACTIVE_DAYS } from '../../src/data/trust';
 import { useNow } from '../../src/lib/useNow';
 import { useColors } from '../../src/theme/appearance';
 import { shadow } from '../../src/theme/tokens';
+import { inviteFriend } from '../../src/lib/inviteFriend';
 
 export default function ProfileScreen() {
   const colors = useColors();
@@ -313,7 +314,7 @@ export default function ProfileScreen() {
             </Text>
           </XStack>
           {me.pbs.length ? (
-            <PersonalBests pbs={me.pbs} />
+            <PersonalBests pbs={me.pbs} showTimes />
           ) : (
             <Button
               variant="ghost"
@@ -416,6 +417,15 @@ export default function ProfileScreen() {
             />
           ))}
         </XStack>
+
+        <Button
+          variant="secondary"
+          icon="users"
+          onPress={inviteFriend}
+          style={{ width: '100%', marginTop: 24 }}
+        >
+          Invite a training friend
+        </Button>
 
         {__DEV__ ? (
           <XStack

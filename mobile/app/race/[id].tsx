@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Aurora } from '../../src/components/Motif';
@@ -7,17 +8,28 @@ import { showPip } from '../../src/components/PipKit';
 import { SyncBadge } from '../../src/components/Rhythm';
 import { Button, Callout, DisplayTitle, ScreenHeader } from '../../src/components/ui';
 import { compatibility } from '../../src/data/compat';
-import { nextDateFor } from '../../src/data/dates';
+import { formatWhen, nextDateFor } from '../../src/data/dates';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
-import { hostOpen } from '../../src/data/plans';
-import { athletesTrainingFor, daysUntil, formatRaceDate, raceById } from '../../src/data/races';
+import { isShowable } from '../../src/data/pacers';
+import { hostOpen, usePlans } from '../../src/data/plans';
+import {
+  athletesTrainingFor,
+  buildUpRuns,
+  daysUntil,
+  formatRaceDate,
+  raceById,
+} from '../../src/data/races';
 import { updateMe, useMe } from '../../src/data/session';
+import { useSocial } from '../../src/data/social';
 import { successHaptic } from '../../src/lib/haptics';
 
 export default function RaceScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
+  const { blocked } = useSocial();
+  const { open } = usePlans();
+  const [now] = useState(() => new Date());
   const { id } = useLocalSearchParams<{ id: string }>();
   const race = raceById(id);
 
@@ -30,8 +42,36 @@ export default function RaceScreen() {
   }
 
   const mine = me.goalRaceId === race.id;
-  const runners = athletesTrainingFor(race.id);
+  // Same start line: verified, active people you haven't blocked.
+  const runners = athletesTrainingFor(race.id).filter(
+    (a) => isShowable(a) && !blocked.includes(a.id)
+  );
   const days = daysUntil(race.date);
+  const buildUp = buildUpRuns(race, now);
+  // A build-up run already posted for that Saturday.
+  const postedFor = (date: Date) =>
+    open.find(
+      (o) =>
+        o.title === `${race.name} long run` &&
+        new Date(o.date).toDateString() === date.toDateString()
+    );
+
+  function hostLongRun(date: Date, weeksToGo: number) {
+    if (!race) return;
+    const s = hostOpen({
+      title: `${race.name} long run`,
+      activity: race.sport,
+      date: date.toISOString(),
+      place: race.meetup,
+      city: race.city,
+      distance: `${weeksToGo} ${weeksToGo === 1 ? 'week' : 'weeks'} to go · long run`,
+      level: me.level ?? 2,
+      spots: 10,
+      note: `Build-up long run for ${race.name}. All paces welcome — we regroup.`,
+    });
+    successHaptic();
+    router.push({ pathname: '/session/[id]', params: { id: s.id } });
+  }
 
   function hostMeetup() {
     if (!race) return;
@@ -116,6 +156,49 @@ export default function RaceScreen() {
               );
             })}
           </YStack>
+
+          {buildUp.length ? (
+            <YStack gap={10}>
+              <DisplayTitle size={28}>{`Build-up *long runs*`}</DisplayTitle>
+              {buildUp.map(({ date, weeksToGo }) => {
+                const posted = postedFor(date);
+                return (
+                  <XStack
+                    key={date.toISOString()}
+                    items="center"
+                    gap={12}
+                    p={14}
+                    rounded={20}
+                    bg="$card"
+                    borderWidth={1}
+                    borderColor="$border"
+                  >
+                    <YStack flex={1}>
+                      <Text fontFamily="$semibold" fontSize={15} color="$text">
+                        {`${formatWhen(date.toISOString(), now)}`}
+                      </Text>
+                      <Text fontSize={13} color="$muted">
+                        {posted
+                          ? `${posted.joined.length + 1} going · ${weeksToGo} wk to go`
+                          : `${weeksToGo} wk to go`}
+                      </Text>
+                    </YStack>
+                    <Button
+                      variant={posted ? 'primary' : 'secondary'}
+                      onPress={() =>
+                        posted
+                          ? router.push({ pathname: '/session/[id]', params: { id: posted.id } })
+                          : hostLongRun(date, weeksToGo)
+                      }
+                      style={{ height: 40, paddingHorizontal: 16 }}
+                    >
+                      {posted ? 'View' : 'Host'}
+                    </Button>
+                  </XStack>
+                );
+              })}
+            </YStack>
+          ) : null}
 
           <Callout icon="map-pin" title="Race-weekend meetup">
             {`Meet at ${race.meetup}.`}

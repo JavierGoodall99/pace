@@ -18,7 +18,7 @@ test('days factor explains the shared days', () => {
 test('pace factor rewards similar effort and flags big gaps', () => {
   expect(paceFactor(3, 3).score).toBe(1);
   expect(paceFactor(2, 3).score).toBe(0.7);
-  expect(paceFactor(1, 4).detail).toMatch(/Big gap/);
+  expect(paceFactor(1, 4).detail).toMatch(/Different effort/);
 });
 
 test('time and distance factors read naturally', () => {

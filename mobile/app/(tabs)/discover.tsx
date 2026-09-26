@@ -34,6 +34,7 @@ import { useSocial } from '../../src/data/social';
 import { upcomingEvents } from '../../src/data/capeTown';
 import { EVENT_ATTENDEES, pacersAmong } from '../../src/data/explore';
 import { useColors } from '../../src/theme/appearance';
+import { useNow } from '../../src/lib/useNow';
 import { shadow } from '../../src/theme/tokens';
 
 // Today's pacers. Not an endless swipe deck: a short daily drop of people
@@ -63,7 +64,7 @@ export default function PacersScreen() {
   const [liking, setLiking] = useState<Liking>(null);
 
   const cardWidth = width - 40;
-  const now = useMemo(() => new Date(), []);
+  const now = useNow();
 
   const [ageMin, ageMax] = ageWindow(filters, me.age);
   const here = activeCity(me, now);

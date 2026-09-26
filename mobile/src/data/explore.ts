@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import { Challenge, CHALLENGES, CT_SPOTS } from './capeTown';
+import { localDayKey } from './dates';
 import { ATHLETES, Athlete } from './mockData';
 import { isShowable, wantEachOther } from './pacers';
 import type { MeProfile } from './session';
@@ -74,17 +75,20 @@ export function toggleChallenge(id: string) {
   setState({ challenges: toggle(state.challenges, id) });
 }
 
-// One stamp per spot per day.
+// Stamps store a UTC timestamp; compare them by local calendar day.
+const stampDay = (at: string) => localDayKey(new Date(at));
+
+// One stamp per spot per (local) day.
 export function stampSpot(spotId: string, now: Date = new Date()): boolean {
-  const day = now.toISOString().slice(0, 10);
-  if (state.stamps.some((s) => s.spotId === spotId && s.at.slice(0, 10) === day)) return false;
+  const day = localDayKey(now);
+  if (state.stamps.some((s) => s.spotId === spotId && stampDay(s.at) === day)) return false;
   setState({ stamps: [...state.stamps, { spotId, at: now.toISOString() }] });
   return true;
 }
 
 export function stampedToday(s: ExploreState, spotId: string, now: Date = new Date()): boolean {
-  const day = now.toISOString().slice(0, 10);
-  return s.stamps.some((x) => x.spotId === spotId && x.at.slice(0, 10) === day);
+  const day = localDayKey(now);
+  return s.stamps.some((x) => x.spotId === spotId && stampDay(x.at) === day);
 }
 
 export function passport(s: ExploreState): { visited: number; total: number } {
@@ -93,10 +97,10 @@ export function passport(s: ExploreState): { visited: number; total: number } {
 
 // Progress this calendar month.
 export function challengeProgress(c: Challenge, s: ExploreState, now: Date = new Date()): number {
-  const month = now.toISOString().slice(0, 7);
+  const month = localDayKey(now).slice(0, 7);
   const kindOf = (id: string) => CT_SPOTS.find((x) => x.id === id)?.kind;
   const counted = s.stamps
-    .filter((x) => x.at.slice(0, 7) === month)
+    .filter((x) => stampDay(x.at).slice(0, 7) === month)
     .filter((x) =>
       c.spotIds
         ? c.spotIds.includes(x.spotId)

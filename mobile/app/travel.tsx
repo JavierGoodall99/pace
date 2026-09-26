@@ -6,6 +6,7 @@ import { Illo } from '../src/components/Illustrations';
 import { showPip } from '../src/components/PipKit';
 import { PickRow } from '../src/components/Sessions';
 import { Button, Callout, ScreenHeader, SectionTitle } from '../src/components/ui';
+import { CITIES } from '../src/data/places';
 import { formatRaceDate, upcomingRaces } from '../src/data/races';
 import { isTravelling, updateMe, useMe } from '../src/data/session';
 import { successHaptic } from '../src/lib/haptics';
@@ -13,7 +14,6 @@ import { successHaptic } from '../src/lib/haptics';
 // Travel & race-weekend mode: match with people in another city for a
 // few days — a work trip, a holiday, or the weekend of a big race.
 
-const CITIES = ['Cape Town', 'Johannesburg', 'Pretoria', 'Durban'];
 const LENGTHS = ['Weekend', '1 week', '2 weeks'];
 const LENGTH_DAYS: Record<string, number> = { Weekend: 3, '1 week': 7, '2 weeks': 14 };
 
@@ -23,7 +23,9 @@ export default function TravelScreen() {
   const me = useMe();
   const now = useMemo(() => new Date(), []);
   const travelling = isTravelling(me, now);
-  const [city, setCity] = useState<string>(me.travel?.city ?? CITIES.find((c) => c !== me.city)!);
+  const [city, setCity] = useState<string>(
+    me.travel?.city ?? CITIES.find((c) => c !== me.city) ?? CITIES[0]
+  );
   const [length, setLength] = useState('Weekend');
   const races = upcomingRaces(now).slice(0, 4);
 

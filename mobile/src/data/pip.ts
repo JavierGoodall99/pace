@@ -1,5 +1,5 @@
 import type { Mood } from '../components/Mascot';
-import { formatWhen } from './dates';
+import { formatWhen, localDayKey } from './dates';
 import { athleteById } from './mockData';
 import { checkInOutcome, effectiveStatus, Plan } from './plans';
 import { daysUntil, raceById } from './races';
@@ -163,5 +163,5 @@ export function weekDigest(
     pacers.size > 0
       ? `${parts.join(', ')} — and ${pacers.size} pacer${pacers.size === 1 ? '' : 's'} you might like ${pacers.size === 1 ? 'is' : 'are'} going to some of them.`
       : `${parts.join(', ')}. Pick one and say you’re going.`;
-  return { key: `digest-${now.toISOString().slice(0, 10)}`, text, mood: 'excited' };
+  return { key: `digest-${localDayKey(now)}`, text, mood: 'excited' };
 }

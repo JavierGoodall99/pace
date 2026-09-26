@@ -1,33 +1,28 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, YStack } from 'tamagui';
 import { Callout, Card, ScreenHeader, SectionTitle, ToggleRow } from '../src/components/ui';
+import { EmailKey, PushKey, setEmail, setPush, useSettings } from '../src/data/settings';
 
-const PUSH_ITEMS: { label: string; hint: string; default: boolean }[] = [
-  { label: 'Likes & kudos', hint: 'When someone likes your run or workout', default: true },
-  { label: 'Messages', hint: 'Direct messages from your matches', default: true },
-  { label: 'New matches', hint: 'When someone you liked likes you back', default: true },
-  { label: 'Session invites', hint: 'Planner invites to run, ride, or lift', default: true },
-  { label: 'Training reminders', hint: 'Nudges when your streak is at risk', default: false },
+const PUSH_ITEMS: { key: PushKey; label: string; hint: string }[] = [
+  { key: 'likes', label: 'Likes & kudos', hint: 'When someone likes your run or workout' },
+  { key: 'messages', label: 'Messages', hint: 'Direct messages from your matches' },
+  { key: 'matches', label: 'New matches', hint: 'When someone you liked likes you back' },
+  { key: 'invites', label: 'Session invites', hint: 'Planner invites to run, ride, or lift' },
+  { key: 'reminders', label: 'Training reminders', hint: 'Nudges when your streak is at risk' },
 ];
 
-const EMAIL_ITEMS: { label: string; hint: string; default: boolean }[] = [
-  { label: 'Weekly digest', hint: 'Your week in pace, every Monday', default: true },
-  { label: 'New match emails', hint: 'A note when you match', default: false },
-  { label: 'Product updates', hint: 'New features and beta invites', default: false },
+const EMAIL_ITEMS: { key: EmailKey; label: string; hint: string }[] = [
+  { key: 'digest', label: 'Weekly digest', hint: 'Your week in pace, every Monday' },
+  { key: 'matchEmails', label: 'New match emails', hint: 'A note when you match' },
+  { key: 'product', label: 'Product updates', hint: 'New features and beta invites' },
 ];
 
 export default function SettingsNotificationsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  const [push, setPush] = useState<Record<string, boolean>>(
-    Object.fromEntries(PUSH_ITEMS.map((i) => [i.label, i.default]))
-  );
-  const [email, setEmail] = useState<Record<string, boolean>>(
-    Object.fromEntries(EMAIL_ITEMS.map((i) => [i.label, i.default]))
-  );
+  const { push, email } = useSettings();
 
   return (
     <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
@@ -47,8 +42,8 @@ export default function SettingsNotificationsScreen() {
                 label={item.label}
                 hint={item.hint}
                 last={i === PUSH_ITEMS.length - 1}
-                value={!!push[item.label]}
-                onChange={(v) => setPush((prev) => ({ ...prev, [item.label]: v }))}
+                value={push[item.key]}
+                onChange={(v) => setPush(item.key, v)}
               />
             ))}
           </Card>
@@ -63,8 +58,8 @@ export default function SettingsNotificationsScreen() {
                 label={item.label}
                 hint={item.hint}
                 last={i === EMAIL_ITEMS.length - 1}
-                value={!!email[item.label]}
-                onChange={(v) => setEmail((prev) => ({ ...prev, [item.label]: v }))}
+                value={email[item.key]}
+                onChange={(v) => setEmail(item.key, v)}
               />
             ))}
           </Card>

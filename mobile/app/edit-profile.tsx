@@ -24,8 +24,10 @@ import {
   Lifestyle,
   REST_DAYS,
 } from '../src/data/identity';
-import { DISCIPLINES, Discipline } from '../src/data/mockData';
+import { CITIES } from '../src/data/places';
+import { daysPerWeek } from '../src/data/rhythm';
 import { updateMe, useMe } from '../src/data/session';
+import { formatLabel } from '../src/theme/tokens';
 
 const MAX_PHOTOS = 6;
 
@@ -43,14 +45,10 @@ export default function EditProfileScreen() {
   const [bio, setBio] = useState(me.bio);
   const [gender, setGender] = useState<Gender | null>(me.gender);
   const [lifestyle, setLifestyle] = useState<Lifestyle>(me.lifestyle);
-  const [disciplines, setDisciplines] = useState<Discipline[]>(me.disciplines);
+  const [error, setError] = useState<string | null>(null);
 
   const days = daysSince(me.photosUpdatedAt);
   const missingOffClock = me.photos.length > 0 && !me.photoLabels.includes('offclock');
-
-  function toggleDiscipline(d: Discipline) {
-    setDisciplines((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
-  }
 
   async function pickPhotos() {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -67,15 +65,24 @@ export default function EditProfileScreen() {
   }
 
   async function save() {
+    const ageNum = Number(age.trim());
+    if (!Number.isInteger(ageNum) || ageNum < 18 || ageNum > 99) {
+      setError('Pace is for adults only. Enter your age (18 or older).');
+      return;
+    }
+    if (!city) {
+      setError('Pick the city you train in.');
+      return;
+    }
+    setError(null);
     await updateMe({
       name: name.trim() || me.name,
       age: age.trim(),
       heightCm: Number(height) || null,
-      city: city.trim(),
+      city,
       bio: bio.trim(),
       gender,
       lifestyle,
-      disciplines,
     });
     router.back();
   }
@@ -130,7 +137,12 @@ export default function EditProfileScreen() {
             <Input placeholder="Name" value={name} onChangeText={setName} autoCapitalize="words" />
             <XStack gap={10}>
               <YStack flex={1}>
-                <Input placeholder="Age" value={age} onChangeText={setAge} keyboardType="numeric" />
+                <Input
+                  placeholder="Age"
+                  value={age}
+                  onChangeText={(v) => setAge(v.replace(/[^0-9]/g, '').slice(0, 2))}
+                  keyboardType="numeric"
+                />
               </YStack>
               <YStack flex={1}>
                 <Input
@@ -141,9 +153,13 @@ export default function EditProfileScreen() {
                 />
               </YStack>
             </XStack>
-            <Input placeholder="City" value={city} onChangeText={setCity} autoCapitalize="words" />
             <Input placeholder="Bio — one line is plenty" value={bio} onChangeText={setBio} />
           </YStack>
+        </YStack>
+
+        <YStack>
+          <SectionTitle>Where you train</SectionTitle>
+          <PickRow options={[...CITIES] as string[]} value={city || null} onChange={setCity} />
         </YStack>
 
         <YStack>
@@ -197,23 +213,27 @@ export default function EditProfileScreen() {
           </YStack>
         </YStack>
 
-        <YStack>
-          <SectionTitle>What you train</SectionTitle>
-          <XStack flexWrap="wrap" gap={8}>
-            {DISCIPLINES.map((d) => (
-              <Chip
-                key={d}
-                label={d}
-                selected={disciplines.includes(d)}
-                onPress={() => toggleDiscipline(d)}
-              />
-            ))}
-          </XStack>
+        <YStack gap={10}>
+          <SectionTitle>Your training</SectionTitle>
+          <Text fontSize={15} color="$muted">
+            {me.disciplines.length
+              ? `${me.disciplines.map(formatLabel).join(', ')} · ${daysPerWeek(me.cadence, me.trainingDays)}× a week`
+              : 'No sports picked yet'}
+          </Text>
+          <Button variant="ghost" onPress={() => router.push('/settings-preferences')}>
+            Edit sports, week, level & race
+          </Button>
         </YStack>
 
         <Callout icon="mail" title={`Signed in as ${me.email}`}>
           Your email is tied to your account and can&apos;t be changed here yet.
         </Callout>
+
+        {error ? (
+          <Text fontFamily="$medium" fontSize={14} color="$accentText">
+            {error}
+          </Text>
+        ) : null}
 
         <Button onPress={save} style={{ width: '100%' }}>
           Save changes

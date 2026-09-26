@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Alert } from 'react-native';
+import { notify } from '../src/lib/dialogs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../src/components/Icon';
@@ -137,10 +137,9 @@ export default function SettingsSubscriptionScreen() {
           <Button
             style={{ width: '100%', marginTop: 22 }}
             onPress={() =>
-              Alert.alert(
+              notify(
                 'Pace Pro',
-                'Upgrade flow coming soon — this is a shipping milestone, not a live payment screen.',
-                [{ text: 'Got it' }]
+                'Upgrade flow coming soon — this is a shipping milestone, not a live payment screen.'
               )
             }
           >
@@ -149,11 +148,7 @@ export default function SettingsSubscriptionScreen() {
           <Button
             variant="ghost"
             style={{ width: '100%', marginTop: 10, backgroundColor: colors.card }}
-            onPress={() =>
-              Alert.alert('Manage payment', 'Payment method and receipts will live here.', [
-                { text: 'Got it' },
-              ])
-            }
+            onPress={() => notify('Manage payment', 'Payment method and receipts will live here.')}
           >
             Manage payment
           </Button>

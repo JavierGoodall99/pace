@@ -1,11 +1,11 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { PhotoSlot } from '../src/components/PhotoSlot';
 import { athleteById } from '../src/data/mockData';
 import { ATHLETE_PHOTOS } from '../src/data/photos';
 import { updateMe, useMe } from '../src/data/session';
+import { PrivacySettings, setPrivacy, useSettings, Visibility } from '../src/data/settings';
 import { unblockAthlete, useSocial } from '../src/data/social';
 import {
   Callout,
@@ -16,15 +16,17 @@ import {
   ToggleRow,
 } from '../src/components/ui';
 
-const VISIBILITY_OPTIONS = ['EVERYONE', 'MATCHES ONLY'];
+const VISIBILITY_OPTIONS: Visibility[] = ['EVERYONE', 'MATCHES ONLY'];
 
-const TOGGLES: { label: string; hint: string; default: boolean }[] = [
-  { label: 'Show pace & stats', hint: 'Your training stats on your card', default: true },
-  { label: 'Show my city', hint: 'Used for match radius', default: true },
+type CardToggle = 'showStats' | 'showCity' | 'publicTrainingPhotos';
+
+const TOGGLES: { key: CardToggle; label: string; hint: string }[] = [
+  { key: 'showStats', label: 'Show pace & stats', hint: 'Your training stats on your card' },
+  { key: 'showCity', label: 'Show my city', hint: 'Used for match radius' },
   {
+    key: 'publicTrainingPhotos',
     label: 'Public training photos',
     hint: 'Visible to people you haven’t matched with',
-    default: false,
   },
 ];
 
@@ -34,10 +36,8 @@ export default function SettingsPrivacyScreen() {
   const me = useMe();
   const { blocked } = useSocial();
 
-  const [visibility, setVisibility] = useState<string>('EVERYONE');
-  const [toggles, setToggles] = useState<Record<string, boolean>>(
-    Object.fromEntries(TOGGLES.map((t) => [t.label, t.default]))
-  );
+  const { privacy } = useSettings();
+  const visibility = privacy.visibility;
 
   return (
     <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
@@ -53,7 +53,7 @@ export default function SettingsPrivacyScreen() {
           <SegmentedControl
             options={VISIBILITY_OPTIONS}
             value={visibility}
-            onChange={setVisibility}
+            onChange={(v) => setPrivacy({ visibility: v as Visibility })}
           />
         </YStack>
 
@@ -66,8 +66,8 @@ export default function SettingsPrivacyScreen() {
                 label={t.label}
                 hint={t.hint}
                 last={i === TOGGLES.length - 1}
-                value={!!toggles[t.label]}
-                onChange={(v) => setToggles((prev) => ({ ...prev, [t.label]: v }))}
+                value={privacy[t.key]}
+                onChange={(v) => setPrivacy({ [t.key]: v } as Partial<PrivacySettings>)}
               />
             ))}
           </Card>

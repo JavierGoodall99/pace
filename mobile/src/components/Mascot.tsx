@@ -10,7 +10,7 @@ import { useColors } from '../theme/appearance';
 
 export type Mood = 'happy' | 'excited' | 'thinking' | 'wink';
 
-const INK = '#2A1A1F';
+const INK = '#241B16';
 
 function Face({ mood, blink }: { mood: Mood; blink: boolean }) {
   const closedLeft = blink || mood === 'wink';
@@ -54,7 +54,7 @@ function Face({ mood, blink }: { mood: Mood; blink: boolean }) {
       {mood === 'excited' ? (
         <G>
           <Path d="M40 55 Q50 71 60 55 Z" fill={INK} />
-          <Path d="M44 61 Q50 66 56 61 Q50 63 44 61 Z" fill="#FF7A9A" />
+          <Path d="M44 61 Q50 66 56 61 Q50 63 44 61 Z" fill="#FF8A5C" />
         </G>
       ) : mood === 'thinking' ? (
         <Ellipse cx={50} cy={60} rx={4} ry={4.6} fill={INK} />

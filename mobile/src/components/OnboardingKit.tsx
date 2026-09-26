@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Easing } from 'react-native';
 import { Text, XStack, YStack } from 'tamagui';
 import { Icon } from './Icon';
+import { Illo, IlloName } from './Illustrations';
 import { tapHaptic } from '../lib/haptics';
 import { useColors } from '../theme/appearance';
 import { WEEK_DAY_NAMES } from '../data/rhythm';
@@ -77,13 +78,13 @@ function usePressScale() {
 }
 
 export function OptionCard({
-  emoji,
+  illo,
   title,
   subtitle,
   selected,
   onPress,
 }: {
-  emoji: string;
+  illo: IlloName;
   title: string;
   subtitle?: string;
   selected: boolean;
@@ -120,9 +121,7 @@ export function OptionCard({
           justify="center"
           bg={selected ? '$card' : '$surface'}
         >
-          <Text fontSize={26} lineHeight={32}>
-            {emoji}
-          </Text>
+          <Illo name={illo} size={34} />
         </XStack>
         <YStack flex={1}>
           <Text fontFamily="$bold" fontSize={17} color="$text">
@@ -152,12 +151,12 @@ export function OptionCard({
 }
 
 export function SportTile({
-  emoji,
+  illo,
   label,
   selected,
   onPress,
 }: {
-  emoji: string;
+  illo: IlloName;
   label: string;
   selected: boolean;
   onPress: () => void;
@@ -183,9 +182,7 @@ export function SportTile({
         borderColor={selected ? '$accent' : '$border'}
         bg={selected ? '$accentSoft' : '$card'}
       >
-        <Text fontSize={34} lineHeight={42}>
-          {emoji}
-        </Text>
+        <Illo name={illo} size={48} />
         <Text fontFamily="$bold" fontSize={15} color={selected ? '$accentText' : '$text'}>
           {label}
         </Text>

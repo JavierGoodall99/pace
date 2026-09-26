@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Illo } from '../../src/components/Illustrations';
 import { Icon } from '../../src/components/Icon';
 import { PipTip, showPip } from '../../src/components/PipKit';
 import { GoalCard } from '../../src/components/Proof';
@@ -202,7 +203,7 @@ export default function TodayScreen() {
                   icon="check"
                   onPress={() => {
                     respondToInvite(p.id, true);
-                    showPip(`It’s on! ${a?.name ?? 'Your session'} is in your week. ✅`);
+                    showPip(`It’s on! ${a?.name ?? 'Your session'} is in your week.`);
                   }}
                   style={{ flex: 1, height: 44 }}
                 >
@@ -300,7 +301,7 @@ export default function TodayScreen() {
             borderWidth={1}
             borderColor="$border"
           >
-            <Text fontSize={26}>🏁</Text>
+            <Illo name="flag" size={40} />
             <YStack flex={1}>
               <Text fontFamily="$semibold" fontSize={15} color="$text">
                 Training for a race?

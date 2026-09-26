@@ -1,5 +1,6 @@
 import { ATHLETES, Athlete, Discipline } from './mockData';
 import { depthFor } from './athleteDepth';
+import type { IlloName } from '../components/Illustrations';
 
 // Races and events — the real-world anchor for "race mode": see who's
 // training for the same start line and meet at the expo or finish.
@@ -11,7 +12,7 @@ export interface Race {
   date: string; // ISO date
   distance: string;
   sport: Discipline;
-  emoji: string;
+  illo: IlloName;
   meetup: string; // suggested race-weekend meetup spot
 }
 
@@ -23,7 +24,7 @@ export const RACES: Race[] = [
     date: '2026-10-18',
     distance: '42.2 km',
     sport: 'RUNNING',
-    emoji: '🏃',
+    illo: 'run',
     meetup: 'Expo, Green Point Stadium',
   },
   {
@@ -33,7 +34,7 @@ export const RACES: Race[] = [
     date: '2026-11-01',
     distance: '42.2 km',
     sport: 'RUNNING',
-    emoji: '🏃',
+    illo: 'run',
     meetup: 'Finish line, FNB Stadium',
   },
   {
@@ -43,7 +44,7 @@ export const RACES: Race[] = [
     date: '2026-11-15',
     distance: '97 km',
     sport: 'CYCLING',
-    emoji: '🚴',
+    illo: 'cycle',
     meetup: 'Coffee at the start village',
   },
   {
@@ -53,7 +54,7 @@ export const RACES: Race[] = [
     date: '2027-01-24',
     distance: '113 km',
     sport: 'TRIATHLON',
-    emoji: '🏅',
+    illo: 'medal',
     meetup: 'Athlete village, Orient Beach',
   },
   {
@@ -63,7 +64,7 @@ export const RACES: Race[] = [
     date: '2027-02-13',
     distance: '1.6 km swim',
     sport: 'SWIMMING',
-    emoji: '🏊',
+    illo: 'swim',
     meetup: 'Registration tent, north shore',
   },
   {
@@ -73,7 +74,7 @@ export const RACES: Race[] = [
     date: '2027-04-03',
     distance: '56 km',
     sport: 'RUNNING',
-    emoji: '⛰️',
+    illo: 'trail',
     meetup: 'Expo, CTICC',
   },
 ];

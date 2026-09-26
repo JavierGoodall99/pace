@@ -8,7 +8,7 @@ import { PickRow } from '../src/components/Sessions';
 import { Button, Callout, Input, ScreenHeader, SectionTitle } from '../src/components/ui';
 import { Level, LEVELS } from '../src/data/athleteDepth';
 import { formatWhen, shortDay, startOfDay } from '../src/data/dates';
-import { DISCIPLINES, Discipline, SPORT_EMOJI } from '../src/data/mockData';
+import { DISCIPLINES, Discipline, SPORT_ILLO } from '../src/data/mockData';
 import { spotsFor } from '../src/data/places';
 import { hostOpen } from '../src/data/plans';
 import { useMe } from '../src/data/session';
@@ -65,7 +65,7 @@ export default function NewSessionScreen() {
       note: note.trim() || undefined,
     });
     successHaptic();
-    showPip('Session posted! I’ll tell you when people join. 📣');
+    showPip('Session posted! I’ll tell you when people join.');
     router.replace({ pathname: '/session/[id]', params: { id: s.id } });
   }
 
@@ -91,7 +91,8 @@ export default function NewSessionScreen() {
                   setActivity(a);
                   setPlace(spotsFor(city, a)[0]?.name ?? place);
                 }}
-                render={(a) => `${SPORT_EMOJI[a]} ${formatLabel(a)}`}
+                render={(a) => formatLabel(a)}
+                illo={(a) => SPORT_ILLO[a]}
               />
             </YStack>
             <YStack>
@@ -139,10 +140,8 @@ export default function NewSessionScreen() {
                 options={LEVELS.map((l) => String(l.id))}
                 value={String(level)}
                 onChange={(v) => setLevel(Number(v) as Level)}
-                render={(v) => {
-                  const l = LEVELS.find((x) => String(x.id) === v)!;
-                  return `${l.emoji} ${l.label}`;
-                }}
+                render={(v) => LEVELS.find((x) => String(x.id) === v)!.label}
+                illo={(v) => LEVELS.find((x) => String(x.id) === v)!.illo}
               />
             </YStack>
             <YStack>

@@ -1,3 +1,5 @@
+import type { IlloName } from '../components/Illustrations';
+
 // Mock data ported 1:1 from the DC script in `../Pace App.dc.html`.
 
 export type Discipline =
@@ -428,12 +430,12 @@ export const NOTIFICATIONS: AppNotification[] = [
   },
 ];
 
-export const SPORT_EMOJI: Record<Discipline, string> = {
-  RUNNING: '🏃',
-  CYCLING: '🚴',
-  TRAIL: '⛰️',
-  SWIMMING: '🏊',
-  CROSSFIT: '🏋️',
-  CLIMBING: '🧗',
-  TRIATHLON: '🏅',
+export const SPORT_ILLO: Record<Discipline, IlloName> = {
+  RUNNING: 'run',
+  CYCLING: 'cycle',
+  TRAIL: 'trail',
+  SWIMMING: 'swim',
+  CROSSFIT: 'lift',
+  CLIMBING: 'climb',
+  TRIATHLON: 'medal',
 };

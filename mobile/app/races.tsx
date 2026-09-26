@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Illo } from '../src/components/Illustrations';
 import { Icon } from '../src/components/Icon';
 import { PhotoSlot } from '../src/components/PhotoSlot';
 import { Badge, ScreenHeader } from '../src/components/ui';
@@ -52,8 +53,9 @@ export default function RacesScreen() {
               </YStack>
               <YStack flex={1} gap={3}>
                 <XStack items="center" gap={6}>
+                  <Illo name={r.illo} size={22} />
                   <Text fontFamily="$bold" fontSize={16} color="$text" numberOfLines={1} flex={1}>
-                    {r.emoji} {r.name}
+                    {r.name}
                   </Text>
                   {mine ? <Badge tone="accent">Your race</Badge> : null}
                 </XStack>

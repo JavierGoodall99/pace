@@ -11,7 +11,7 @@ import { PickRow, SafetyPanel } from '../../src/components/Sessions';
 import { Badge, Button, Input, ScreenHeader, SectionTitle } from '../../src/components/ui';
 import { compatibility } from '../../src/data/compat';
 import { dayIndex, formatTime, formatWhen, shortDay, startOfDay } from '../../src/data/dates';
-import { athleteById, Discipline, SPORT_EMOJI } from '../../src/data/mockData';
+import { athleteById, Discipline, SPORT_ILLO } from '../../src/data/mockData';
 import { suggestSession } from '../../src/data/pacers';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
 import { spotsFor } from '../../src/data/places';
@@ -101,7 +101,7 @@ export default function InviteScreen() {
     });
     if (params.fromDrop) dropAction(athlete.id, 'invited');
     successHaptic();
-    showPip(`Invite sent! I’ll let you know when ${athlete.name} replies. 📨`);
+    showPip(`Invite sent! I’ll let you know when ${athlete.name} replies.`);
     router.back();
   }
 
@@ -151,7 +151,8 @@ export default function InviteScreen() {
                 options={activities}
                 value={activity}
                 onChange={setActivity}
-                render={(a) => `${SPORT_EMOJI[a]} ${formatLabel(a)}`}
+                render={(a) => formatLabel(a)}
+                illo={(a) => SPORT_ILLO[a]}
               />
             </YStack>
 

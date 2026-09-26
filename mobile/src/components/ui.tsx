@@ -3,6 +3,7 @@ import { StyleSheet, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Input as TInput, Text, XStack, YStack } from 'tamagui';
 import { Icon, IconName } from './Icon';
+import { Illo, IlloName } from './Illustrations';
 import { Mascot, Mood } from './Mascot';
 import { useColors } from '../theme/appearance';
 import { formatLabel, shadow } from '../theme/tokens';
@@ -23,11 +24,13 @@ export function Badge({
   children,
   tone = 'neutral',
   icon,
+  illo,
   style,
 }: {
   children: React.ReactNode;
   tone?: 'neutral' | 'accent' | 'success';
   icon?: IconName;
+  illo?: IlloName;
   style?: ViewStyle;
 }) {
   const colors = useColors();
@@ -38,6 +41,7 @@ export function Badge({
   return (
     <XStack items="center" gap={5} rounded="$full" px={12} py={6} bg={bg} style={style}>
       {icon ? <Icon name={icon} size={13} color={iconColor} strokeWidth={2} /> : null}
+      {illo ? <Illo name={illo} size={18} /> : null}
       <Text fontFamily="$semibold" fontSize={13} lineHeight={16} color={fg}>
         {typeof children === 'string' ? formatLabel(children) : children}
       </Text>

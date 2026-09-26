@@ -52,7 +52,7 @@ export default function RaceScreen() {
       note: `For everyone racing ${race.name}. All paces welcome.`,
     });
     successHaptic();
-    showPip('Meetup posted! Everyone racing will see it. 🏁');
+    showPip('Meetup posted! Everyone racing will see it.');
     router.push({ pathname: '/session/[id]', params: { id: s.id } });
   }
 
@@ -60,7 +60,7 @@ export default function RaceScreen() {
     <YStack flex={1} bg="$canvas">
       <Aurora height={420} />
       <ScrollView flex={1} contentContainerStyle={{ pb: 24 }}>
-        <ScreenHeader title={`${race.emoji} ${race.name}`} onBack={() => router.back()} />
+        <ScreenHeader title={race.name} onBack={() => router.back()} />
         <YStack px={20} mt={10} gap={18}>
           <XStack items="baseline" gap={10}>
             <Text fontFamily="$display" fontSize={88} lineHeight={90} color="$accentText">
@@ -137,7 +137,7 @@ export default function RaceScreen() {
             icon="check"
             onPress={() => {
               updateMe({ goalRaceId: race.id });
-              showPip(`Locked in! ${days} days to ${race.name}. Let’s find you pacers. 🏁`);
+              showPip(`Locked in! ${days} days to ${race.name}. Let’s find you pacers.`);
             }}
             style={{ width: '100%' }}
           >

@@ -18,7 +18,7 @@ const ALWAYS_FREE = [
   'Every message you receive',
   'Who liked you — names and photos',
   'Unlimited invites to train',
-  'Safety tools, travel mode and singles run clubs',
+  'Safety tools and singles run clubs',
 ];
 
 export default function SettingsSubscriptionScreen() {

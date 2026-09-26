@@ -4,7 +4,7 @@ import { freshnessLabel, seeking } from './identity';
 import { getMomentsState, kudosCount, liveMoments, resetMoments, toggleKudos } from './moments';
 import { getPlansState, resetPlans } from './plans';
 import { block, report } from './safety';
-import { activeCity, freshMe } from './session';
+import { freshMe } from './session';
 
 // AsyncStorage is mocked by jest-expo's preset; these stores only need
 // their in-memory state.
@@ -74,17 +74,6 @@ test('the drop day starts at 07:00', () => {
   expect(dropKey(new Date(2026, 8, 26, 6, 59))).toBe('2026-09-25');
   expect(dropKey(new Date(2026, 8, 26, 7, 0))).toBe('2026-09-26');
   expect(nextDrop(new Date(2026, 8, 26, 8, 0)).getDate()).toBe(27);
-});
-
-test('travel mode changes the city you match in until it ends', () => {
-  const me = { ...freshMe('Ana', 'a@x.co'), city: 'Pretoria' };
-  const now = new Date(2026, 8, 26);
-  const travelling = {
-    ...me,
-    travel: { city: 'Durban', until: new Date(2026, 8, 28).toISOString() },
-  };
-  expect(activeCity(travelling, now)).toBe('Durban');
-  expect(activeCity(travelling, new Date(2026, 8, 30))).toBe('Pretoria');
 });
 
 test('labels read naturally', () => {

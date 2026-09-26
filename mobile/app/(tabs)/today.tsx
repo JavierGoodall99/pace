@@ -21,6 +21,7 @@ import {
   usePlans,
 } from '../../src/data/plans';
 import { usePacerDeck } from '../../src/data/deck';
+import { activityText, SOURCE_LABEL, useMyTraining } from '../../src/data/training';
 import { todayLine } from '../../src/data/pip';
 import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { rhythmForMe, WEEK_DAY_NAMES } from '../../src/data/rhythm';
@@ -161,6 +162,8 @@ export default function TodayScreen() {
         <Legend dotBg="$accent" label="Session planned" />
         <Legend dotBg="$borderStrong" label="Your training day" />
       </XStack>
+
+      <TrainedTodayCard now={now} onLog={() => router.push('/log-training')} />
 
       <YStack px={20} mt={20} gap={14}>
         <PipTip line={todayLine(me, state.plans, pacersLeft, now)} />
@@ -358,6 +361,61 @@ function Legend({ dotBg, label }: { dotBg: string; label: string }) {
       <Text fontSize={12} color="$muted">
         {label}
       </Text>
+    </XStack>
+  );
+}
+
+// Did you train today? One tap to log it. Logging (or a sync, or a Pace
+// session) is what keeps you in other people's decks.
+function TrainedTodayCard({ now, onLog }: { now: Date; onLog: () => void }) {
+  const colors = useColors();
+  const { all, activity } = useMyTraining(now);
+  const today = activity.trainedToday ? all[0] : undefined;
+  return (
+    <XStack
+      mx={20}
+      mt={14}
+      p={14}
+      gap={12}
+      items="center"
+      rounded={20}
+      bg={today ? '$successSoft' : '$card'}
+      borderWidth={1}
+      borderColor={today ? '$success' : '$border'}
+    >
+      <XStack
+        width={40}
+        height={40}
+        rounded={12}
+        items="center"
+        justify="center"
+        bg={today ? '$card' : '$accentSoft'}
+      >
+        <Icon
+          name={today ? 'check' : 'zap'}
+          size={20}
+          color={today ? colors.success : colors.accentText}
+          strokeWidth={2.4}
+        />
+      </XStack>
+      <YStack flex={1}>
+        <Text fontFamily="$semibold" fontSize={15} color="$text">
+          {today ? 'Trained today' : 'Did you train today?'}
+        </Text>
+        <Text fontSize={13} color="$muted" numberOfLines={1}>
+          {today
+            ? `${formatLabel(today.sport)} · ${today.minutes} min · ${SOURCE_LABEL[today.source]}`
+            : activityText(activity)}
+        </Text>
+      </YStack>
+      <Button
+        variant={today ? 'ghost' : 'primary'}
+        icon="plus"
+        onPress={onLog}
+        style={{ height: 40, paddingHorizontal: 14 }}
+      >
+        {today ? 'Add' : 'Log it'}
+      </Button>
     </XStack>
   );
 }

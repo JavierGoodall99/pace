@@ -2,7 +2,7 @@ import type { Gender, Lifestyle, PhotoLabel } from './identity';
 import type { Provider, SyncSummary } from './sync';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
-import type { Level, Prompt } from './athleteDepth';
+import type { Level, Prompt, Route } from './athleteDepth';
 import type { Discipline } from './mockData';
 import { canonicalCity } from './places';
 
@@ -34,6 +34,8 @@ export interface MeProfile {
   goalRaceId: string | null;
   prompts: Prompt[];
   pbs: { label: string; value: string; source?: Provider }[];
+  // Favourite routes, added in Personal bests & routes.
+  routes: Route[];
   // Last Strava/Garmin import.
   sync: SyncSummary | null;
   // Dating basics — null until asked in onboarding.
@@ -45,14 +47,6 @@ export interface MeProfile {
   photosUpdatedAt: string | null;
   // Women-first messaging: after a match, only you can start the chat.
   womenFirst: boolean;
-  // Travel / race-weekend mode: match in another city until a date.
-  travel: Travel | null;
-}
-
-export interface Travel {
-  city: string;
-  until: string; // ISO date
-  raceId?: string;
 }
 
 export type Intent = 'love' | 'partner' | 'both';
@@ -96,13 +90,13 @@ const DEFAULT_ME: MeProfile = {
     { label: 'Back squat', value: '105 kg' },
     { label: '5 km', value: '22:40' },
   ],
+  routes: [{ name: 'Sea Point Promenade', detail: '8 km · flat, sunrise' }],
   gender: 'woman',
   heightCm: 167,
   lifestyle: { drinks: 'social', diet: 'highprotein', restDay: 'brunch' },
   photoLabels: [],
   photosUpdatedAt: null,
   womenFirst: false,
-  travel: null,
   sync: null,
 };
 
@@ -197,26 +191,20 @@ export function freshMe(name: string, email: string): MeProfile {
     goalRaceId: null,
     prompts: [],
     pbs: [],
+    routes: [],
     gender: null,
     heightCm: null,
     lifestyle: { drinks: null, diet: null, restDay: null },
     photoLabels: [],
     photosUpdatedAt: null,
     womenFirst: false,
-    travel: null,
     sync: null,
   };
 }
 
-// The city you're matching in right now: your travel city while travel
-// mode is on, otherwise home.
-export function activeCity(me: MeProfile, now: Date = new Date()): string {
-  if (me.travel && new Date(me.travel.until).getTime() >= now.getTime()) return me.travel.city;
+// Pace is Cape Town only for now; everyone matches in their home city.
+export function activeCity(me: MeProfile): string {
   return me.city;
-}
-
-export function isTravelling(me: MeProfile, now: Date = new Date()): boolean {
-  return !!me.travel && new Date(me.travel.until).getTime() >= now.getTime();
 }
 
 export type AuthResult = { ok: true } | { ok: false; error: string };

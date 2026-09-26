@@ -11,8 +11,8 @@ export interface Spot {
   sports: Discipline[];
 }
 
-// Cape Town (launch city) comes from the curated guide; the rest are for
-// travel mode.
+// Cape Town (launch city) comes from the curated guide. The other cities'
+// spots are ready for when Pace launches there.
 export const SPOTS: Spot[] = [
   ...CT_SPOTS.filter((s) => s.firstMeet).map((s) => ({
     name: s.name,
@@ -38,10 +38,18 @@ export function spotsFor(city: string, sport?: Discipline): Spot[] {
   return matching.length ? [...matching, ...pool.filter((s) => !matching.includes(s))] : pool;
 }
 
-// Cities Pace matches in. Profiles pick from this list rather than typing
-// free text, so matching never depends on how someone spelled their city.
+// Pace launches in Cape Town only. Onboarding asks for your city first;
+// anyone elsewhere joins the waitlist for their city instead.
+export const LAUNCH_CITY = 'Cape Town';
 export const CITIES = ['Cape Town', 'Johannesburg', 'Pretoria', 'Durban'] as const;
 export type City = (typeof CITIES)[number];
+// What onboarding offers. "Somewhere else" asks them to type it.
+export const OTHER_CITY = 'Somewhere else';
+export const HOME_CITY_OPTIONS: string[] = [...CITIES, OTHER_CITY];
+
+export function isLaunchCity(city: string | null | undefined): boolean {
+  return canonicalCity(city) === LAUNCH_CITY;
+}
 
 // Common spellings people typed before the picker existed.
 const CITY_ALIASES: Record<string, City> = {

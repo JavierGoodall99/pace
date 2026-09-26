@@ -20,7 +20,6 @@ import {
   ageWindow,
   useFilters,
 } from '../src/data/filters';
-import { HEIGHT_RANGE } from '../src/data/identity';
 import { useMe } from '../src/data/session';
 import { ACTIVE_DAYS } from '../src/data/trust';
 
@@ -30,8 +29,6 @@ export default function DiscoverFiltersScreen() {
   const f = useFilters();
   const me = useMe();
   const [autoMin, autoMax] = ageWindow(f, me.age);
-  const hMin = useMemo(() => [f.heightMin], [f.heightMin]);
-  const hMax = useMemo(() => [f.heightMax], [f.heightMax]);
   const ageMinValue = useMemo(() => [autoMin], [autoMin]);
   const ageMaxValue = useMemo(() => [autoMax], [autoMax]);
 
@@ -92,36 +89,7 @@ export default function DiscoverFiltersScreen() {
         </YStack>
 
         <YStack>
-          <XStack items="baseline" justify="space-between">
-            <SectionTitle>Height</SectionTitle>
-            <Text fontFamily="$semibold" fontSize={15} color="$accentText">
-              {f.heightMin} – {f.heightMax} cm
-            </Text>
-          </XStack>
-          <Card py={14}>
-            <YStack gap={14}>
-              <AgeSlider
-                label="Shortest"
-                value={hMin}
-                min={HEIGHT_RANGE.min}
-                max={HEIGHT_RANGE.max}
-                onChange={(v) => setFilters({ heightMin: Math.min(v, f.heightMax) })}
-              />
-              <AgeSlider
-                label="Tallest"
-                value={hMax}
-                min={HEIGHT_RANGE.min}
-                max={HEIGHT_RANGE.max}
-                onChange={(v) => setFilters({ heightMax: Math.max(v, f.heightMin) })}
-              />
-            </YStack>
-          </Card>
-        </YStack>
-
-        <YStack>
-          <SectionTitle hint="Nearby first, so a first session is easy. Travelling? Use travel mode.">
-            Distance
-          </SectionTitle>
+          <SectionTitle hint="Nearby first, so a first session is easy.">Distance</SectionTitle>
           <XStack flexWrap="wrap" gap={8}>
             <Chip
               label="Anywhere"
@@ -140,7 +108,9 @@ export default function DiscoverFiltersScreen() {
         </YStack>
 
         <YStack>
-          <SectionTitle>Availability</SectionTitle>
+          <SectionTitle hint="Only show people who train at these times.">
+            Availability
+          </SectionTitle>
           <XStack flexWrap="wrap" gap={8}>
             {AVAILABILITY_OPTIONS.map((t) => (
               <Chip
@@ -169,14 +139,10 @@ function AgeSlider({
   label,
   value,
   onChange,
-  min = AGE_RANGE.min,
-  max = AGE_RANGE.max,
 }: {
   label: string;
   value: number[];
   onChange: (v: number) => void;
-  min?: number;
-  max?: number;
 }) {
   return (
     <YStack gap={10}>
@@ -188,7 +154,13 @@ function AgeSlider({
           {value[0]}
         </Text>
       </XStack>
-      <Slider value={value} min={min} max={max} step={1} onValueChange={([v]) => onChange(v)}>
+      <Slider
+        value={value}
+        min={AGE_RANGE.min}
+        max={AGE_RANGE.max}
+        step={1}
+        onValueChange={([v]) => onChange(v)}
+      >
         <Slider.Track bg="$surface" height={6}>
           <Slider.TrackActive bg="$accent" />
         </Slider.Track>

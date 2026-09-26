@@ -41,7 +41,15 @@ import {
 } from '../src/data/rhythm';
 import { compatibility } from '../src/data/compat';
 import { isShowable, wantEachOther } from '../src/data/pacers';
-import { CITIES, distanceTo } from '../src/data/places';
+import {
+  CITIES,
+  distanceTo,
+  HOME_CITY_OPTIONS,
+  isLaunchCity,
+  LAUNCH_CITY,
+  OTHER_CITY,
+} from '../src/data/places';
+import { isOnWaitlist, joinWaitlist, useWaitlist } from '../src/data/waitlist';
 import { DEFAULT_RADIUS_KM } from '../src/data/trust';
 import { depthFor, LEVELS } from '../src/data/athleteDepth';
 import { athletesTrainingFor, formatRaceDate, raceById, upcomingRaces } from '../src/data/races';
@@ -62,6 +70,7 @@ import { brand, formatLabel, shadow } from '../src/theme/tokens';
 type StepId =
   | 'welcome'
   | 'meet'
+  | 'city'
   | 'name'
   | 'gender'
   | 'intent'
@@ -82,6 +91,7 @@ type StepId =
 const STEPS: StepId[] = [
   'welcome',
   'meet',
+  'city',
   'name',
   'gender',
   'intent',
@@ -102,6 +112,7 @@ const STEPS: StepId[] = [
 
 // Steps that count toward the progress bar.
 const QUESTIONS: StepId[] = [
+  'city',
   'name',
   'gender',
   'intent',
@@ -180,6 +191,9 @@ const CTA_STYLE = {
 
 function answered(step: StepId, me: MeProfile): boolean {
   switch (step) {
+    case 'city':
+      // Only Cape Town can carry on; everyone else joins the waitlist.
+      return isLaunchCity(me.city);
     case 'name':
       return me.name.trim().length > 0;
     case 'gender':
@@ -197,7 +211,7 @@ function answered(step: StepId, me: MeProfile): boolean {
     case 'goal':
       return me.goalRaceId !== null;
     case 'basics':
-      return Number(me.age) >= 18 && me.city.trim().length > 0 && !!me.heightCm;
+      return Number(me.age) >= 18 && !!me.heightCm;
     case 'lifestyle':
       return !!me.lifestyle.drinks && !!me.lifestyle.diet && !!me.lifestyle.restDay;
     case 'photos':
@@ -225,10 +239,20 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
         text: 'Hey, I’m Pip! I help athletes find people who move like them. Ready to build your card?',
         mood: 'excited',
       };
+    case 'city': {
+      const city = me.city.trim();
+      if (done) return { text: 'Cape Town! That’s exactly where Pace is live.', mood: 'excited' };
+      if (city)
+        return {
+          text: `Pace isn’t in ${city} yet, but we’re coming. Leave your email and I’ll tell you first.`,
+          mood: 'thinking',
+        };
+      return { text: 'First things first: where do you train?', mood: 'happy' };
+    }
     case 'name':
       return done
         ? { text: `Nice to meet you, ${first}!`, mood: 'excited' }
-        : { text: 'First things first — what should I call you?', mood: 'happy' };
+        : { text: 'What should I call you?', mood: 'happy' };
     case 'gender':
       return done
         ? {
@@ -306,15 +330,8 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
     case 'basics':
       if (me.age && Number(me.age) < 18)
         return { text: 'Pace is for adults only — you need to be 18+.', mood: 'thinking' };
-      if (done)
-        return {
-          text: `${me.city.trim()}! Plenty of athletes training there.`,
-          mood: 'excited',
-        };
-      return {
-        text: 'Almost there. How old are you, how tall, and where do you train?',
-        mood: 'happy',
-      };
+      if (done) return { text: 'Perfect. Nearly done!', mood: 'excited' };
+      return { text: 'Almost there. How old are you, and how tall?', mood: 'happy' };
     case 'lifestyle':
       return done
         ? { text: 'Perfect. Deal-breakers sorted before the first session.', mood: 'excited' }
@@ -485,6 +502,8 @@ export default function OnboardingScreen() {
 
               {step === 'meet' && <MeetStep text={pip.text} />}
 
+              {step === 'city' && <CityStep />}
+
               {step === 'name' && (
                 <Input
                   placeholder="Your first name"
@@ -629,16 +648,6 @@ export default function OnboardingScreen() {
                     }}
                     keyboardType="numeric"
                   />
-                  <YStack gap={8} pt={4}>
-                    <Text fontFamily="$semibold" fontSize={15} color="$text">
-                      Where you train
-                    </Text>
-                    <PickRow
-                      options={[...CITIES] as string[]}
-                      value={me.city || null}
-                      onChange={(v) => updateMe({ city: v })}
-                    />
-                  </YStack>
                 </YStack>
               )}
 
@@ -1314,6 +1323,98 @@ function LaunchStep({
       <Text color="$muted" fontSize={15} lineHeight={22} mt={20} text="center">
         Your card looks great. Every step you took helps us find people who really get you.
       </Text>
+    </YStack>
+  );
+}
+
+// First question: where you train. Cape Town carries on; anywhere else
+// gets a friendly "coming soon" and a way to join that city's waitlist.
+function CityStep() {
+  const me = useMe();
+  const waitlist = useWaitlist();
+  const known = (CITIES as readonly string[]).includes(me.city);
+  const [other, setOther] = useState(!known && me.city.trim().length > 0);
+  const [emailEdit, setEmail] = useState<string | null>(null);
+  const email = emailEdit ?? me.email;
+  const [error, setError] = useState<string | null>(null);
+
+  const choice = other ? OTHER_CITY : known ? me.city : null;
+  const city = me.city.trim();
+  const outside = !!city && !isLaunchCity(city);
+  const joined = outside && isOnWaitlist(email || me.email, city, waitlist);
+
+  async function join() {
+    const res = await joinWaitlist(email, city);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    setError(null);
+    successHaptic();
+  }
+
+  return (
+    <YStack gap={16}>
+      <PickRow
+        options={HOME_CITY_OPTIONS}
+        value={choice}
+        onChange={(v) => {
+          setError(null);
+          if (v === OTHER_CITY) {
+            setOther(true);
+            updateMe({ city: '' });
+          } else {
+            setOther(false);
+            updateMe({ city: v });
+          }
+        }}
+      />
+      {other ? (
+        <Input
+          placeholder="Which city?"
+          value={me.city}
+          onChangeText={(v) => updateMe({ city: v })}
+          autoCapitalize="words"
+        />
+      ) : null}
+
+      {outside ? (
+        <YStack p={16} gap={12} rounded={20} bg="$card" borderWidth={1} borderColor="$border">
+          <Text fontFamily="$semibold" fontSize={17} color="$text">
+            {`Coming soon to ${city}`}
+          </Text>
+          <Text fontSize={14} lineHeight={20} color="$muted">
+            {`Pace is live in ${LAUNCH_CITY} only for now, so everyone you meet is close enough to train with. Leave your email and we’ll let you know the moment we launch in ${city}.`}
+          </Text>
+          {joined ? (
+            <Callout icon="check" title="You’re on the list">
+              {`We’ll email ${email.trim().toLowerCase()} when Pace opens in ${city}. Train in Cape Town? Pick it above to carry on.`}
+            </Callout>
+          ) : (
+            <>
+              <Input
+                placeholder="Your email"
+                value={email}
+                onChangeText={(v) => {
+                  setEmail(v);
+                  setError(null);
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+              />
+              {error ? (
+                <Text fontFamily="$medium" fontSize={13} color="$accentText">
+                  {error}
+                </Text>
+              ) : null}
+              <Button icon="mail" onPress={join} style={{ width: '100%' }}>
+                Let me know
+              </Button>
+            </>
+          )}
+        </YStack>
+      ) : null}
     </YStack>
   );
 }

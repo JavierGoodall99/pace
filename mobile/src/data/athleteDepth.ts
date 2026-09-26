@@ -49,8 +49,6 @@ export interface AthleteDepth {
   lifestyle: Lifestyle;
   // Days since they last updated their photos.
   photosDaysAgo: number;
-  // Likes received this week — drives Standouts.
-  likesThisWeek: number;
   // Women-first messaging: after a match, only she can start the chat.
   womenFirst: boolean;
   // Main photo is a motion clip (plays as a slow loop on the card).
@@ -86,7 +84,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     heightCm: 168,
     lifestyle: { drinks: 'social', diet: 'anything', restDay: 'brunch' },
     photosDaysAgo: 9,
-    likesThisWeek: 41,
     womenFirst: false,
     motion: true,
     lastTrainedDays: 0,
@@ -112,7 +109,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     heightCm: 183,
     lifestyle: { drinks: 'social', diet: 'highprotein', restDay: 'brunch' },
     photosDaysAgo: 22,
-    likesThisWeek: 18,
     womenFirst: false,
     motion: false,
     lastTrainedDays: 1,
@@ -138,7 +134,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     heightCm: 171,
     lifestyle: { drinks: 'never', diet: 'vegetarian', restDay: 'adventure' },
     photosDaysAgo: 4,
-    likesThisWeek: 37,
     womenFirst: true,
     motion: true,
     lastTrainedDays: 0,
@@ -161,7 +156,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     heightCm: 188,
     lifestyle: { drinks: 'offseason', diet: 'highprotein', restDay: 'couch' },
     photosDaysAgo: 48,
-    likesThisWeek: 12,
     womenFirst: false,
     motion: false,
     lastTrainedDays: 3,
@@ -184,7 +178,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     heightCm: 165,
     lifestyle: { drinks: 'social', diet: 'highprotein', restDay: 'brunch' },
     photosDaysAgo: 15,
-    likesThisWeek: 29,
     womenFirst: false,
     motion: false,
     lastTrainedDays: 1,
@@ -204,7 +197,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     heightCm: 179,
     lifestyle: { drinks: 'social', diet: 'anything', restDay: 'adventure' },
     photosDaysAgo: 6,
-    likesThisWeek: 33,
     womenFirst: false,
     motion: true,
     lastTrainedDays: 23,
@@ -224,7 +216,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     heightCm: 173,
     lifestyle: { drinks: 'offseason', diet: 'vegan', restDay: 'adventure' },
     photosDaysAgo: 11,
-    likesThisWeek: 52,
     womenFirst: true,
     motion: true,
     lastTrainedDays: 0,
@@ -247,7 +238,6 @@ export const DEPTH: Record<number, AthleteDepth> = {
     heightCm: 185,
     lifestyle: { drinks: 'never', diet: 'highprotein', restDay: 'couch' },
     photosDaysAgo: 3,
-    likesThisWeek: 46,
     womenFirst: false,
     motion: true,
     lastTrainedDays: 2,
@@ -271,7 +261,6 @@ export function depthFor(a: Pick<Athlete, 'id'>): AthleteDepth {
       heightCm: 170,
       lifestyle: { drinks: null, diet: null, restDay: null },
       photosDaysAgo: 30,
-      likesThisWeek: 0,
       womenFirst: false,
       motion: false,
       lastTrainedDays: 30,

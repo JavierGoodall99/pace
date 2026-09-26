@@ -11,21 +11,20 @@ import { recentlyPassed, useSocial } from './social';
 // Who's left in your swipe deck. Shared by the Pacers tab and Today so
 // they always agree on the count.
 
-// Outside your Discover filters (age, height, radius).
+// Outside your Discover filters (age, radius, availability).
 export function filteredOut(
   me: MeProfile,
   filters: DiscoverFilterState,
   now: Date = new Date()
 ): number[] {
   const [ageMin, ageMax] = ageWindow(filters, me.age);
-  const here = activeCity(me, now);
+  const here = activeCity(me);
   return ATHLETES.filter((a) => {
     const d = depthFor(a);
     return (
       a.age < ageMin ||
       a.age > ageMax ||
-      d.heightCm < filters.heightMin ||
-      d.heightCm > filters.heightMax ||
+      (filters.times.length > 0 && !d.times.some((t) => filters.times.includes(t))) ||
       (filters.radiusKm != null && distanceTo(here, a.city, d.nearKm) > filters.radiusKm)
     );
   }).map((a) => a.id);

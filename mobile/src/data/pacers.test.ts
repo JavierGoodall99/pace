@@ -1,6 +1,6 @@
 import { dayIndex } from './dates';
 import { ATHLETES } from './mockData';
-import { isShowable, pacerDeck, standouts, wantEachOther } from './pacers';
+import { isShowable, pacerDeck, wantEachOther } from './pacers';
 import { freshMe } from './session';
 
 const me = {
@@ -40,10 +40,4 @@ test('the deck only shows people who want to see each other', () => {
   drop.forEach(({ athlete }) =>
     expect(['Sipho', 'Jacques', 'Dean', 'Kagiso']).toContain(athlete.name)
   );
-});
-
-test('standouts are ranked by likes this week', () => {
-  const list = standouts(me, []);
-  expect(list[0].name).toBe('Zanele');
-  expect(list).toHaveLength(4);
 });

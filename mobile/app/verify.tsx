@@ -73,23 +73,21 @@ export default function VerifyScreen() {
   let body: string;
   if (done) {
     title = "You're verified";
-    body = 'Your card carries the verified badge. Matches can trust it is really you.';
+    body = 'Your card now has the verified badge.';
   } else if (!scannerSupported) {
     title = 'Verify on your phone';
-    body = 'The selfie check uses your phone’s front camera. Open Pace on your phone to finish.';
+    body = 'Open Pace on your phone to finish.';
   } else if (cameraError) {
     title = 'Camera didn’t start';
-    body = 'Something else may be using the camera. Close other camera apps and try again.';
+    body = 'Close other camera apps and try again.';
   } else if (!hasPermission) {
     title = 'Camera access needed';
     body = canRequestPermission
-      ? 'We use your front camera for a few seconds. Nothing is saved or uploaded.'
-      : 'Camera access is off for Pace. Turn it on in Settings to take the selfie check.';
+      ? 'A few seconds. Nothing is saved.'
+      : 'Turn on camera access for Pace in Settings.';
   } else {
     title = instruction(liveness);
-    body = failed
-      ? 'No stress. Find good light, hold the phone at eye level, and go again.'
-      : 'Follow the prompts so we know it’s really you. Nothing is saved or uploaded.';
+    body = failed ? 'Find good light and try again.' : 'Follow the prompts. Nothing is saved.';
   }
 
   const ringColor = done ? colors.success : failed ? colors.muted : colors.accent;

@@ -48,11 +48,7 @@ export default function SafetyScreen() {
   const router = useRouter();
   return (
     <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 24 }}>
-      <ScreenHeader
-        title="Safety *centre*"
-        subtitle="Training first makes meeting safer. Here’s how Pace helps."
-        onBack={() => router.back()}
-      />
+      <ScreenHeader title="Safety *centre*" onBack={() => router.back()} />
       <YStack px={20} gap={12} mt={16}>
         <PipTip
           dismissible={false}

@@ -21,11 +21,7 @@ export default function RacesScreen() {
 
   return (
     <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 24 }}>
-      <ScreenHeader
-        title="Race *mode*"
-        subtitle="Find people training for the same start line."
-        onBack={() => router.back()}
-      />
+      <ScreenHeader title="Race *mode*" onBack={() => router.back()} />
       <YStack px={20} gap={12} mt={16}>
         {upcomingRaces().map((r) => {
           const runners = athletesTrainingFor(r.id);

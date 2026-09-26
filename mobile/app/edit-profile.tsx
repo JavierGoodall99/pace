@@ -181,12 +181,7 @@ export default function EditProfileScreen() {
               setLabels((l) => l.filter((_, k) => k !== i));
             }}
           />
-          {photoIssue ? (
-            <Callout icon="camera" title={photoIssue}>
-              Every card needs at least two labelled photos, one of them Off the clock. People want
-              to see you dressed up too.
-            </Callout>
-          ) : null}
+          {photoIssue ? <Callout icon="camera" title={photoIssue} /> : null}
         </YStack>
 
         <YStack>
@@ -345,9 +340,7 @@ export default function EditProfileScreen() {
           </Button>
         </YStack>
 
-        <Callout icon="mail" title={`Signed in as ${me.email}`}>
-          Your email is tied to your account and can&apos;t be changed here yet.
-        </Callout>
+        <Callout icon="mail" title={`Signed in as ${me.email}`} />
 
         {error ? (
           <Text fontFamily="$medium" fontSize={14} color="$accentText">

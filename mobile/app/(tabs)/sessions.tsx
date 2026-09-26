@@ -134,9 +134,6 @@ export default function ExploreScreen() {
     >
       <YStack px={20} gap={4}>
         <DisplayTitle size={42}>Explore *Cape Town*</DisplayTitle>
-        <Text fontSize={15} lineHeight={22} color="$muted">
-          Run crews, events and the best spots to train — and who from Pace is going.
-        </Text>
       </YStack>
 
       {/* Scrolls sideways so every tab keeps its full label on narrow phones. */}
@@ -212,9 +209,6 @@ export default function ExploreScreen() {
               onChange={setKind}
               render={(k) => (k === 'all' ? 'All' : KIND_LABEL[k])}
             />
-            <Text fontSize={13} color="$muted">
-              Tap a spot to see who trains there, check in for your Pace passport or post a session.
-            </Text>
             {spots.map((s) => (
               <SpotCard
                 key={s.id}
@@ -229,10 +223,6 @@ export default function ExploreScreen() {
 
         {tab === 'Crews' ? (
           <>
-            <Text fontSize={13} lineHeight={19} color="$muted">
-              Cape Town’s established clubs and crews. Follow the ones you run with — we’ll show you
-              who from Pace runs with them too.
-            </Text>
             {COMMUNITIES.map((c) => (
               <CrewCard
                 key={c.id}
@@ -246,8 +236,7 @@ export default function ExploreScreen() {
             <XStack gap={8} p={12} rounded={16} bg="$surface" items="flex-start">
               <Icon name="users" size={16} color={colors.muted} />
               <Text flex={1} fontSize={12} lineHeight={17} color="$muted">
-                Listings come from each club’s public pages and aren’t affiliated with Pace. Run a
-                club? Get in touch to claim or update your page.
+                From each club’s public pages. Not affiliated with Pace.
               </Text>
             </XStack>
           </>
@@ -272,8 +261,7 @@ export default function ExploreScreen() {
                 </Text>
               </XStack>
               <Text fontSize={13} lineHeight={18} color="$muted">
-                Check in at a spot after you train there to collect a stamp. Stamps count toward
-                challenges and show on your profile.
+                Check in after training at a spot to collect a stamp.
               </Text>
               <Button
                 variant="secondary"

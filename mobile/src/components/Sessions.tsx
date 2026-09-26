@@ -243,7 +243,7 @@ const OUTCOME_COPY: Record<CheckIn | 'waiting', { title: string; body: string }>
   },
   waiting: {
     title: 'Answer saved',
-    body: 'You’ll see the result once they check in too. Only mutual answers are shown.',
+    body: 'Only shown if it’s mutual.',
   },
 };
 

@@ -243,8 +243,7 @@ export default function EventScreen() {
           ) : null}
 
           <Callout icon="shield-check" title="Not a Pace event">
-            Details come from the organiser’s public pages and can change. Always check with them
-            before you go.
+            Check details with the organiser before you go.
           </Callout>
         </YStack>
       </ScrollView>

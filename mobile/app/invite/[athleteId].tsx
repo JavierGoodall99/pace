@@ -141,11 +141,7 @@ export default function InviteScreen() {
     >
       <YStack flex={1} bg="$canvas">
         <ScrollView flex={1} contentContainerStyle={{ pb: 24 }} keyboardShouldPersistTaps="handled">
-          <ScreenHeader
-            title={`Invite *${athlete.name}*`}
-            subtitle="Suggested from both your weeks — change anything."
-            onBack={() => router.back()}
-          />
+          <ScreenHeader title={`Invite *${athlete.name}*`} onBack={() => router.back()} />
 
           <YStack px={20} gap={22} mt={14}>
             <XStack
@@ -205,9 +201,7 @@ export default function InviteScreen() {
             </YStack>
 
             <YStack>
-              <SectionTitle hint="Busy, public places — ideal for a first session.">
-                Where
-              </SectionTitle>
+              <SectionTitle hint="Busy, public places">Where</SectionTitle>
               <YStack gap={8}>
                 {spots.slice(0, 4).map((s) => {
                   const active = s.name === place;

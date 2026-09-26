@@ -66,9 +66,7 @@ export default function DiscoverFiltersScreen() {
       >
         <YStack>
           <XStack items="baseline" justify="space-between">
-            <SectionTitle hint="They also only see you if you’re in their range.">
-              Age range
-            </SectionTitle>
+            <SectionTitle hint="It’s mutual">Age range</SectionTitle>
             <Text fontFamily="$semibold" fontSize={15} color="$accentText">
               {autoMin} – {autoMax}
             </Text>
@@ -89,7 +87,7 @@ export default function DiscoverFiltersScreen() {
         </YStack>
 
         <YStack>
-          <SectionTitle hint="Nearby first, so a first session is easy.">Distance</SectionTitle>
+          <SectionTitle>Distance</SectionTitle>
           <XStack flexWrap="wrap" gap={8}>
             <Chip
               label="Anywhere"
@@ -108,9 +106,7 @@ export default function DiscoverFiltersScreen() {
         </YStack>
 
         <YStack>
-          <SectionTitle hint="Only show people who train at these times.">
-            Availability
-          </SectionTitle>
+          <SectionTitle>Availability</SectionTitle>
           <XStack flexWrap="wrap" gap={8}>
             {AVAILABILITY_OPTIONS.map((t) => (
               <Chip
@@ -124,7 +120,7 @@ export default function DiscoverFiltersScreen() {
         </YStack>
 
         <Callout icon="shield-check" title="Always on">
-          {`Everyone you see is selfie-verified and has trained in the last ${ACTIVE_DAYS} days. Inactive profiles drop out automatically.`}
+          {`Everyone is verified and trained in the last ${ACTIVE_DAYS} days.`}
         </Callout>
 
         <Button icon="check" onPress={() => router.back()} style={{ width: '100%' }}>

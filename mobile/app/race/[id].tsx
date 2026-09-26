@@ -118,7 +118,7 @@ export default function RaceScreen() {
           </YStack>
 
           <Callout icon="map-pin" title="Race-weekend meetup">
-            {`Meet at ${race.meetup} — a busy, public spot where everyone's already buzzing.`}
+            {`Meet at ${race.meetup}.`}
           </Callout>
         </YStack>
       </ScrollView>

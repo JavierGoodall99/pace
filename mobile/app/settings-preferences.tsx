@@ -40,11 +40,7 @@ export default function SettingsPreferencesScreen() {
 
   return (
     <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
-      <ScreenHeader
-        title="Your *training*"
-        subtitle="What you train, and when. This is what we match on."
-        onBack={() => router.back()}
-      />
+      <ScreenHeader title="Your *training*" onBack={() => router.back()} />
 
       <YStack px={20} pt={20} gap={28}>
         <YStack>

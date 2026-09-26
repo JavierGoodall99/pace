@@ -26,11 +26,7 @@ export default function SignInScreen() {
   }
 
   return (
-    <AuthScreen
-      eyebrow="Sign in to Pace"
-      title="Welcome *back*"
-      subtitle="Your training is waiting. Pick up right where you left off."
-    >
+    <AuthScreen eyebrow="Sign in to Pace" title="Welcome *back*">
       <YStack gap={14}>
         <Input
           placeholder="Email"

@@ -36,10 +36,7 @@ export default function ConnectScreen() {
         sync,
         pbs: me.pbs.map((pb) => ({ ...pb, source: providerKey })),
       });
-      showPip(
-        `Imported ${sync.activities} activities from ${PROVIDER_LABEL[providerKey]}. Your stats are now verified.`,
-        'excited'
-      );
+      showPip(`Imported ${sync.activities} activities. Stats verified!`, 'excited');
       setConnecting(false);
     }, 1400);
   }
@@ -73,7 +70,7 @@ export default function ConnectScreen() {
 
         {connected ? (
           <Callout icon="check" tone="success" title="Connected">
-            {`${p.label} is syncing to your card. Your stats stay current automatically.`}
+            {`${p.label} is syncing to your card.`}
           </Callout>
         ) : (
           <Button onPress={connect} disabled={connecting} style={{ width: '100%' }}>
@@ -87,10 +84,11 @@ export default function ConnectScreen() {
           </Button>
         ) : null}
 
-        <Text color="$muted" fontSize={13} lineHeight={19}>
-          Demo note: this is a simulated authorize screen. A real build opens {p.label}&apos;s
-          permission screen and swaps the timeout in connect() for the callback.
-        </Text>
+        {__DEV__ ? (
+          <Text color="$muted" fontSize={13} lineHeight={19}>
+            Dev: simulated connect screen. A real build opens {p.label}&apos;s permission screen.
+          </Text>
+        ) : null}
       </YStack>
     </YStack>
   );

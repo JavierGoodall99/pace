@@ -55,7 +55,7 @@ export function LikeSheet({
     if (result === 'sent') {
       showPip(
         comment.trim()
-          ? `Comment sent! ${athlete.name} sees exactly what caught your eye.`
+          ? 'Comment sent!'
           : `Like sent! I’ll tell you if ${athlete.name} likes you back.`,
         'wink'
       );
@@ -174,10 +174,10 @@ export function LikeSheet({
                   )}
                   <Text fontFamily="$body" fontSize={12} color="$muted" text="center">
                     {!me.verified
-                      ? 'Only selfie-verified members can like — it keeps fakes out.'
+                      ? 'Only verified members can like.'
                       : left <= 0
-                        ? 'Likes reset at midnight. Once you match, invites to train are unlimited.'
-                        : `${left} of ${LIKES_PER_DAY} likes left today — make them count.`}
+                        ? 'Likes reset at midnight.'
+                        : `${left} of ${LIKES_PER_DAY} likes left today`}
                   </Text>
                 </YStack>
               </>

@@ -50,7 +50,7 @@ export default function NewMomentScreen() {
     <YStack flex={1} bg="$canvas">
       <ScreenHeader
         title="Post a *moment*"
-        subtitle="One photo from today’s session. Matches only, gone in 24 hours."
+        subtitle="Matches only · gone in 24 hours"
         onBack={() => router.back()}
       />
       <ScrollView

@@ -78,7 +78,7 @@ export default function MatchScreen() {
         <Text color="$muted" fontSize={16} lineHeight={24} mt={8} maxW={300} text="center">
           {plan
             ? `${athlete.name} said yes to training together. That’s your first session — see you out there.`
-            : `You and ${athlete.name} move to the same beat. Say hi and plan your first session.`}
+            : `You and ${athlete.name} move to the same beat.`}
         </Text>
 
         <YStack

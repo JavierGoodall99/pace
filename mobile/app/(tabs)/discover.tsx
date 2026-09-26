@@ -89,12 +89,12 @@ export default function PacersScreen() {
   function allowSwipe(p: Pacer, dir: SwipeDir): boolean {
     if (dir === 'left') return true;
     if (!me.verified) {
-      showPip('Verify your selfie to start liking. It keeps fakes out.', 'thinking');
+      showPip('Verify your selfie to start liking.', 'thinking');
       router.push('/verify');
       return false;
     }
     if (likesLeft <= 0) {
-      showPip('That’s all your likes for today. They reset at midnight.', 'thinking');
+      showPip('Out of likes — they reset at midnight.', 'thinking');
       return false;
     }
     return true;
@@ -505,7 +505,7 @@ function DeckDone({
         You’re all *caught up*
       </DisplayTitle>
       <Text fontSize={15} lineHeight={22} color="$muted" text="center">
-        You’ve seen everyone near you for now. New pacers show up as they join and train.
+        New pacers show up as they join.
       </Text>
       {goingNote ? (
         <Text fontFamily="$semibold" fontSize={14} color="$accentText" text="center" mt={4}>

@@ -15,7 +15,7 @@ import { effectiveStatus, usePlans } from '../../src/data/plans';
 import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { ME_AVATAR, ME_COVER, TRAINING_PHOTOS } from '../../src/data/photos';
 import { lifestyleChips } from '../../src/data/identity';
-import { availableProviders, hasSync, providerList, syncLabel } from '../../src/data/sync';
+import { availableProviders, hasSync, syncLabel } from '../../src/data/sync';
 import { communityById } from '../../src/data/capeTown';
 import { completedChallenges, passport, useExplore } from '../../src/data/explore';
 import { useMe } from '../../src/data/session';
@@ -135,8 +135,8 @@ export default function ProfileScreen() {
         </XStack>
         {!activity.active ? (
           <YStack mt={12}>
-            <Callout icon="activity" title="You’re hidden from other people’s decks">
-              {`Pace only shows people who trained in the last ${ACTIVE_DAYS} days. Log a session or connect ${providerList()} to show up again.`}
+            <Callout icon="activity" title="You’re hidden from decks">
+              {`No training in ${ACTIVE_DAYS} days. Log a session to show up again.`}
             </Callout>
             <XStack gap={10} mt={10}>
               <Button icon="plus" onPress={() => router.push('/log-training')} style={{ flex: 1 }}>
@@ -213,9 +213,6 @@ export default function ProfileScreen() {
             </Text>
           </XStack>
           <RhythmStrip mine={myRhythm} theirs={myRhythm} height={34} />
-          <Text fontSize={13} color="$muted">
-            We match you with people who train on {myDays.slice(0, 3).join(', ')} and more.
-          </Text>
         </YStack>
 
         <YStack mt={16} mb={4}>
@@ -295,7 +292,7 @@ export default function ProfileScreen() {
             </XStack>
           ) : (
             <Text fontSize={13} color="$muted">
-              Check in at spots and follow your crews — they show here for matches to see.
+              Follow crews and check in at spots to show them here.
             </Text>
           )}
         </YStack>

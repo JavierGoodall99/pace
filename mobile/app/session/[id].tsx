@@ -172,13 +172,8 @@ export default function SessionDetailScreen() {
             summary={`${s.title} · ${formatWhen(s.date)} · ${s.place}, ${s.city}`}
           />
           {s.singles && s.balance ? (
-            <Callout icon="heart" title="Singles only, balanced">
-              {`Spots are held equally: ${s.balance.women} women and ${s.balance.men} men. Everyone here is single and on Pace — name tags, an easy pace and time to chat afterwards.`}
-            </Callout>
-          ) : s.spots > 1 ? (
-            <Callout icon="users" title="A great first meet">
-              Group sessions keep things easy — meet someone new with others around, then plan a
-              1-on-1 if it clicks.
+            <Callout icon="heart" title="Singles only">
+              {`${s.balance.women} women + ${s.balance.men} men, all on Pace.`}
             </Callout>
           ) : null}
         </YStack>

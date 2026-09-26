@@ -54,13 +54,7 @@ import { isOnWaitlist, joinWaitlist, useWaitlist } from '../src/data/waitlist';
 import { DEFAULT_RADIUS_KM } from '../src/data/trust';
 import { depthFor, LEVELS } from '../src/data/athleteDepth';
 import { athletesTrainingFor, formatRaceDate, raceById, upcomingRaces } from '../src/data/races';
-import {
-  availableProviders,
-  hasSync,
-  PROVIDER_INFO,
-  PROVIDER_LABEL,
-  providerList,
-} from '../src/data/sync';
+import { availableProviders, hasSync, PROVIDER_INFO, PROVIDER_LABEL } from '../src/data/sync';
 import { seedDemoFor } from '../src/data/account';
 import type { LegalDoc } from '../src/data/legal';
 import {
@@ -252,15 +246,15 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
   switch (step) {
     case 'meet':
       return {
-        text: 'Hey, I’m Pip! I help athletes find people who move like them. Ready to build your card?',
+        text: 'Hey, I’m Pip! Let’s build your card.',
         mood: 'excited',
       };
     case 'city': {
       const city = me.city.trim();
-      if (done) return { text: 'Cape Town! That’s exactly where Pace is live.', mood: 'excited' };
+      if (done) return { text: 'Cape Town — we’re live there!', mood: 'excited' };
       if (city)
         return {
-          text: `Pace isn’t in ${city} yet, but we’re coming. Leave your email and I’ll tell you first.`,
+          text: `Not in ${city} yet — leave your email and I’ll tell you first.`,
           mood: 'thinking',
         };
       return { text: 'First things first: where do you train?', mood: 'happy' };
@@ -294,8 +288,7 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
     }
     case 'week': {
       const n = me.trainingDays?.filter(Boolean).length ?? 0;
-      if (n === 0)
-        return { text: 'Now the fun part: tap the days you usually train.', mood: 'happy' };
+      if (n === 0) return { text: 'Tap the days you train.', mood: 'happy' };
       if (n <= 2)
         return {
           text: `${n} day${n === 1 ? '' : 's'} a week — every session counts!`,
@@ -308,14 +301,13 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
     case 'time':
       if (me.times.includes('EARLY MORNING'))
         return { text: 'An early bird! We’ll find you other early birds.', mood: 'excited' };
-      if (done)
-        return { text: 'Got it — we’ll match you with people on the same clock.', mood: 'happy' };
+      if (done) return { text: 'Got it — same-clock matches.', mood: 'happy' };
       return { text: 'When do you like to train?', mood: 'happy' };
     case 'level': {
       const l = LEVELS.find((x) => x.id === me.level);
       if (!l)
         return {
-          text: 'How hard do you go? We match effort so sessions actually work.',
+          text: 'How hard do you go?',
           mood: 'happy',
         };
       if (l.id === 4)
@@ -330,7 +322,7 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
     case 'goal': {
       if (me.goalRaceId === null)
         return {
-          text: 'Training for something? Meet people on the same start line.',
+          text: 'Training for a race?',
           mood: 'happy',
         };
       const race = raceById(me.goalRaceId);
@@ -350,46 +342,45 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
       return { text: 'Almost there. How old are you?', mood: 'happy' };
     case 'lifestyle':
       return done
-        ? { text: 'Perfect. Deal-breakers sorted before the first session.', mood: 'excited' }
-        : { text: 'Quick lifestyle check — the stuff that matters off the track.', mood: 'happy' };
+        ? { text: 'Perfect. Deal-breakers sorted.', mood: 'excited' }
+        : { text: 'Quick lifestyle check.', mood: 'happy' };
     case 'photos':
       if (done)
         return {
-          text: 'Looking great! Both sides of you — that’s what gets likes.',
+          text: 'Looking great!',
           mood: 'excited',
         };
       if (me.photos.length >= 2 && !me.photoLabels.includes('offclock'))
         return {
-          text: 'Mark one photo Off the clock — people want to see you dressed up, not just sweaty.',
+          text: 'Mark one photo Off the clock.',
           mood: 'wink',
         };
-      if (me.photos.length >= 2)
-        return { text: 'Now label each photo so people know what they’re seeing.', mood: 'happy' };
+      if (me.photos.length >= 2) return { text: 'Now label each photo.', mood: 'happy' };
       return {
-        text: 'Add 2–4 photos: at least one in action and one off the clock. Faces first!',
+        text: 'Add 2–4 photos — one in action, one off the clock.',
         mood: 'happy',
       };
     case 'sync':
       return done
-        ? { text: 'Synced! Your stats now carry a verified badge.', mood: 'excited' }
+        ? { text: 'Synced! Your stats are verified.', mood: 'excited' }
         : {
-            text: `Connect ${providerList()}. Pace only shows people who actually train — this proves you do.`,
+            text: 'Connect your training app to prove you train.',
             mood: 'happy',
           };
     case 'verify':
       return done
         ? { text: 'Verified! You just unlocked Gold.', mood: 'excited' }
         : {
-            text: 'Last one: a quick selfie check. Everyone here is verified — you’ll need it to like or invite.',
+            text: 'Last one: a quick selfie check.',
             mood: 'happy',
           };
     case 'account':
       return {
-        text: `Your card’s ready${first ? `, ${first}` : ''}! Add an email and password so it’s saved.`,
+        text: `Your card’s ready${first ? `, ${first}` : ''}! Save it with an email.`,
         mood: 'excited',
       };
     case 'building':
-      return { text: 'Hold tight — finding people who move like you…', mood: 'thinking' };
+      return { text: 'Finding people who move like you…', mood: 'thinking' };
     default:
       return { text: '', mood: 'happy' };
   }
@@ -616,10 +607,6 @@ export default function OnboardingScreen() {
                     </Text>
                   </XStack>
                   <WeekBuilder days={me.trainingDays ?? NO_DAYS} onToggle={toggleDay} />
-                  <Callout icon="activity">
-                    This is your rhythm. We match you with people who train on the same days — so
-                    plans actually happen.
-                  </Callout>
                 </YStack>
               )}
 
@@ -764,11 +751,6 @@ export default function OnboardingScreen() {
                       onPress={() => router.push(`/connect/${p}`)}
                     />
                   ))}
-                  <YStack mt={6}>
-                    <Callout icon="sparkles" title="Unlocks Silver tier">
-                      A wider match radius and a verified-stats badge on your card.
-                    </Callout>
-                  </YStack>
                 </YStack>
               )}
 
@@ -801,7 +783,7 @@ export default function OnboardingScreen() {
                     {me.verified ? 'Verified' : 'Start selfie check'}
                   </Button>
                   <Text fontSize={13} color="$muted" text="center">
-                    Takes 10 seconds. Verified profiles get twice the matches.
+                    Takes 10 seconds.
                   </Text>
                 </YStack>
               )}
@@ -945,7 +927,7 @@ function MeetStep({ text }: { text: string }) {
         </YStack>
       </YStack>
       <Text fontSize={14} color="$muted" text="center">
-        {QUESTIONS.length} quick questions · about 2 minutes
+        About 2 minutes
       </Text>
     </YStack>
   );
@@ -1090,8 +1072,7 @@ function RevealStep({ me, rhythm }: { me: MeProfile; rhythm: Rhythm }) {
         </Text>
       ) : (
         <Text fontSize={15} color="$muted" text="center" maxW={300}>
-          Pace only shows verified people who actually train, so we’re still growing in {city}.
-          Singles run clubs are the fastest way to meet people this week.
+          We’re still growing in {city}. Try a singles run club this week.
         </Text>
       )}
     </YStack>
@@ -1320,7 +1301,7 @@ function LaunchStep({
         </DisplayTitle>
       </YStack>
       <Text color="$muted" fontSize={15} lineHeight={22} text="center">
-        This is your card, exactly as other people will see it.
+        Your card, as others see it.
       </Text>
 
       <Confetti pieces={CONFETTI_PIECES} />
@@ -1352,7 +1333,7 @@ function LaunchStep({
         />
       </YStack>
       <Text color="$muted" fontSize={14} lineHeight={20} mt={16} text="center">
-        Tap the sides of your card to flip through it.
+        Tap the sides to flip through.
       </Text>
     </YStack>
   );
@@ -1415,11 +1396,11 @@ function CityStep() {
             {`Coming soon to ${city}`}
           </Text>
           <Text fontSize={14} lineHeight={20} color="$muted">
-            {`Pace is live in ${LAUNCH_CITY} only for now, so everyone you meet is close enough to train with. Leave your email and we’ll let you know the moment we launch in ${city}.`}
+            {`We’re only in ${LAUNCH_CITY} for now. Leave your email and we’ll tell you when we launch.`}
           </Text>
           {joined ? (
             <Callout icon="check" title="You’re on the list">
-              {`We’ll email ${email.trim().toLowerCase()} when Pace opens in ${city}. Train in Cape Town? Pick it above to carry on.`}
+              {`We’ll email ${email.trim().toLowerCase()}. Train in Cape Town? Pick it above.`}
             </Callout>
           ) : (
             <>

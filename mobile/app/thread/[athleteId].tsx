@@ -87,7 +87,7 @@ export default function ThreadScreen() {
   const lock = !matched
     ? social.matches.includes(athlete.id) && !social.blocked.includes(athlete.id)
       ? `This match expired — nobody said hi within ${MATCH_TTL_DAYS} days.`
-      : `You can only message matches. Like ${athlete.name} and if they like you back, you can chat.`
+      : 'You can only message matches.'
     : composerLock(me, athlete.id, chat);
   const gallery = galleryFor(athlete.slotId);
   const inviteToTrain = () =>
@@ -188,9 +188,7 @@ export default function ThreadScreen() {
             <YStack items="center" gap={10} py={30}>
               <Mascot size={90} mood={lock ? 'thinking' : 'excited'} />
               <Text fontSize={15} color="$muted" text="center" maxW={280}>
-                {lock
-                  ? lock
-                  : `You matched with ${athlete.name}! Say hi, send a voice note, or skip the small talk and invite them to train.`}
+                {lock ? lock : `You matched with ${athlete.name}! Say hi or invite them to train.`}
               </Text>
             </YStack>
           ) : null}
@@ -270,8 +268,7 @@ export default function ThreadScreen() {
               <XStack items="center" gap={8} px={20} pt={10}>
                 <Icon name="shield-check" size={15} color={colors.accentText} />
                 <Text flex={1} fontSize={13} color="$muted">
-                  Tip: keep it on Pace until you’ve trained together — it’s how we keep scammers
-                  out.
+                  Keep chatting on Pace until you’ve trained together.
                 </Text>
               </XStack>
             ) : null}

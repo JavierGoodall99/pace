@@ -523,7 +523,7 @@ export function Callout({
 }: {
   icon?: IconName;
   title?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   tone?: 'accent' | 'success';
 }) {
   const colors = useColors();
@@ -550,9 +550,11 @@ export function Callout({
             {title}
           </Text>
         ) : null}
-        <Text fontSize={14} lineHeight={20} color="$muted">
-          {children}
-        </Text>
+        {children ? (
+          <Text fontSize={14} lineHeight={20} color="$muted">
+            {children}
+          </Text>
+        ) : null}
       </YStack>
     </XStack>
   );

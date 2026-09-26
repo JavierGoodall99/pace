@@ -5,15 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, YStack } from 'tamagui';
 import { showPip } from '../src/components/PipKit';
 import { PickRow } from '../src/components/Sessions';
-import {
-  Button,
-  Callout,
-  Card,
-  Input,
-  ScreenHeader,
-  SectionTitle,
-  ToggleRow,
-} from '../src/components/ui';
+import { Button, Card, Input, ScreenHeader, SectionTitle, ToggleRow } from '../src/components/ui';
 import { Level, LEVELS } from '../src/data/athleteDepth';
 import { formatWhen, shortDay, startOfDay } from '../src/data/dates';
 import { DISCIPLINES, Discipline, SPORT_ILLO } from '../src/data/mockData';
@@ -135,7 +127,7 @@ export default function NewSessionScreen() {
               <PickRow options={TIMES} value={time} onChange={setTime} />
             </YStack>
             <YStack>
-              <SectionTitle hint="Public spots only — safer for everyone.">Where</SectionTitle>
+              <SectionTitle hint="Public spots only">Where</SectionTitle>
               <PickRow
                 options={[
                   ...new Set([
@@ -188,9 +180,6 @@ export default function NewSessionScreen() {
                 onChangeText={setNote}
               />
             </YStack>
-            <Callout icon="users" title="Tip">
-              Small groups are the easiest first meet. You can always plan a 1-on-1 afterwards.
-            </Callout>
           </YStack>
         </ScrollView>
         <YStack

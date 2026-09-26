@@ -26,11 +26,7 @@ export default function SignUpScreen() {
   }
 
   return (
-    <AuthScreen
-      eyebrow="Join Pace"
-      title="Find your *pace*"
-      subtitle="Create your card in a few minutes. Quick questions, one at a time, then it's built."
-    >
+    <AuthScreen eyebrow="Join Pace" title="Find your *pace*">
       <YStack gap={14}>
         <Input
           placeholder="Name"

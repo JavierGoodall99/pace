@@ -4,7 +4,7 @@ import { athleteById } from './mockData';
 import { checkInOutcome, effectiveStatus, Plan } from './plans';
 import { daysUntil, raceById } from './races';
 import type { MeProfile } from './session';
-import { availableProviders, hasSync, providerList } from './sync';
+import { availableProviders, hasSync } from './sync';
 import { upcomingEvents } from './capeTown';
 import { EVENT_ATTENDEES, ExploreState, pacersAmong } from './explore';
 
@@ -36,7 +36,7 @@ export function todayLine(
     const who = athleteById(pendingCheckIn.athleteId)?.name ?? 'them';
     return {
       key: `checkin-${pendingCheckIn.id}`,
-      text: `How did it go with ${who}? Your answer stays private unless it’s mutual.`,
+      text: `How did it go with ${who}? Only shared if mutual.`,
       mood: 'wink',
     };
   }
@@ -76,7 +76,7 @@ export function todayLine(
 
   return {
     key: 'quiet',
-    text: 'Quiet day? Cape Town’s run crews are the easiest way to meet someone new.',
+    text: 'Quiet day? Try a Cape Town run crew.',
     mood: 'thinking',
     cta: { label: 'Explore Cape Town', href: '/(tabs)/sessions' },
   };
@@ -87,7 +87,7 @@ export function profileTip(me: MeProfile, now: Date = new Date()): PipLine {
   if (!me.gender) {
     return {
       key: 'tip-basics',
-      text: 'Tell me whether you’re a man or a woman so I can show you the right people.',
+      text: 'Are you a man or a woman? I’ll show you the right people.',
       mood: 'thinking',
       cta: { label: 'Edit profile', href: '/edit-profile' },
     };
@@ -95,7 +95,7 @@ export function profileTip(me: MeProfile, now: Date = new Date()): PipLine {
   if (me.photos.length > 0 && !me.photoLabels.includes('offclock')) {
     return {
       key: 'tip-offclock',
-      text: 'Add an Off the clock photo. People want to see you dressed up, not just mid-rep.',
+      text: 'Add an Off the clock photo.',
       mood: 'wink',
       cta: { label: 'Edit photos', href: '/edit-profile' },
     };
@@ -103,7 +103,7 @@ export function profileTip(me: MeProfile, now: Date = new Date()): PipLine {
   if (me.photos.length < 3) {
     return {
       key: 'tip-photos',
-      text: 'Action shots get 3× more invites. Add another training photo?',
+      text: 'Action shots get 3× more invites. Add another?',
       mood: 'happy',
       cta: { label: 'Edit profile', href: '/edit-profile' },
     };
@@ -111,7 +111,7 @@ export function profileTip(me: MeProfile, now: Date = new Date()): PipLine {
   if (!me.verified) {
     return {
       key: 'tip-verify',
-      text: 'Verified athletes get twice the matches. It takes 10 seconds!',
+      text: 'Verified athletes get twice the matches.',
       mood: 'excited',
       cta: { label: 'Get verified', href: '/verify' },
     };
@@ -119,7 +119,7 @@ export function profileTip(me: MeProfile, now: Date = new Date()): PipLine {
   if (!hasSync(me)) {
     return {
       key: 'tip-sync',
-      text: `Sync ${providerList()}. Pace hides profiles that haven’t trained in two weeks — this keeps you visible.`,
+      text: 'Sync your training app to stay visible.',
       mood: 'thinking',
       cta: { label: 'Connect', href: `/connect/${availableProviders()[0]}` },
     };
@@ -128,7 +128,7 @@ export function profileTip(me: MeProfile, now: Date = new Date()): PipLine {
   if (!race) {
     return {
       key: 'tip-race',
-      text: 'Training for a race? Add it and meet people on the same start line.',
+      text: 'Training for a race? Add it.',
       mood: 'happy',
       cta: { label: 'Race mode', href: '/races' },
     };

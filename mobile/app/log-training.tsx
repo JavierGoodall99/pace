@@ -160,7 +160,7 @@ export default function LogTrainingScreen() {
           </Button>
 
           <Callout icon="shield-check">
-            {`Pace only shows people who trained in the last ${ACTIVE_DAYS} days. Logged sessions keep you visible; Strava, Garmin and Pace sessions count as verified.`}
+            {`Training in the last ${ACTIVE_DAYS} days keeps you visible.`}
           </Callout>
 
           {recent.length ? (

@@ -2,23 +2,23 @@ import { useRouter } from 'expo-router';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, YStack } from 'tamagui';
-import { Callout, Card, ScreenHeader, SectionTitle, ToggleRow } from '../src/components/ui';
+import { Card, ScreenHeader, SectionTitle, ToggleRow } from '../src/components/ui';
 import { EmailKey, PushKey, setEmail, setPush, useSettings } from '../src/data/settings';
 import { notify } from '../src/lib/dialogs';
 import { allowNotifications } from '../src/lib/reminders';
 
-const PUSH_ITEMS: { key: PushKey; label: string; hint: string }[] = [
-  { key: 'likes', label: 'Likes & kudos', hint: 'When someone likes your run or workout' },
-  { key: 'messages', label: 'Messages', hint: 'Direct messages from your matches' },
-  { key: 'matches', label: 'New matches', hint: 'When someone you liked likes you back' },
-  { key: 'invites', label: 'Session invites', hint: 'Planner invites to run, ride, or lift' },
-  { key: 'reminders', label: 'Training reminders', hint: 'Nudges when your streak is at risk' },
+const PUSH_ITEMS: { key: PushKey; label: string; hint?: string }[] = [
+  { key: 'likes', label: 'Likes & kudos' },
+  { key: 'messages', label: 'Messages' },
+  { key: 'matches', label: 'New matches' },
+  { key: 'invites', label: 'Session invites' },
+  { key: 'reminders', label: 'Training reminders', hint: 'When your streak is at risk' },
 ];
 
-const EMAIL_ITEMS: { key: EmailKey; label: string; hint: string }[] = [
-  { key: 'digest', label: 'Weekly digest', hint: 'Your week in pace, every Monday' },
-  { key: 'matchEmails', label: 'New match emails', hint: 'A note when you match' },
-  { key: 'product', label: 'Product updates', hint: 'New features and beta invites' },
+const EMAIL_ITEMS: { key: EmailKey; label: string; hint?: string }[] = [
+  { key: 'digest', label: 'Weekly digest' },
+  { key: 'matchEmails', label: 'New match emails' },
+  { key: 'product', label: 'Product updates' },
 ];
 
 export default function SettingsNotificationsScreen() {
@@ -29,11 +29,7 @@ export default function SettingsNotificationsScreen() {
 
   return (
     <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
-      <ScreenHeader
-        title="Stay in the *loop*"
-        subtitle="Choose what pings you, and where."
-        onBack={() => router.back()}
-      />
+      <ScreenHeader title="Stay in the *loop*" onBack={() => router.back()} />
 
       <YStack px={20} pt={20} gap={28}>
         <YStack>
@@ -82,10 +78,6 @@ export default function SettingsNotificationsScreen() {
             ))}
           </Card>
         </YStack>
-
-        <Callout icon="shield-check">
-          We never sell your data. Notifications stay between you and your matches.
-        </Callout>
       </YStack>
     </ScrollView>
   );

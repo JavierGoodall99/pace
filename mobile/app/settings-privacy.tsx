@@ -20,8 +20,8 @@ const VISIBILITY_OPTIONS: Visibility[] = ['EVERYONE', 'MATCHES ONLY'];
 
 type CardToggle = 'showStats' | 'showCity' | 'publicTrainingPhotos';
 
-const TOGGLES: { key: CardToggle; label: string; hint: string }[] = [
-  { key: 'showStats', label: 'Show pace & stats', hint: 'Your training stats on your card' },
+const TOGGLES: { key: CardToggle; label: string; hint?: string }[] = [
+  { key: 'showStats', label: 'Show pace & stats' },
   { key: 'showCity', label: 'Show my city', hint: 'Used for match radius' },
   {
     key: 'publicTrainingPhotos',
@@ -41,11 +41,7 @@ export default function SettingsPrivacyScreen() {
 
   return (
     <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
-      <ScreenHeader
-        title="Your *privacy*"
-        subtitle="You decide who sees what."
-        onBack={() => router.back()}
-      />
+      <ScreenHeader title="Your *privacy*" onBack={() => router.back()} />
 
       <YStack px={20} pt={20} gap={28}>
         <YStack>
@@ -75,9 +71,7 @@ export default function SettingsPrivacyScreen() {
 
         {me.gender !== 'man' ? (
           <YStack>
-            <SectionTitle hint="After you match, only you can send the first message.">
-              Messaging
-            </SectionTitle>
+            <SectionTitle>Messaging</SectionTitle>
             <Card>
               <ToggleRow
                 label="I make the first move"
@@ -91,9 +85,7 @@ export default function SettingsPrivacyScreen() {
         ) : null}
 
         <YStack>
-          <SectionTitle hint="They can’t see you, message you or join your sessions.">
-            Blocked
-          </SectionTitle>
+          <SectionTitle>Blocked</SectionTitle>
           <Card>
             {blocked.length === 0 ? (
               <Text fontSize={14} color="$muted" py={6}>
@@ -143,8 +135,8 @@ export default function SettingsPrivacyScreen() {
 
         <Callout icon="lock">
           {visibility === 'EVERYONE'
-            ? 'Anyone on Pace can see your profile. Switch to Matches only to hide from Discover.'
-            : 'Only people you match with can see your full profile.'}
+            ? 'Anyone on Pace can see your profile.'
+            : 'Only your matches can see your full profile.'}
         </Callout>
       </YStack>
     </ScrollView>

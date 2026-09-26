@@ -13,12 +13,12 @@ export default function ForgotPasswordScreen() {
     <AuthScreen
       eyebrow="No sweat"
       title="Reset your *password*"
-      subtitle="Enter the email on your account and we'll send you a reset link."
+      subtitle="We'll email you a reset link."
     >
       {sent ? (
         <YStack gap={18}>
           <Callout icon="mail" tone="success" title="Link sent">
-            {`Check ${email.trim() || 'your inbox'} for a reset link. Just like a rest day — give it a few minutes.`}
+            {`Check ${email.trim() || 'your inbox'} for a reset link.`}
           </Callout>
           <Button style={{ width: '100%' }} onPress={() => router.replace('/sign-in')}>
             Back to sign in

@@ -157,8 +157,7 @@ export default function CrewScreen() {
           </XStack>
 
           <Callout icon="users" title="Not affiliated with Pace">
-            This listing comes from the club’s public pages. Times and places change — check their
-            channels before you go. Run this club? Get in touch to claim or update it.
+            Check times with the club before you go.
           </Callout>
         </YStack>
       </ScrollView>

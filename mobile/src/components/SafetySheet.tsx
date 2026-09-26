@@ -152,8 +152,8 @@ export function SafetySheet({
                 </Text>
                 <Text fontFamily="$body" fontSize={15} lineHeight={22} color="$muted">
                   {mode === 'confirm-block'
-                    ? 'They won’t be able to see your profile, message you or join your sessions. They aren’t told.'
-                    : 'Your chat and any planned sessions with them are removed. They aren’t told why.'}
+                    ? 'They can’t see or message you. They aren’t told.'
+                    : 'Your chat and plans are removed. They aren’t told.'}
                 </Text>
                 <Button
                   onPress={() => finish(mode === 'confirm-block' ? 'block' : 'unmatch')}

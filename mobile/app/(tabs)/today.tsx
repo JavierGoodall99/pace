@@ -228,7 +228,7 @@ export default function TodayScreen() {
             items="flex-start"
           >
             <Text fontSize={15} color="$muted">
-              Nothing planned yet. Invite one of this week’s pacers, or join an open session.
+              Nothing planned yet.
             </Text>
             <Button
               icon="sparkles"

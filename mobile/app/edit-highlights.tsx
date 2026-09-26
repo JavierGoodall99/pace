@@ -71,11 +71,7 @@ export default function EditHighlightsScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <YStack flex={1} bg="$canvas">
-        <ScreenHeader
-          title="PBs & *routes*"
-          subtitle="What you’re proud of, and where you love to train."
-          onBack={() => router.back()}
-        />
+        <ScreenHeader title="PBs & *routes*" onBack={() => router.back()} />
         <ScrollView
           flex={1}
           contentContainerStyle={{ p: 20, gap: 28, pb: insets.bottom + 24 }}
@@ -224,9 +220,7 @@ export default function EditHighlightsScreen() {
             </Button>
           </YStack>
 
-          <Callout icon="sparkles">
-            Matches see these on your card. A shared route is an easy first session.
-          </Callout>
+          <Callout icon="sparkles">Matches see these on your card.</Callout>
         </ScrollView>
       </YStack>
     </KeyboardAvoidingView>

@@ -168,12 +168,15 @@ export const CHAT_THREADS: ChatThread[] = [
   { id: 4, athleteId: 7, lastMsg: 'Nice PB on the swim leg!', time: '1D', unread: false },
 ];
 
-// An activity plan attached to a message, composed inline in a chat
-// thread and mirrored into the Planner's sessions as a PENDING invite.
+// An activity plan attached to a message. `planId` points at the Plan in
+// plans.ts, which is the source of truth: accepting the card confirms that
+// plan, so it shows up on Today. `id` is only on cards saved by older
+// builds, before cards were linked to plans.
 export type PlanStatus = 'INVITE' | 'CONFIRMED' | 'DECLINED';
 
 export interface PlanCard {
-  id: number;
+  planId?: string;
+  id?: number;
   activity: Discipline;
   when: string;
   location: string;
@@ -196,7 +199,7 @@ export const THREAD_MESSAGES: Record<number, ThreadMessage[]> = {
       from: 'them',
       text: 'Forecast is clear Sunday — trail with me?',
       plan: {
-        id: 3,
+        planId: 'p-lerato-trail',
         activity: 'TRAIL',
         when: 'Sun · 07:00',
         location: 'Table Mountain, Cape Town',
@@ -287,63 +290,6 @@ export const FEED_ITEMS: FeedItem[] = [
     hasPhoto: false,
   },
 ];
-
-export interface Session {
-  id: number;
-  athleteId: number;
-  activity: string;
-  when: string;
-  location: string;
-  status: 'CONFIRMED' | 'PENDING' | 'DECLINED';
-}
-
-export const SESSIONS: Session[] = [
-  {
-    id: 1,
-    athleteId: 1,
-    activity: 'RUN',
-    when: 'Sat · 06:00',
-    location: 'Sea Point Promenade',
-    status: 'CONFIRMED',
-  },
-  {
-    id: 2,
-    athleteId: 5,
-    activity: 'CROSSFIT',
-    when: 'Thu · 18:00',
-    location: 'City Rock, Observatory',
-    status: 'PENDING',
-  },
-  {
-    id: 3,
-    athleteId: 1,
-    activity: 'TRAIL',
-    when: 'Sun · 07:00',
-    location: 'Table Mountain, Cape Town',
-    status: 'PENDING',
-  },
-];
-
-// Sessions added from a chat-thread plan hit the Planner's upcoming list
-// as unconfirmed invites, so a plan lives in one place once it's sent.
-export function addSession(
-  athleteId: number,
-  activity: Discipline,
-  when: string,
-  location: string
-): Session {
-  const id = SESSIONS.reduce((max, s) => Math.max(max, s.id), 0) + 1;
-  const session: Session = { id, athleteId, activity, when, location, status: 'PENDING' };
-  SESSIONS.push(session);
-  return session;
-}
-
-// Mirrors an accept/decline from a thread's invite card back to the
-// Planner's session list.
-export function updateSessionStatus(id: number, status: Session['status']) {
-  const session = SESSIONS.find((s) => s.id === id);
-  if (session) session.status = status;
-}
 
 export const PLANNER_PARTNER_IDS = [1, 3, 5, 7];
 

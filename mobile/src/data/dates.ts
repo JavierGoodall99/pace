@@ -9,6 +9,13 @@ export function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
+// Calendar day in the device's time zone, "YYYY-MM-DD". Use this for any
+// per-day key (like budgets, stamps, streaks): toISOString() is UTC, so in
+// SAST it rolls over at 02:00 and a 01:00 action lands on yesterday.
+export function localDayKey(d: Date = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 // Next occurrence of a Monday-first weekday (today counts), at `time`.
 export function nextDateFor(dayIdx: number, time: string, now: Date = new Date()): Date {
   const ahead = (dayIdx - dayIndex(now) + 7) % 7;
@@ -31,7 +38,7 @@ export function daysFrom(now: Date, offset: number, time: string): Date {
 export function weekKey(now: Date = new Date()): string {
   const monday = startOfDay(now);
   monday.setDate(monday.getDate() - dayIndex(now));
-  return monday.toISOString().slice(0, 10);
+  return localDayKey(monday);
 }
 
 const DAY = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -58,6 +65,15 @@ export function formatWhen(iso: string, now: Date = new Date()): string {
           ? 'Yesterday'
           : `${DAY[dayIndex(d)]} ${d.getDate()} ${MONTH[d.getMonth()]}`;
   return `${day} · ${formatTime(d)}`;
+}
+
+// Parses a chat plan label like "Sun · 07:00" into the next matching
+// date. Falls back to tomorrow at the given time (or 07:00).
+export function dateFromWhenLabel(label: string, now: Date = new Date()): Date {
+  const [dayPart = '', timePart = ''] = label.split('·').map((x) => x.trim());
+  const time = /^\d{1,2}:\d{2}$/.test(timePart) ? timePart : '07:00';
+  const idx = DAY.findIndex((d) => dayPart.toLowerCase().startsWith(d.toLowerCase()));
+  return idx >= 0 ? nextDateFor(idx, time, now) : daysFrom(now, 1, time);
 }
 
 export function shortDay(d: Date): string {

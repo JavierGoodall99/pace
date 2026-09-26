@@ -45,6 +45,35 @@ export function cadenceForDays(count: number): string {
   return count >= 6 ? '6+X/WK' : count >= 4 ? '4-5X/WK' : '2-3X/WK';
 }
 
+export const NO_DAYS: Rhythm = [false, false, false, false, false, false, false];
+
+// Flip one day in your week and keep the stored cadence bucket in step,
+// so everything that still reads `cadence` agrees with `trainingDays`.
+export function toggleTrainingDay(
+  days: boolean[] | null,
+  i: number
+): { trainingDays: Rhythm; cadence: string | null } {
+  const next = [...(days && days.length === 7 ? days : NO_DAYS)];
+  next[i] = !next[i];
+  const count = next.filter(Boolean).length;
+  return { trainingDays: next, cadence: count ? cadenceForDays(count) : null };
+}
+
+// Days a week you train: your picked week when set, else the cadence
+// bucket's typical count.
+export function daysPerWeek(cadence: string | null, trainingDays?: boolean[] | null): number {
+  return rhythmForMe(cadence, trainingDays).filter(Boolean).length;
+}
+
+// Time-of-day buckets. Shared by onboarding and Settings → Training so the
+// two can't drift (Settings used to be missing MIDDAY).
+export const TRAINING_TIMES = [
+  { id: 'EARLY MORNING', title: 'Early morning', subtitle: 'Before the world wakes up' },
+  { id: 'MIDDAY', title: 'Midday', subtitle: 'Lunch-break sessions' },
+  { id: 'EVENING', title: 'Evening', subtitle: 'After work, under the lights' },
+  { id: 'WEEKENDS', title: 'Weekends', subtitle: 'Long runs and big rides' },
+] as const;
+
 export function sharedDays(a: Rhythm, b: Rhythm): number[] {
   return a.map((on, i) => (on && b[i] ? i : -1)).filter((i) => i >= 0);
 }

@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import type { Level } from './athleteDepth';
-import { daysFrom, dropKey, nextDateFor } from './dates';
-import type { Discipline } from './mockData';
+import { dateFromWhenLabel, daysFrom, dropKey, nextDateFor } from './dates';
+import type { Discipline, PlanCard, PlanStatus as CardStatus } from './mockData';
 import { likeBack } from './social';
 import type { IlloName } from '../components/Illustrations';
 
@@ -97,6 +97,15 @@ function seed(now: Date = new Date()): PlansState {
         place: 'Green Point Athletics Stadium',
         status: 'received',
         note: 'Easy 400s, then tacos?',
+      },
+      {
+        // Lerato's "trail with me?" card in chat points at this plan.
+        id: 'p-lerato-trail',
+        athleteId: 1,
+        activity: 'TRAIL',
+        date: iso(nextDateFor(6, '07:00', now)),
+        place: 'Table Mountain, Cape Town',
+        status: 'received',
       },
       {
         id: 'p-amahle-sent',
@@ -333,6 +342,38 @@ export function respondToInvite(id: string, accept: boolean) {
   if (!plan) return;
   updatePlan(id, { status: accept ? 'confirmed' : 'declined' });
   if (accept) likeBack(plan.athleteId);
+}
+
+// Accept or decline an invite card from a chat thread. The card's plan
+// is confirmed/declined here so it shows on Today like any other invite.
+// Cards saved before they were linked to plans (or whose plan is gone)
+// get a plan created from the card on first response. Returns the plan id
+// so the caller can link the card to it.
+export function respondToChatPlan(athleteId: number, card: PlanCard, accept: boolean): string {
+  let plan = card.planId ? state.plans.find((p) => p.id === card.planId) : undefined;
+  if (!plan) {
+    plan = {
+      id: card.planId ?? newId('p'),
+      athleteId,
+      activity: card.activity,
+      date: dateFromWhenLabel(card.when).toISOString(),
+      place: card.location,
+      status: 'received',
+    };
+    setState({ plans: [plan, ...state.plans] });
+  }
+  respondToInvite(plan.id, accept);
+  return plan.id;
+}
+
+// What a chat card should show, read from its linked plan when there is
+// one so the card and Today never disagree.
+export function chatCardStatus(s: PlansState, card: PlanCard): CardStatus {
+  const plan = card.planId ? s.plans.find((p) => p.id === card.planId) : undefined;
+  if (!plan) return card.status;
+  if (plan.status === 'confirmed' || plan.status === 'done') return 'CONFIRMED';
+  if (plan.status === 'declined') return 'DECLINED';
+  return 'INVITE';
 }
 
 // Unmatch / block: drop every 1:1 plan with that person.

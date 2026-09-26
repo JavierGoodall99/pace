@@ -32,10 +32,16 @@ import { Badge, Button, Callout, DisplayTitle, IconButton, Input } from '../src/
 import { successHaptic } from '../src/lib/haptics';
 import { ATHLETES, DISCIPLINES, Discipline, SPORT_ILLO } from '../src/data/mockData';
 import { ATHLETE_PHOTOS, HERO_RUNNERS } from '../src/data/photos';
-import { cadenceForDays, Rhythm, rhythmForMe } from '../src/data/rhythm';
+import {
+  NO_DAYS,
+  Rhythm,
+  rhythmForMe,
+  toggleTrainingDay,
+  TRAINING_TIMES,
+} from '../src/data/rhythm';
 import { compatibility } from '../src/data/compat';
 import { isShowable, wantEachOther } from '../src/data/pacers';
-import { distanceTo } from '../src/data/places';
+import { CITIES, distanceTo } from '../src/data/places';
 import { DEFAULT_RADIUS_KM } from '../src/data/trust';
 import { depthFor, LEVELS } from '../src/data/athleteDepth';
 import { athletesTrainingFor, formatRaceDate, raceById, upcomingRaces } from '../src/data/races';
@@ -115,7 +121,6 @@ const MAX_PHOTOS = 4;
 
 const BODY_STYLE = { px: 20, pt: 8, pb: 24, flexGrow: 1 };
 const WELCOME_BODY_STYLE = { pb: 0, flexGrow: 1 };
-const NO_DAYS = [false, false, false, false, false, false, false];
 
 const INTENTS: { id: Intent; illo: IlloName; title: string; subtitle: string; reply: string }[] = [
   {
@@ -141,17 +146,13 @@ const INTENTS: { id: Intent; illo: IlloName; title: string; subtitle: string; re
   },
 ];
 
-const TIMES: { id: string; illo: IlloName; title: string; subtitle: string }[] = [
-  {
-    id: 'EARLY MORNING',
-    illo: 'sunrise',
-    title: 'Early morning',
-    subtitle: 'Before the world wakes up',
-  },
-  { id: 'MIDDAY', illo: 'sun', title: 'Midday', subtitle: 'Lunch-break sessions' },
-  { id: 'EVENING', illo: 'moon', title: 'Evening', subtitle: 'After work, under the lights' },
-  { id: 'WEEKENDS', illo: 'calendar', title: 'Weekends', subtitle: 'Long runs and big rides' },
-];
+const TIME_ILLO: Record<string, IlloName> = {
+  'EARLY MORNING': 'sunrise',
+  MIDDAY: 'sun',
+  EVENING: 'moon',
+  WEEKENDS: 'calendar',
+};
+const TIMES = TRAINING_TIMES.map((t) => ({ ...t, illo: TIME_ILLO[t.id] }));
 
 const CONFETTI_COLORS = [
   brand.accent,
@@ -401,10 +402,7 @@ export default function OnboardingScreen() {
     updateMe({ times: me.times.includes(t) ? me.times.filter((x) => x !== t) : [...me.times, t] });
   }
   function toggleDay(i: number) {
-    const days = [...(me.trainingDays ?? NO_DAYS)];
-    days[i] = !days[i];
-    const count = days.filter(Boolean).length;
-    updateMe({ trainingDays: days, cadence: count ? cadenceForDays(count) : null });
+    updateMe(toggleTrainingDay(me.trainingDays, i));
   }
   async function pickPhotos() {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -631,12 +629,16 @@ export default function OnboardingScreen() {
                     }}
                     keyboardType="numeric"
                   />
-                  <Input
-                    placeholder="City"
-                    value={me.city}
-                    onChangeText={(v) => updateMe({ city: v })}
-                    autoCapitalize="words"
-                  />
+                  <YStack gap={8} pt={4}>
+                    <Text fontFamily="$semibold" fontSize={15} color="$text">
+                      Where you train
+                    </Text>
+                    <PickRow
+                      options={[...CITIES] as string[]}
+                      value={me.city || null}
+                      onChange={(v) => updateMe({ city: v })}
+                    />
+                  </YStack>
                 </YStack>
               )}
 

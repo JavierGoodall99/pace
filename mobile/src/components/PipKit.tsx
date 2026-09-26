@@ -7,6 +7,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { Icon } from './Icon';
 import { Mascot, Mood } from './Mascot';
 import { tapHaptic } from '../lib/haptics';
+import { localDayKey } from '../data/dates';
 import type { PipLine } from '../data/pip';
 import { useColors } from '../theme/appearance';
 
@@ -30,7 +31,7 @@ AsyncStorage.getItem(DISMISS_KEY)
   .catch(() => {});
 
 function today() {
-  return new Date().toISOString().slice(0, 10);
+  return localDayKey();
 }
 
 function dismiss(key: string) {

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Illo } from '../../src/components/Illustrations';
@@ -28,6 +28,7 @@ import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { rhythmForMe, WEEK_DAY_NAMES } from '../../src/data/rhythm';
 import { useMe } from '../../src/data/session';
 import { useColors } from '../../src/theme/appearance';
+import { useNow } from '../../src/lib/useNow';
 import { formatLabel } from '../../src/theme/tokens';
 
 // Home. Pace is built around sessions, so Today answers "what am I
@@ -45,7 +46,7 @@ export default function TodayScreen() {
   const router = useRouter();
   const me = useMe();
   const state = usePlans();
-  const now = useMemo(() => new Date(), []);
+  const now = useNow();
 
   const rhythm = rhythmForMe(me.cadence, me.trainingDays);
   const first = me.name.trim().split(' ')[0] || 'you';

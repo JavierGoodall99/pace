@@ -1,4 +1,5 @@
 import type { AthleteDepth } from './athleteDepth';
+import { localDayKey } from './dates';
 
 // Trust rules — the things that make other fitness dating apps feel dead
 // or scammy, handled on purpose:
@@ -57,9 +58,38 @@ export function inRange(age: number, [min, max]: [number, number]): boolean {
 
 // ── Chat safety ─────────────────────────────────────────────────────
 
-const MONEY =
-  /\b(send|lend|loan|borrow|transfer|pay|invest(ment)?|crypto|bitcoin|btc|usdt|forex|gift ?cards?|airtime|e-?wallet|cash ?send|paypal|western union|bank (details|account)|R ?\d{3,})\b/i;
-const OFF_APP = /\b(whats ?app|telegram|signal|snap(chat)?|kik|wechat|text me on|my number is)\b/i;
+// Patterns are phrased as requests, not bare keywords: "I'll pay for
+// coffee" and "Meet at Signal Hill?" are normal date talk and must not
+// trip a scam warning.
+const MONEY = new RegExp(
+  [
+    // Asking you to move money: "send me R500", "can you lend me", "pay me back"
+    String.raw`\b(send|lend|loan|transfer|give|pay)( me| us)? (some |the )?(money|cash|funds|R ?\d+|\d+ ?(rand|bucks|dollars|usd))\b`,
+    String.raw`\b(lend|loan|pay) me\b`,
+    String.raw`\b(can|could|would) you (lend|loan|transfer)\b`,
+    String.raw`\bborrow (some )?(money|cash|R ?\d+)`,
+    String.raw`\bneed (some )?(money|cash|a loan)\b`,
+    // Investment / crypto pitches
+    String.raw`\binvest(ment|ing)? (opportunit(y|ies)|platform|plan|app)\b`,
+    String.raw`\binvest (with|through) me\b`,
+    // Pig-butchering scams lean on crypto / forex talk; it's rare in real date chat.
+    String.raw`\b(crypto|bitcoin|btc|usdt|forex)\b`,
+    String.raw`\b(guaranteed|daily|weekly) (returns?|profits?)\b`,
+    // Payment rails scammers ask for
+    String.raw`\bgift ?cards?\b`,
+    String.raw`\bairtime\b`,
+    String.raw`\bwestern union\b`,
+    String.raw`\b(bank|banking) (details|account|card)\b`,
+    String.raw`\b(paypal|venmo|revolut) me\b`,
+    // Large amounts: "R 2000", "R5,000" (small ones like a R350 race entry are normal)
+    String.raw`\bR ?\d{1,3}(,?\d{3})+\b`,
+  ].join('|'),
+  'i'
+);
+// "Signal" alone is a place in Cape Town (Signal Hill); only flag it
+// when it's clearly the messaging app.
+const OFF_APP =
+  /\b(whats ?app|telegram|snap ?chat|kik|wechat|text me on|my number is|add me on (signal|snap|insta(gram)?)|(on|via|message me on|chat on|move to) signal\b(?! hill)|signal app)\b/i;
 const PHONE = /(\+?\d[\d\s-]{8,}\d)/;
 
 export type ScamSignal = 'money' | 'off-app' | null;
@@ -79,8 +109,9 @@ export function sharesContact(text: string): boolean {
 
 // ── Budgets & expiry ────────────────────────────────────────────────
 
+// Local calendar day, so the like budget resets at local midnight.
 export function dayKeyOf(now: Date = new Date()): string {
-  return now.toISOString().slice(0, 10);
+  return localDayKey(now);
 }
 
 export function likesLeft(

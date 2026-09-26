@@ -1,19 +1,20 @@
 import { useRouter, type Href } from 'expo-router';
-import { Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon, IconName } from '../src/components/Icon';
 import { PhotoSlot } from '../src/components/PhotoSlot';
 import { Badge, Card, ScreenHeader, SegmentedControl } from '../src/components/ui';
 import { ME_AVATAR } from '../src/data/photos';
-import { signOut, useMe } from '../src/data/session';
+import { daysPerWeek } from '../src/data/rhythm';
+import { deleteAccount, MeProfile, signOut, useMe } from '../src/data/session';
+import { confirmAction } from '../src/lib/dialogs';
 import {
   AppearancePreference,
   setAppearance,
   useAppearance,
   useColors,
 } from '../src/theme/appearance';
-import { shadow } from '../src/theme/tokens';
+import { formatLabel, shadow } from '../src/theme/tokens';
 
 interface SettingsRow {
   icon: IconName;
@@ -22,13 +23,16 @@ interface SettingsRow {
   route: Href;
 }
 
+function trainingSummary(me: MeProfile): string {
+  const sports = me.disciplines.map(formatLabel);
+  const sport =
+    sports.length > 1 ? `${sports[0]} +${sports.length - 1}` : (sports[0] ?? 'No sport');
+  if (!me.cadence && !me.trainingDays?.some(Boolean)) return sport;
+  return `${sport} · ${daysPerWeek(me.cadence, me.trainingDays)}× a week`;
+}
+
 const PREFERENCE_ROWS: SettingsRow[] = [
-  {
-    icon: 'zap',
-    label: 'Training',
-    value: 'CrossFit · 4–5× a week',
-    route: '/settings-preferences',
-  },
+  { icon: 'zap', label: 'Training', route: '/settings-preferences' },
   { icon: 'bell', label: 'Notifications', route: '/settings-notifications' },
   { icon: 'lock', label: 'Privacy', route: '/settings-privacy' },
   { icon: 'shield-check', label: 'Safety centre', route: '/safety' },
@@ -50,29 +54,29 @@ export default function SettingsScreen() {
 
   const avatar = me.photos[0] ? { uri: me.photos[0] } : ME_AVATAR;
 
-  function confirmSignOut() {
-    Alert.alert('Sign out', 'Are you sure? You can sign back in anytime.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign out',
-        style: 'destructive',
-        onPress: async () => {
-          await signOut();
-          router.replace('/sign-in');
-        },
-      },
-    ]);
+  async function confirmSignOut() {
+    const ok = await confirmAction({
+      title: 'Sign out',
+      message: 'Are you sure? You can sign back in anytime.',
+      confirmLabel: 'Sign out',
+      destructive: true,
+    });
+    if (!ok) return;
+    await signOut();
+    router.replace('/sign-in');
   }
 
-  function confirmDelete() {
-    Alert.alert(
-      'Delete account',
-      'This permanently removes your profile, photos, and match history. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete account', style: 'destructive' },
-      ]
-    );
+  async function confirmDelete() {
+    const ok = await confirmAction({
+      title: 'Delete account',
+      message:
+        'This permanently removes your profile, photos, and match history. This cannot be undone.',
+      confirmLabel: 'Delete account',
+      destructive: true,
+    });
+    if (!ok) return;
+    await deleteAccount();
+    router.replace('/sign-up');
   }
 
   return (
@@ -130,7 +134,7 @@ export default function SettingsScreen() {
               key={row.label}
               icon={row.icon}
               label={row.label}
-              value={row.value}
+              value={row.route === '/settings-preferences' ? trainingSummary(me) : row.value}
               last={i === PREFERENCE_ROWS.length - 1}
               onPress={() => router.push(row.route)}
             />

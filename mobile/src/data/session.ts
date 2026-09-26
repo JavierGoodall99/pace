@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import type { Level, Prompt } from './athleteDepth';
 import type { Discipline } from './mockData';
+import { canonicalCity } from './places';
 
 // Local mock of the auth + profile backend. There is no real server yet:
 // the account lives in AsyncStorage and every "server" transition below
@@ -152,6 +153,12 @@ async function persist() {
   }
 }
 
+// Profiles saved before the city picker may hold free text ("cape town",
+// "Cape Town, WC"); map them onto the canonical city names.
+function normaliseMe(me: MeProfile): MeProfile {
+  return { ...me, city: canonicalCity(me.city) };
+}
+
 // Hydrate once at module load; screens render the default state until
 // the stored session (if any) replaces it.
 AsyncStorage.getItem(STORAGE_KEY)
@@ -160,7 +167,7 @@ AsyncStorage.getItem(STORAGE_KEY)
       const saved = JSON.parse(raw) as Partial<SessionState>;
       setState({
         account: saved.account ?? null,
-        me: { ...DEFAULT_ME, ...saved.me },
+        me: normaliseMe({ ...DEFAULT_ME, ...saved.me }),
         onboarded: saved.onboarded ?? false,
         loading: false,
       });
@@ -251,8 +258,21 @@ export async function signOut() {
   await persist();
 }
 
+// Mock account deletion: wipes every Pace key on this device and resets
+// the session. A real backend must delete server-side data too.
+export async function deleteAccount() {
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    await AsyncStorage.multiRemove(keys.filter((k) => k.startsWith('pace.')));
+  } catch (e) {
+    console.warn('Failed to clear account data:', e);
+  }
+  setState({ account: null, me: freshMe('', ''), onboarded: false });
+}
+
 export async function updateMe(patch: Partial<MeProfile>) {
-  setState({ me: { ...state.me, ...patch } });
+  const next = { ...state.me, ...patch };
+  setState({ me: patch.city !== undefined ? normaliseMe(next) : next });
   await persist();
 }
 

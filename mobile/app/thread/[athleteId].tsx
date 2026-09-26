@@ -18,9 +18,15 @@ import {
   updateMessage,
   useChat,
 } from '../../src/data/chat';
-import { athleteById, updateSessionStatus } from '../../src/data/mockData';
+import { athleteById, PlanStatus as CardStatus } from '../../src/data/mockData';
 import { ATHLETE_PHOTOS, galleryFor } from '../../src/data/photos';
-import { sessionsTogether, stageWith, usePlans } from '../../src/data/plans';
+import {
+  chatCardStatus,
+  respondToChatPlan,
+  sessionsTogether,
+  stageWith,
+  usePlans,
+} from '../../src/data/plans';
 import { useMe } from '../../src/data/session';
 import { scamSignal, sharesContact } from '../../src/data/trust';
 import { useSocial } from '../../src/data/social';
@@ -104,8 +110,8 @@ export default function ThreadScreen() {
   const respondTo = (index: number, status: 'CONFIRMED' | 'DECLINED') => {
     const plan = messages[index]?.plan;
     if (!plan) return;
-    updateSessionStatus(plan.id, status);
-    updateMessage(athlete.id, index, { plan: { ...plan, status } });
+    const planId = respondToChatPlan(athlete.id, plan, status === 'CONFIRMED');
+    updateMessage(athlete.id, index, { plan: { ...plan, planId, status } });
   };
 
   return (
@@ -185,6 +191,7 @@ export default function ThreadScreen() {
               key={i}
               m={m}
               likedSource={m.like?.kind === 'photo' ? gallery[m.like.index]?.source : undefined}
+              planStatus={m.plan ? chatCardStatus(plansState, m.plan) : undefined}
               onRespond={(s) => respondTo(i, s)}
               onReport={() => setSafety(true)}
             />
@@ -333,18 +340,20 @@ export default function ThreadScreen() {
 function Bubble({
   m,
   likedSource,
+  planStatus,
   onRespond,
   onReport,
 }: {
   m: ChatMessage;
   likedSource?: number;
+  planStatus?: CardStatus;
   onRespond: (s: 'CONFIRMED' | 'DECLINED') => void;
   onReport: () => void;
 }) {
   const colors = useColors();
   const mine = m.from === 'me';
   const signal = mine ? null : scamSignal(m.text);
-  const plan = m.plan;
+  const plan = m.plan ? { ...m.plan, status: planStatus ?? m.plan.status } : undefined;
   return (
     <YStack items={mine ? 'flex-end' : 'flex-start'} gap={6}>
       {m.like ? (

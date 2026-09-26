@@ -121,8 +121,9 @@ export function resetSocial() {
 // liking you) only fit a man.
 export function demoGraphFor(gender: Gender | null): { likes: number[]; matches: number[] } {
   if (!DEMO_DATA) return { likes: [], matches: [] };
-  if (gender === 'woman') return { likes: [6, 8], matches: [2, 4] };
-  if (gender === 'man') return { likes: [7], matches: [1, 3, 5] };
+  // Only a couple of matches, so most demo people stay in the deck.
+  if (gender === 'woman') return { likes: [6, 8], matches: [2] };
+  if (gender === 'man') return { likes: [7], matches: [1, 5] };
   return { likes: [], matches: [] };
 }
 

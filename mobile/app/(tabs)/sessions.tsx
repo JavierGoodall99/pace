@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import {
-  ChallengeCard,
   ConditionsCard,
   CrewCard,
   EventCard,
@@ -18,7 +17,6 @@ import { useNow } from '../../src/lib/useNow';
 import { Button, Chip, DisplayTitle } from '../../src/components/ui';
 import { levelLabel } from '../../src/data/athleteDepth';
 import {
-  CHALLENGES,
   communityById,
   COMMUNITIES,
   CT_SPOTS,
@@ -27,14 +25,10 @@ import {
 } from '../../src/data/capeTown';
 import {
   athletesIn,
-  challengeProgress,
-  CHALLENGE_MEMBERS,
   CREW_MEMBERS,
   EVENT_ATTENDEES,
   pacersAmong,
-  passport,
   stampedToday,
-  toggleChallenge,
   toggleGoing,
   useExplore,
 } from '../../src/data/explore';
@@ -48,10 +42,10 @@ import { FEATURES } from '../../src/config';
 
 // Explore Cape Town. There's always something to do here, even on a
 // day with no new pacers: established events and run crews, the city's
-// best spots to train and meet, and monthly challenges. Pace points to
+// best spots to train and meet. Pace points to
 // what Cape Town already loves rather than running its own clubs.
 
-const TABS = ['This week', 'Spots', 'Crews', ...(FEATURES.challenges ? ['Challenges'] : [])];
+const TABS = ['This week', 'Spots', 'Crews'];
 const KINDS: ('all' | SpotKind)[] = ['all', 'run', 'trail', 'ride', 'swim', 'surf', 'gym'];
 
 export function sessionMeta(o: OpenSession): string {
@@ -106,7 +100,6 @@ export default function ExploreScreen() {
 
   const spots = CT_SPOTS.filter((s) => kind === 'all' || s.kind === kind);
   const crewsAt = (spotId: string) => COMMUNITIES.filter((c) => c.spotId === spotId).length;
-  const pp = passport(explore);
   const digest = weekDigest(me, explore, blocked, now);
 
   const renderEvent = ({ event, at }: (typeof events)[number]) => {
@@ -240,49 +233,6 @@ export default function ExploreScreen() {
                 From each club’s public pages. Not affiliated with Pace.
               </Text>
             </XStack>
-          </>
-        ) : null}
-
-        {FEATURES.challenges && tab === 'Challenges' ? (
-          <>
-            <YStack
-              p={16}
-              gap={10}
-              rounded={22}
-              bg="$accentSoft"
-              borderWidth={1}
-              borderColor="$accentBorder"
-            >
-              <XStack items="center" justify="space-between">
-                <Text fontFamily="$bold" fontSize={17} color="$text">
-                  Your Pace passport
-                </Text>
-                <Text fontFamily="$bold" fontSize={17} color="$accentText">
-                  {pp.visited}/{pp.total}
-                </Text>
-              </XStack>
-              <Text fontSize={13} lineHeight={18} color="$muted">
-                Check in after training at a spot to collect a stamp.
-              </Text>
-              <Button
-                variant="secondary"
-                icon="map-pin"
-                onPress={() => setTab('Spots')}
-                style={{ width: '100%' }}
-              >
-                Find a spot
-              </Button>
-            </YStack>
-            {CHALLENGES.map((c) => (
-              <ChallengeCard
-                key={c.id}
-                challenge={c}
-                progress={challengeProgress(c, explore, now)}
-                joined={explore.challenges.includes(c.id)}
-                others={athletesIn(CHALLENGE_MEMBERS[c.id])}
-                onToggle={() => toggleChallenge(c.id)}
-              />
-            ))}
           </>
         ) : null}
       </YStack>

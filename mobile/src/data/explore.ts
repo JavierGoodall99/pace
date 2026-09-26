@@ -1,15 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
-import { Challenge, CHALLENGES, CT_SPOTS } from './capeTown';
+import { CT_SPOTS } from './capeTown';
 import { localDayKey } from './dates';
 import { ATHLETES, Athlete } from './mockData';
 import { isEligible, wantEachOther } from './pacers';
 import type { MeProfile } from './session';
 import { demo } from '../config';
 
-// What you do in Explore: events you're going to, crews you follow,
-// spots you've trained at (your Pace passport) and challenges you've
-// joined. Local until a backend exists.
+// What you do in Explore: events you're going to, crews you follow and
+// spots you've trained at (your Pace passport). Local until a backend
+// exists.
 
 export interface Stamp {
   spotId: string;
@@ -20,11 +20,10 @@ export interface ExploreState {
   going: string[]; // event ids
   crews: string[]; // community ids
   stamps: Stamp[];
-  challenges: string[];
 }
 
 const STORAGE_KEY = 'pace.explore.v1';
-const EMPTY: ExploreState = { going: [], crews: [], stamps: [], challenges: [] };
+const EMPTY: ExploreState = { going: [], crews: [], stamps: [] };
 
 let state: ExploreState = EMPTY;
 const listeners = new Set<() => void>();
@@ -72,10 +71,6 @@ export function toggleCrew(communityId: string) {
   setState({ crews: toggle(state.crews, communityId) });
 }
 
-export function toggleChallenge(id: string) {
-  setState({ challenges: toggle(state.challenges, id) });
-}
-
 // Stamps store a UTC timestamp; compare them by local calendar day.
 const stampDay = (at: string) => localDayKey(new Date(at));
 
@@ -94,27 +89,6 @@ export function stampedToday(s: ExploreState, spotId: string, now: Date = new Da
 
 export function passport(s: ExploreState): { visited: number; total: number } {
   return { visited: new Set(s.stamps.map((x) => x.spotId)).size, total: CT_SPOTS.length };
-}
-
-// Progress this calendar month.
-export function challengeProgress(c: Challenge, s: ExploreState, now: Date = new Date()): number {
-  const month = localDayKey(now).slice(0, 7);
-  const kindOf = (id: string) => CT_SPOTS.find((x) => x.id === id)?.kind;
-  const counted = s.stamps
-    .filter((x) => stampDay(x.at).slice(0, 7) === month)
-    .filter((x) =>
-      c.spotIds
-        ? c.spotIds.includes(x.spotId)
-        : c.kinds
-          ? c.kinds.includes(kindOf(x.spotId)!)
-          : true
-    );
-  const n = c.distinct ? new Set(counted.map((x) => x.spotId)).size : counted.length;
-  return Math.min(n, c.goal);
-}
-
-export function completedChallenges(s: ExploreState, now: Date = new Date()): Challenge[] {
-  return CHALLENGES.filter((c) => challengeProgress(c, s, now) >= c.goal);
 }
 
 // ── Who's going (mock) ──────────────────────────────────────────────
@@ -148,17 +122,6 @@ export const CREW_MEMBERS: Record<string, number[]> = demo<Record<string, number
     'swim-cape-town': [4, 7],
     'pedal-power': [2],
     'cycling-friends': [2, 7],
-  },
-  {}
-);
-
-export const CHALLENGE_MEMBERS: Record<string, number[]> = demo<Record<string, number[]>>(
-  {
-    'lions-head-4': [3, 1, 6],
-    'spot-hopper': [8, 2, 5],
-    'parkrun-3': [1, 8, 4],
-    'cold-water-4': [4, 7],
-    'mountain-3': [3, 6],
   },
   {}
 );

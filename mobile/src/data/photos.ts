@@ -13,6 +13,8 @@ export const ATHLETE_PHOTOS: Record<string, ReturnType<typeof require>> = {
   'athlete-6': require('../../public/images/headshots/athletic_curly_headshot.jpg'),
   'athlete-7': require('../../public/images/headshots/athletic_woman_padel_court.jpg'),
   'athlete-8': require('../../public/images/headshots/smiling_gym_headshot.jpg'),
+  'athlete-9': require('../../public/images/headshots/beach_sunset_portrait.jpg'),
+  'athlete-10': require('../../public/images/headshots/blonde_woman_headshot.jpg'),
 };
 
 // Full-bleed "in action" shots used on the Discover swipe cards and the
@@ -26,6 +28,8 @@ export const ATHLETE_ACTION_PHOTOS: Record<string, ReturnType<typeof require>> =
   'athlete-6': require('../../public/images/activity/padel_jump_smash.jpg'),
   'athlete-7': require('../../public/images/activity/freestyle_swim_splash.jpg'),
   'athlete-8': require('../../public/images/activity/rugby_player_sprint.jpg'),
+  'athlete-9': require('../../public/images/activity/surfing_wave_action.jpg'),
+  'athlete-10': require('../../public/images/activity/yoga_beach_sunrise.jpg'),
 };
 
 // Each athlete's labelled gallery, face first — people decide with
@@ -61,6 +65,13 @@ export const ATHLETE_GALLERY: Record<string, GalleryPhoto[]> = {
   'athlete-6': G('athlete-6', 'athlete-6', ['offclock', 'action'], [undefined, 'Rest-day padel']),
   'athlete-7': G('athlete-7', 'athlete-7', ['post', 'race'], ['After padel', 'Midmar Mile prep']),
   'athlete-8': G('athlete-8', 'athlete-8', ['post', 'action'], ['Gym floor', 'Sunday touch rugby']),
+  'athlete-9': G(
+    'athlete-9',
+    'athlete-9',
+    ['offclock', 'action'],
+    ['Clifton sunset', 'Small-wave day']
+  ),
+  'athlete-10': G('athlete-10', 'athlete-10', ['offclock', 'post'], [undefined, 'Rest-day yoga']),
 };
 
 export function galleryFor(slotId: string): GalleryPhoto[] {

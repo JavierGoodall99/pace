@@ -17,7 +17,7 @@ import { ME_AVATAR, ME_COVER, TRAINING_PHOTOS } from '../../src/data/photos';
 import { lifestyleChips } from '../../src/data/identity';
 import { availableProviders, hasSync, syncLabel } from '../../src/data/sync';
 import { communityById } from '../../src/data/capeTown';
-import { completedChallenges, passport, useExplore } from '../../src/data/explore';
+import { passport, useExplore } from '../../src/data/explore';
 import { useMe } from '../../src/data/session';
 import { activityText, streakText, useMyTraining } from '../../src/data/training';
 import { ACTIVE_DAYS } from '../../src/data/trust';
@@ -35,8 +35,6 @@ export default function ProfileScreen() {
   const me = useMe();
   const explore = useExplore();
   const now = useNow();
-  // Challenge badges are parked with challenges (config FEATURES).
-  const badges = FEATURES.challenges ? completedChallenges(explore) : [];
   const training = useMyTraining(now);
   const { activity } = training;
 
@@ -287,13 +285,8 @@ export default function ProfileScreen() {
               </Text>
             ) : null}
           </XStack>
-          {badges.length || explore.crews.length ? (
+          {explore.crews.length ? (
             <XStack gap={8} flexWrap="wrap">
-              {badges.map((c) => (
-                <Badge key={c.id} tone="accent" illo="medal">
-                  {c.badge}
-                </Badge>
-              ))}
               {explore.crews.map((id) => {
                 const crew = communityById(id);
                 return crew ? <Badge key={id}>{crew.name}</Badge> : null;

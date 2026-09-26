@@ -32,9 +32,6 @@ export function MomentsRow() {
         <Text fontFamily="$semibold" fontSize={15} color="$text">
           Session moments
         </Text>
-        <Text fontSize={12} color="$muted">
-          Matches only · gone in 24h
-        </Text>
       </XStack>
       <ScrollView
         horizontal

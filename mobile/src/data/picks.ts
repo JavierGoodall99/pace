@@ -24,7 +24,8 @@ interface PicksState {
   ready: boolean;
 }
 
-const STORAGE_KEY = 'pace.picks.v1';
+// v2: picks re-drawn once after the demo cast grew.
+const STORAGE_KEY = 'pace.picks.v2';
 
 let state: PicksState = { day: null, ids: [], size: DAILY_PICKS, ready: false };
 const listeners = new Set<() => void>();

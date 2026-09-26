@@ -1,13 +1,5 @@
+import { CT_EVENTS, eventById, nextOccurrence, sunTimes, upcomingEvents } from './capeTown';
 import {
-  CHALLENGES,
-  CT_EVENTS,
-  eventById,
-  nextOccurrence,
-  sunTimes,
-  upcomingEvents,
-} from './capeTown';
-import {
-  challengeProgress,
   getExploreState,
   pacersAmong,
   passport,
@@ -50,19 +42,14 @@ test('Cape Town sunrise and sunset look right', () => {
   expect(Math.abs(mins(winter.sunset) - (17 * 60 + 44))).toBeLessThan(6);
 });
 
-test('passport stamps count once per spot per day and feed challenges', () => {
+test('passport stamps count once per spot per day', () => {
   const day = new Date(2026, 9, 3, 7, 0);
   expect(stampSpot('lions-head', day)).toBe(true);
   expect(stampSpot('lions-head', day)).toBe(false);
   stampSpot('lions-head', new Date(2026, 9, 5, 7, 0));
   stampSpot('camps-bay-tidal-pool', new Date(2026, 9, 5, 8, 0));
   const s = getExploreState();
-  const lions = CHALLENGES.find((c) => c.id === 'lions-head-4')!;
-  const hopper = CHALLENGES.find((c) => c.id === 'spot-hopper')!;
-  const cold = CHALLENGES.find((c) => c.id === 'cold-water-4')!;
-  expect(challengeProgress(lions, s, day)).toBe(2);
-  expect(challengeProgress(hopper, s, day)).toBe(2);
-  expect(challengeProgress(cold, s, day)).toBe(1);
+  expect(s.stamps).toHaveLength(3);
   expect(passport(s).visited).toBe(2);
 });
 

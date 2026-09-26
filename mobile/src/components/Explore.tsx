@@ -3,16 +3,8 @@ import { Image, Linking } from 'react-native';
 import { Text, XStack, YStack } from 'tamagui';
 import { Icon } from './Icon';
 import { Illo, IlloName } from './Illustrations';
-import { Badge, ProgressBar } from './ui';
-import {
-  Challenge,
-  Community,
-  conditions,
-  conditionsTip,
-  CtEvent,
-  CtSpot,
-  SpotKind,
-} from '../data/capeTown';
+import { Badge } from './ui';
+import { Community, conditions, conditionsTip, CtEvent, CtSpot, SpotKind } from '../data/capeTown';
 import { formatWhen } from '../data/dates';
 import type { Athlete } from '../data/mockData';
 import { SPORT_ILLO } from '../data/mockData';
@@ -370,92 +362,6 @@ export function CrewCard({
           </Text>
         </XStack>
       ) : null}
-    </YStack>
-  );
-}
-
-export function ChallengeCard({
-  challenge,
-  progress,
-  joined,
-  others,
-  onToggle,
-}: {
-  challenge: Challenge;
-  progress: number;
-  joined: boolean;
-  others: Athlete[];
-  onToggle: () => void;
-}) {
-  const done = progress >= challenge.goal;
-  return (
-    <YStack
-      p={14}
-      gap={10}
-      rounded={22}
-      bg={done ? '$accentSoft' : '$card'}
-      borderWidth={1}
-      borderColor={done ? '$accentBorder' : '$border'}
-    >
-      <XStack items="center" gap={12}>
-        <YStack
-          width={48}
-          height={48}
-          rounded={24}
-          bg={done ? '$card' : '$surface'}
-          items="center"
-          justify="center"
-        >
-          <Illo name={done ? 'medal' : 'flag'} size={32} />
-        </YStack>
-        <YStack flex={1}>
-          <Text fontFamily="$bold" fontSize={16} color="$text">
-            {challenge.title}
-          </Text>
-          <Text fontSize={13} color="$muted">
-            {challenge.detail}
-          </Text>
-        </YStack>
-      </XStack>
-      {joined ? (
-        <YStack gap={6}>
-          <ProgressBar pct={(progress / challenge.goal) * 100} />
-          <Text fontFamily="$semibold" fontSize={12} color={done ? '$accentText' : '$muted'}>
-            {done
-              ? `Done! “${challenge.badge}” badge unlocked`
-              : `${progress} of ${challenge.goal} this month · stamp spots to count`}
-          </Text>
-        </YStack>
-      ) : null}
-      <XStack items="center" justify="space-between">
-        {others.length ? (
-          <XStack items="center" gap={8}>
-            <AvatarStack people={others} size={22} />
-            <Text fontSize={12} color="$muted">
-              {others.length} doing it
-            </Text>
-          </XStack>
-        ) : (
-          <YStack />
-        )}
-        <XStack
-          accessibilityRole="button"
-          aria-label={joined ? `Leave ${challenge.title}` : `Join ${challenge.title}`}
-          onPress={() => {
-            tapHaptic();
-            onToggle();
-          }}
-          height={34}
-          px={14}
-          rounded="$full"
-          items="center"
-          bg={joined ? '$surface' : '$accent'}
-        >
-          <Text fontFamily="$semibold" fontSize={13} color={joined ? '$text' : '$onAccent'}>
-            {joined ? 'Leave' : 'Join'}
-          </Text>
-        </XStack>
-      </XStack>
     </YStack>
   );
 }

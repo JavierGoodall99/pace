@@ -13,7 +13,6 @@ import { GoalCard } from '../../src/components/Proof';
 import { CheckInCard, SessionCard } from '../../src/components/Sessions';
 import { useTabBarSpace } from '../../src/components/TabBar';
 import { Button, DisplayTitle } from '../../src/components/ui';
-import { dayIndex, startOfDay } from '../../src/data/dates';
 import { athleteById } from '../../src/data/mockData';
 import {
   checkIn,
@@ -26,7 +25,6 @@ import { usePacerDeck } from '../../src/data/deck';
 import { activityText, SOURCE_LABEL, streakText, useMyTraining } from '../../src/data/training';
 import { todayLine } from '../../src/data/pip';
 import { athletesTrainingFor, raceById } from '../../src/data/races';
-import { rhythmForMe, WEEK_DAY_NAMES } from '../../src/data/rhythm';
 import { useMe } from '../../src/data/session';
 import { useColors } from '../../src/theme/appearance';
 import { useNow } from '../../src/lib/useNow';
@@ -50,7 +48,6 @@ export default function TodayScreen() {
   const state = usePlans();
   const now = useNow();
 
-  const rhythm = rhythmForMe(me.cadence, me.trainingDays);
   const first = me.name.trim().split(' ')[0] || 'you';
 
   // Sessions still waiting on your check-in, plus any you just answered
@@ -68,18 +65,6 @@ export default function TodayScreen() {
     )
     .sort((a, b) => a.date.localeCompare(b.date));
   const joined = state.open.filter((o) => o.joined.includes('me') || o.hostId === 'me');
-
-  // This week, Monday first, with a dot for each session.
-  const monday = startOfDay(now);
-  monday.setDate(monday.getDate() - dayIndex(now));
-  const week = WEEK_DAY_NAMES.map((name, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    const sessions = [...upcoming.map((p) => p.date), ...joined.map((o) => o.date)].filter(
-      (iso) => startOfDay(new Date(iso)).getTime() === d.getTime()
-    ).length;
-    return { name, date: d.getDate(), today: i === dayIndex(now), training: rhythm[i], sessions };
-  });
 
   const goal = raceById(me.goalRaceId);
   const pacersLeft = usePacerDeck(now).deck.length;
@@ -108,61 +93,6 @@ export default function TodayScreen() {
           <MomentsRow />
         </YStack>
       ) : null}
-
-      {/* This week */}
-      <XStack
-        mx={20}
-        mt={18}
-        p={10}
-        gap={4}
-        rounded={22}
-        bg="$card"
-        borderWidth={1}
-        borderColor="$border"
-      >
-        {week.map((d) => (
-          <YStack
-            key={d.name}
-            flex={1}
-            items="center"
-            py={10}
-            gap={4}
-            rounded={16}
-            bg={d.today ? '$accent' : 'transparent'}
-          >
-            <Text fontFamily="$medium" fontSize={11} color={d.today ? '$onAccent' : '$muted'}>
-              {d.name}
-            </Text>
-            <Text fontFamily="$bold" fontSize={17} color={d.today ? '$onAccent' : '$text'}>
-              {d.date}
-            </Text>
-            <XStack gap={3} height={6}>
-              {d.sessions > 0 ? (
-                Array.from({ length: Math.min(d.sessions, 3) }).map((_, i) => (
-                  <YStack
-                    key={i}
-                    width={6}
-                    height={6}
-                    rounded={3}
-                    bg={d.today ? '$onAccent' : '$accent'}
-                  />
-                ))
-              ) : d.training ? (
-                <YStack
-                  width={6}
-                  height={6}
-                  rounded={3}
-                  bg={d.today ? 'rgba(255,255,255,0.5)' : '$borderStrong'}
-                />
-              ) : null}
-            </XStack>
-          </YStack>
-        ))}
-      </XStack>
-      <XStack mx={24} mt={8} gap={14}>
-        <Legend dotBg="$accent" label="Session planned" />
-        <Legend dotBg="$borderStrong" label="Your training day" />
-      </XStack>
 
       <TrainedTodayCard now={now} onLog={() => router.push('/log-training')} />
 
@@ -352,17 +282,6 @@ function SectionLabel({ children }: { children: string }) {
     <Text fontFamily="$semibold" fontSize={17} color="$text" mt={6}>
       {children}
     </Text>
-  );
-}
-
-function Legend({ dotBg, label }: { dotBg: string; label: string }) {
-  return (
-    <XStack items="center" gap={6}>
-      <YStack width={6} height={6} rounded={3} bg={dotBg as any} />
-      <Text fontSize={12} color="$muted">
-        {label}
-      </Text>
-    </XStack>
   );
 }
 

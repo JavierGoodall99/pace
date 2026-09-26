@@ -13,8 +13,8 @@ athletes in Cape Town, built with Expo / React Native (`mobile/`).
 |---|---|---|
 | `LAUNCH_MODE` | on | Decks include people without a selfie check or recent training; those rank lower instead of being hidden. |
 | `RANK_WEIGHTS` | verified +15, active +10 (fades to 0 by 28 days) | Added to the "% in sync" score in launch mode. |
-| `DEMO_DATA` | on in dev builds only | Demo profiles, chats, plans, moments and notifications. Off = real empty states. |
-| `FEATURES.moments / passport / challenges / voiceNotes` | off | Parked for v1; every entry point is hidden. |
+| `DEMO_DATA` | on in dev builds only | 10 demo profiles, chats, plans, moments and notifications. Off = real empty states. |
+| `FEATURES.moments / passport / voiceNotes` | off | Parked for v1; every entry point is hidden. |
 | `PRO_EXTRA_PICKS` | 5 | Extra daily picks with Pro (entitlement `pro`). |
 
 ## Contents
@@ -71,7 +71,7 @@ Welcome → Meet Pip → City → Age → Sports → Your week → Level → Tim
 - **Streak badge** next to the bell: weeks in a row with at least one session. Filled when this
   week counts, outlined when at risk. Tap to learn more or log a session.
 - **Notification bell** with an unread dot.
-- **This week**: your week strip and planned sessions, with Pip's tip of the day.
+- **This week**: your planned and joined sessions, with Pip's tip of the day.
 - **"Did you train today?"** card: one tap to log, with streak status.
 - Shortcuts to races and the Safety centre.
 
@@ -100,7 +100,7 @@ Welcome → Meet Pip → City → Age → Sports → Your week → Level → Tim
 
 ## 4. Explore
 
-Tabs (scroll sideways): **This week · Spots · Crews** (Challenges is parked).
+Tabs (scroll sideways): **This week · Spots · Crews**.
 
 - **This week**: open group sessions and **singles run clubs** (equal spots for women and men),
   real Cape Town events, conditions, and who from Pace is going.
@@ -110,7 +110,7 @@ Tabs (scroll sideways): **This week · Spots · Crews** (Challenges is parked).
   crews; members are a count, and only your matches are named or pictured.
 - **Events** and group sessions show who's going before you RSVP (people opted in by saying
   they're going; "Show me on events I join" can turn that off).
-- **Parked for v1**: Pace passport and spot check-in stamps, Challenges.
+- **Parked for v1**: Pace passport and spot check-in stamps. (Challenges were removed.)
 
 ## 5. Chats, matches and likes
 
@@ -131,8 +131,8 @@ Tabs (scroll sideways): **This week · Spots · Crews** (Challenges is parked).
 
 ### Moments (parked for v1)
 
-Post one photo from today's session, visible to matches for 24 hours, with kudos and delete.
-Hidden while `FEATURES.moments` is off, along with kudos and comment notifications.
+Post one photo from today's session for your matches, with kudos and delete. Off for launch
+(`FEATURES.moments`), along with kudos and comment notifications.
 
 ## 6. Sessions and invites
 
@@ -153,7 +153,7 @@ Hidden while `FEATURES.moments` is off, along with kudos and comment notificatio
 - **Personal bests** (you see your times; others see which PBs you have, not the times) and
   **favourite routes**.
 - **Prompts** (up to 3) and an "Add a prompt" entry point.
-- **Your crews** (the Pace passport and challenge badges are parked).
+- **Your crews** (the Pace passport is parked).
 - **Invite a training friend** (share sheet).
 - Hidden-from-decks warning when you haven't trained in 14 days (not shown in launch mode).
 

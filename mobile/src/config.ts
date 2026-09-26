@@ -36,7 +36,6 @@ export function demo<T>(value: T, empty: T): T {
 export const FEATURES = {
   moments: false,
   passport: false, // Pace passport + spot check-in stamps
-  challenges: false,
   voiceNotes: false,
 };
 

@@ -7,16 +7,9 @@ import { Icon } from '../../src/components/Icon';
 import { Illo } from '../../src/components/Illustrations';
 import { showPip } from '../../src/components/PipKit';
 import { Badge, Button, Callout, DisplayTitle, ScreenHeader } from '../../src/components/ui';
-import {
-  CHALLENGES,
-  COMMUNITIES,
-  CT_EVENTS,
-  ctSpotById,
-  nextOccurrence,
-} from '../../src/data/capeTown';
+import { COMMUNITIES, CT_EVENTS, ctSpotById, nextOccurrence } from '../../src/data/capeTown';
 import { formatWhen } from '../../src/data/dates';
 import {
-  challengeProgress,
   CREW_MEMBERS,
   EVENT_ATTENDEES,
   getExploreState,
@@ -71,20 +64,10 @@ export default function SpotScreen() {
 
   function checkIn() {
     if (!spot) return;
-    const before = CHALLENGES.filter(
-      (c) => explore.challenges.includes(c.id) && challengeProgress(c, explore, now) < c.goal
-    );
     if (!stampSpot(spot.id, now)) return;
     successHaptic();
-    const after = getExploreState();
-    const finished = before.find((c) => challengeProgress(c, after, now) >= c.goal);
-    const pp = passport(after);
-    showPip(
-      finished
-        ? `Challenge complete: ${finished.title}! “${finished.badge}” is on your profile.`
-        : `Stamped! ${pp.visited} of ${pp.total} Cape Town spots in your passport.`,
-      'excited'
-    );
+    const pp = passport(getExploreState());
+    showPip(`Stamped! ${pp.visited} of ${pp.total} Cape Town spots in your passport.`, 'excited');
   }
 
   return (

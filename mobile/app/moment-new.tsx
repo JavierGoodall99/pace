@@ -55,11 +55,7 @@ function NewMomentScreen() {
 
   return (
     <YStack flex={1} bg="$canvas">
-      <ScreenHeader
-        title="Post a *moment*"
-        subtitle="Matches only · gone in 24 hours"
-        onBack={() => router.back()}
-      />
+      <ScreenHeader title="Post a *moment*" onBack={() => router.back()} />
       <ScrollView
         flex={1}
         contentContainerStyle={{ p: 20, gap: 22, pb: insets.bottom + 24 }}

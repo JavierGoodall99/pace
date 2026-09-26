@@ -610,63 +610,6 @@ export function upcomingEvents(now: Date = new Date()): { event: CtEvent; at: Da
     .sort((a, b) => a.at.getTime() - b.at.getTime());
 }
 
-// ── Challenges ───────────────────────────────────────────────────────
-
-export interface Challenge {
-  id: string;
-  title: string;
-  detail: string;
-  goal: number;
-  // What counts: stamps at these spots, or at any spot of these kinds.
-  spotIds?: string[];
-  kinds?: SpotKind[];
-  distinct?: boolean; // count different spots, not visits
-  badge: string;
-}
-
-export const CHALLENGES: Challenge[] = [
-  {
-    id: 'lions-head-4',
-    title: 'Lion’s Head × 4',
-    detail: 'Summit Lion’s Head four times this month.',
-    goal: 4,
-    spotIds: ['lions-head'],
-    badge: 'Lion tamer',
-  },
-  {
-    id: 'spot-hopper',
-    title: 'Spot hopper',
-    detail: 'Train at 6 different Cape Town spots.',
-    goal: 6,
-    distinct: true,
-    badge: 'Explorer',
-  },
-  {
-    id: 'parkrun-3',
-    title: 'Three parkruns',
-    detail: 'Run 3 parkruns — Green Point or Rondebosch Common.',
-    goal: 3,
-    spotIds: ['green-point-park', 'rondebosch-common'],
-    badge: 'Saturday regular',
-  },
-  {
-    id: 'cold-water-4',
-    title: 'Cold water club',
-    detail: 'Four sea or tidal-pool swims this month.',
-    goal: 4,
-    kinds: ['swim', 'surf'],
-    badge: 'Ice in the veins',
-  },
-  {
-    id: 'mountain-3',
-    title: 'Mountain month',
-    detail: 'Three sessions on Table Mountain trails.',
-    goal: 3,
-    spotIds: ['platteklip', 'kloof-corner', 'pipe-track', 'lions-head'],
-    badge: 'Mountain goat',
-  },
-];
-
 // ── Conditions ───────────────────────────────────────────────────────
 
 const CT_LAT = -33.92;

@@ -1,5 +1,5 @@
 import { ATHLETES } from './mockData';
-import { dailyPacers, isShowable, wantEachOther } from './pacers';
+import { pacerDeck, isShowable, wantEachOther } from './pacers';
 import { freshMe } from './session';
 import {
   defaultAgeRange,
@@ -27,7 +27,7 @@ test('only verified, recently active people make the drop', () => {
   expect(isShowable(byName('Dean'))).toBe(false); // hasn't trained in 23 days
   expect(isShowable(byName('Kagiso'))).toBe(true);
   const me = { ...freshMe('Ana', 'a@x.co'), gender: 'woman' as const, age: '29' };
-  expect(dailyPacers(me, []).map((p) => p.athlete.name)).not.toContain('Dean');
+  expect(pacerDeck(me, []).map((p) => p.athlete.name)).not.toContain('Dean');
 });
 
 test('men see women, women see men, and age ranges are mutual', () => {

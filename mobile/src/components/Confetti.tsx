@@ -27,7 +27,13 @@ export function buildConfettiPieces(
   }));
 }
 
-export function Confetti({ pieces, fallDistance = 300 }: { pieces: ConfettiPiece[]; fallDistance?: number }) {
+export function Confetti({
+  pieces,
+  fallDistance = 300,
+}: {
+  pieces: ConfettiPiece[];
+  fallDistance?: number;
+}) {
   const anims = useRef(pieces.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
@@ -62,8 +68,15 @@ export function Confetti({ pieces, fallDistance = 300 }: { pieces: ConfettiPiece
               backgroundColor: piece.color,
               opacity: anim.interpolate({ inputRange: [0, 0.1, 1], outputRange: [0, 1, 0] }),
               transform: [
-                { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [-20, fallDistance] }) },
-                { rotate: anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '240deg'] }) },
+                {
+                  translateY: anim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-20, fallDistance],
+                  }),
+                },
+                {
+                  rotate: anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '240deg'] }),
+                },
               ],
             }}
           />

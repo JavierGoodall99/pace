@@ -28,16 +28,28 @@ test('check-in outcome only reveals what you both chose', () => {
   );
 });
 
-test('an invite to a responder is accepted, matched and celebrated', () => {
-  const plan = plans.sendInvite({ athleteId: 8, ...base }, { replyDelayMs: 100 });
+test('an invite to a match who responds is accepted and celebrated', () => {
+  // Lerato (1) is a seeded match and a demo responder.
+  const plan = plans.sendInvite({ athleteId: 1, ...base }, { replyDelayMs: 100 })!;
+  expect(plan).not.toBeNull();
   expect(plans.getPlansState().plans.find((p) => p.id === plan.id)?.status).toBe('sent');
   jest.advanceTimersByTime(150);
   expect(plans.getPlansState().plans.find((p) => p.id === plan.id)?.status).toBe('confirmed');
   expect(plans.getPlansState().celebrate).toBe(plan.id);
 });
 
-test('an invite to a non-responder stays pending', () => {
-  const plan = plans.sendInvite({ athleteId: 4, ...base }, { replyDelayMs: 100 });
+test('you can only invite people you have matched with', () => {
+  const before = plans.getPlansState().plans.length;
+  // Kagiso (8) liked you but you haven't liked back; 4 is a stranger.
+  expect(plans.sendInvite({ athleteId: 8, ...base })).toBeNull();
+  expect(plans.sendInvite({ athleteId: 4, ...base })).toBeNull();
+  expect(plans.getPlansState().plans).toHaveLength(before);
+});
+
+test('after matching, an invite to a non-responder stays pending', () => {
+  const social = require('./social') as typeof import('./social');
+  social.likeBack(4);
+  const plan = plans.sendInvite({ athleteId: 4, ...base }, { replyDelayMs: 100 })!;
   jest.advanceTimersByTime(500);
   expect(plans.getPlansState().plans.find((p) => p.id === plan.id)?.status).toBe('sent');
 });

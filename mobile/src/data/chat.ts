@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react';
 import { depthFor } from './athleteDepth';
 import { athleteById, THREAD_MESSAGES, ThreadMessage } from './mockData';
 import type { MeProfile } from './session';
-import { likeBack } from './social';
+import { getSocialState, likeBack } from './social';
 import { dayKeyOf, likesLeft } from './trust';
 
 // Chat threads and first-move likes. A like can target a specific photo
@@ -115,15 +115,17 @@ export function hasLiked(s: ChatState, athleteId: number): boolean {
   return s.sentLikes.includes(athleteId);
 }
 
-// Send a like on a photo or prompt, optionally with a comment. In the
-// demo most athletes like back after a moment: that's a match, and the
-// thread opens with your comment and their reply.
+// Send a like on a photo or prompt, optionally with a comment. If they
+// already liked you it's a match straight away. In the demo, most other
+// athletes like back after a moment. Either way the thread opens with
+// your like/comment, and invites to train unlock.
+// Returns 'match' when the like matched instantly, otherwise 'sent'.
 export function sendLike(
   athleteId: number,
   like: LikeTarget,
   comment: string,
   opts: { replyDelayMs?: number; onMatch?: (athleteId: number) => void } = {}
-) {
+): 'match' | 'sent' {
   const today = dayKeyOf();
   const used = state.likesUsed?.day === today ? state.likesUsed.count : 0;
   if (!state.sentLikes.includes(athleteId)) {
@@ -132,10 +134,14 @@ export function sendLike(
       likesUsed: { day: today, count: used + 1 },
     });
   }
-  const reply = LIKE_REPLIES[athleteId];
-  if (!reply) return;
-  setTimeout(() => {
-    likeBack(athleteId);
+
+  const mine: ChatMessage = {
+    from: 'me',
+    text: comment.trim(),
+    like,
+    at: new Date().toISOString(),
+  };
+  const openThread = (reply?: string) => {
     const list = state.threads[athleteId] ?? [];
     setState({
       sentLikes: state.sentLikes.filter((id) => id !== athleteId),
@@ -143,13 +149,28 @@ export function sendLike(
         ...state.threads,
         [athleteId]: [
           ...list,
-          { from: 'me', text: comment.trim(), like, at: new Date().toISOString() },
-          { from: 'them', text: reply, at: new Date().toISOString() },
+          mine,
+          ...(reply ? [{ from: 'them' as const, text: reply, at: new Date().toISOString() }] : []),
         ],
       },
     });
+  };
+
+  if (getSocialState().likes.includes(athleteId)) {
+    likeBack(athleteId);
+    openThread();
+    opts.onMatch?.(athleteId);
+    return 'match';
+  }
+
+  const reply = LIKE_REPLIES[athleteId];
+  if (!reply) return 'sent';
+  setTimeout(() => {
+    likeBack(athleteId);
+    openThread(reply);
     opts.onMatch?.(athleteId);
   }, opts.replyDelayMs ?? 2600);
+  return 'sent';
 }
 
 // Preview line for the chat list.

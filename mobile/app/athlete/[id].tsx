@@ -41,7 +41,7 @@ export default function AthleteDetailScreen() {
   const athlete = athleteById(Number(id));
   const me = useMe();
   const plansState = usePlans();
-  const { matches } = useSocial();
+  const { matches, likes: likedMe } = useSocial();
   const chat = useChat();
   const explore = useExplore();
   const { height } = useWindowDimensions();
@@ -339,18 +339,36 @@ export default function AthleteDetailScreen() {
             Chat
           </Button>
         ) : null}
-        <Button
-          icon="send"
-          style={{ flex: 1, paddingHorizontal: 12 }}
-          onPress={() =>
-            router.push({
-              pathname: '/invite/[athleteId]',
-              params: { athleteId: String(athlete.id) },
-            })
-          }
-        >
-          Invite to train
-        </Button>
+        {matched ? (
+          <Button
+            icon="send"
+            style={{ flex: 1, paddingHorizontal: 12 }}
+            onPress={() =>
+              router.push({
+                pathname: '/invite/[athleteId]',
+                params: { athleteId: String(athlete.id) },
+              })
+            }
+          >
+            Invite to train
+          </Button>
+        ) : (
+          // Not matched yet: like first. Invites unlock once it's mutual.
+          <Button
+            icon="heart"
+            disabled={liked}
+            style={{ flex: 1, paddingHorizontal: 12 }}
+            onPress={() => {
+              const g = gallery[0];
+              setLiking({
+                target: { kind: 'photo', index: 0, label: g?.caption ?? `${athlete.name}’s photo` },
+                source: g?.source,
+              });
+            }}
+          >
+            {liked ? 'Like sent' : likedMe.includes(athlete.id) ? 'Like back' : 'Like'}
+          </Button>
+        )}
       </XStack>
 
       <SafetySheet

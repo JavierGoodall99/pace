@@ -43,7 +43,8 @@ export type IconName =
   | 'more'
   | 'play'
   | 'pause'
-  | 'star';
+  | 'star'
+  | 'rotate-ccw';
 
 interface IconProps {
   name: IconName;
@@ -144,6 +145,13 @@ export function Icon({ name, size = 20, color, strokeWidth = 1.8, filled = false
       return (
         <Svg {...common}>
           <Path d="M20 6 9 17l-5-5" />
+        </Svg>
+      );
+    case 'rotate-ccw':
+      return (
+        <Svg {...common}>
+          <Path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+          <Path d="M3 3v5h5" />
         </Svg>
       );
     case 'x':

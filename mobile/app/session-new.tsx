@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,7 +34,7 @@ export default function NewSessionScreen() {
   const router = useRouter();
   const me = useMe();
   const now = useMemo(() => new Date(), []);
-  const city = me.city.trim() || 'Pretoria';
+  const city = me.city.trim() || 'Cape Town';
 
   const days = useMemo(
     () =>
@@ -50,7 +50,9 @@ export default function NewSessionScreen() {
   const [title, setTitle] = useState('');
   const [day, setDay] = useState(days[0]);
   const [time, setTime] = useState('06:00');
-  const [place, setPlace] = useState(spotsFor(city, activity)[0]?.name ?? '');
+  // Coming from a spot page, that spot is preselected.
+  const params = useLocalSearchParams<{ place?: string }>();
+  const [place, setPlace] = useState(params.place || (spotsFor(city, activity)[0]?.name ?? ''));
   const [distance, setDistance] = useState('');
   const [level, setLevel] = useState<Level>(me.level ?? 2);
   const [size, setSize] = useState(SIZES[1]);
@@ -105,7 +107,7 @@ export default function NewSessionScreen() {
                 value={activity}
                 onChange={(a) => {
                   setActivity(a);
-                  setPlace(spotsFor(city, a)[0]?.name ?? place);
+                  if (!params.place) setPlace(spotsFor(city, a)[0]?.name ?? place);
                 }}
                 render={(a) => formatLabel(a)}
                 illo={(a) => SPORT_ILLO[a]}
@@ -135,9 +137,14 @@ export default function NewSessionScreen() {
             <YStack>
               <SectionTitle hint="Public spots only — safer for everyone.">Where</SectionTitle>
               <PickRow
-                options={spotsFor(city, activity)
-                  .slice(0, 4)
-                  .map((s) => s.name)}
+                options={[
+                  ...new Set([
+                    ...(params.place ? [params.place] : []),
+                    ...spotsFor(city, activity)
+                      .slice(0, 4)
+                      .map((s) => s.name),
+                  ]),
+                ]}
                 value={place}
                 onChange={setPlace}
               />

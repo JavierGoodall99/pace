@@ -4,6 +4,8 @@ import { athleteById } from './mockData';
 import { checkInOutcome, effectiveStatus, Plan } from './plans';
 import { daysUntil, raceById } from './races';
 import type { MeProfile } from './session';
+import { upcomingEvents } from './capeTown';
+import { EVENT_ATTENDEES, ExploreState, pacersAmong } from './explore';
 
 // What Pip says around the app. Pip is Pace's voice — onboarding
 // introduces it, and it keeps showing up at the moments that matter:
@@ -73,9 +75,9 @@ export function todayLine(
 
   return {
     key: 'quiet',
-    text: 'Quiet week? Group sessions are the easiest way to meet someone new.',
+    text: 'Quiet day? Cape Town’s run crews are the easiest way to meet someone new.',
     mood: 'thinking',
-    cta: { label: 'Open sessions', href: '/(tabs)/sessions' },
+    cta: { label: 'Explore Cape Town', href: '/(tabs)/sessions' },
   };
 }
 
@@ -137,4 +139,29 @@ export function profileTip(me: MeProfile, now: Date = new Date()): PipLine {
     mood: 'excited',
     cta: { label: 'See race', href: `/race/${race.id}` },
   };
+}
+
+// "This week in Cape Town" — Pip's digest at the top of Explore.
+export function weekDigest(
+  me: MeProfile,
+  explore: ExploreState,
+  blocked: number[] = [],
+  now: Date = new Date()
+): PipLine {
+  const week = upcomingEvents(now).filter((e) => e.at.getTime() - now.getTime() < 7 * 86400000);
+  const pacers = new Set(
+    week.flatMap(({ event }) =>
+      pacersAmong(me, EVENT_ATTENDEES[event.id], blocked).map((a) => a.id)
+    )
+  );
+  const crewRuns = week.filter(
+    ({ event }) => event.communityId && explore.crews.includes(event.communityId)
+  ).length;
+  const parts = [`${week.length} things on in Cape Town this week`];
+  if (crewRuns) parts.push(`${crewRuns} with your crews`);
+  const text =
+    pacers.size > 0
+      ? `${parts.join(', ')} — and ${pacers.size} pacer${pacers.size === 1 ? '' : 's'} you might like ${pacers.size === 1 ? 'is' : 'are'} going to some of them.`
+      : `${parts.join(', ')}. Pick one and say you’re going.`;
+  return { key: `digest-${now.toISOString().slice(0, 10)}`, text, mood: 'excited' };
 }

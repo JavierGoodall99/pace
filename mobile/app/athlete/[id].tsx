@@ -26,6 +26,8 @@ import { sessionsTogether, stageWith, usePlans } from '../../src/data/plans';
 import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { useMe } from '../../src/data/session';
 import { galleryFor } from '../../src/data/photos';
+import { COMMUNITIES } from '../../src/data/capeTown';
+import { CREW_MEMBERS, useExplore } from '../../src/data/explore';
 import { activityLabel, repliesLabel } from '../../src/data/trust';
 import { useSocial } from '../../src/data/social';
 import { useColors } from '../../src/theme/appearance';
@@ -41,6 +43,7 @@ export default function AthleteDetailScreen() {
   const plansState = usePlans();
   const { matches } = useSocial();
   const chat = useChat();
+  const explore = useExplore();
   const { height } = useWindowDimensions();
   const [safety, setSafety] = useState(false);
   const [liking, setLiking] = useState<{ target: LikeTarget; source?: ImageSourcePropType } | null>(
@@ -66,6 +69,8 @@ export default function AthleteDetailScreen() {
   const stage = stageWith(plansState, athlete.id, matched);
   const together = sessionsTogether(plansState, athlete.id);
   const gallery = galleryFor(athlete.slotId);
+  const crews = COMMUNITIES.filter((c) => CREW_MEMBERS[c.id]?.includes(athlete.id));
+  const shared = crews.filter((c) => explore.crews.includes(c.id));
   const liked = hasLiked(chat, athlete.id);
   const basics = [
     formatHeight(depth.heightCm),
@@ -200,6 +205,16 @@ export default function AthleteDetailScreen() {
               {activityLabel(depth)} · {repliesLabel(depth.replies)}
             </Text>
           </XStack>
+          {crews.length ? (
+            <XStack items="center" gap={6} mt={6}>
+              <Icon name="users" size={14} color={colors.accentText} />
+              <Text flex={1} fontSize={13} color="$muted">
+                {shared.length
+                  ? `You both run with ${shared.map((c) => c.name).join(' & ')}`
+                  : `Runs with ${crews.map((c) => c.name).join(', ')}`}
+              </Text>
+            </XStack>
+          ) : null}
 
           <Text color="$text" fontSize={16} lineHeight={24} mt={18}>
             {athlete.bio}

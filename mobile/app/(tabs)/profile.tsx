@@ -8,7 +8,7 @@ import { GoalCard, Heatmap, PersonalBests, PromptCard } from '../../src/componen
 import { profileTip } from '../../src/data/pip';
 import { RhythmStrip } from '../../src/components/Rhythm';
 import { useTabBarSpace } from '../../src/components/TabBar';
-import { Badge, Button, DisplayTitle } from '../../src/components/ui';
+import { Badge, Button, Callout, DisplayTitle } from '../../src/components/ui';
 import { rhythmForMe, WEEK_DAY_NAMES } from '../../src/data/rhythm';
 import { levelLabel } from '../../src/data/athleteDepth';
 import { effectiveStatus, usePlans } from '../../src/data/plans';
@@ -19,6 +19,9 @@ import { syncLabel } from '../../src/data/sync';
 import { communityById } from '../../src/data/capeTown';
 import { completedChallenges, passport, useExplore } from '../../src/data/explore';
 import { useMe } from '../../src/data/session';
+import { activityText, useMyTraining } from '../../src/data/training';
+import { ACTIVE_DAYS } from '../../src/data/trust';
+import { useNow } from '../../src/lib/useNow';
 import { useSocial } from '../../src/data/social';
 import { useColors } from '../../src/theme/appearance';
 import { shadow } from '../../src/theme/tokens';
@@ -31,6 +34,9 @@ export default function ProfileScreen() {
   const me = useMe();
   const explore = useExplore();
   const { matches, likes } = useSocial();
+  const now = useNow();
+  const training = useMyTraining(now);
+  const { activity } = training;
 
   const avatar = me.photos[0] ? { uri: me.photos[0] } : ME_AVATAR;
   const primary = me.disciplines[0] ?? 'ATHLETE';
@@ -112,6 +118,46 @@ export default function ProfileScreen() {
             {me.verified ? ' · Verified' : ' · Not verified yet'}
           </Text>
         </XStack>
+        <XStack
+          items="center"
+          gap={5}
+          mt={4}
+          accessibilityRole="button"
+          onPress={() => router.push('/log-training')}
+        >
+          <Icon
+            name="zap"
+            size={14}
+            color={activity.active ? colors.accentText : colors.muted}
+            filled={activity.trainedToday}
+          />
+          <Text fontFamily="$medium" fontSize={14} color={activity.active ? '$text' : '$muted'}>
+            {activityText(activity)}
+          </Text>
+        </XStack>
+        {!activity.active ? (
+          <YStack mt={12}>
+            <Callout icon="activity" title="You’re hidden from other people’s decks">
+              {`Pace only shows people who trained in the last ${ACTIVE_DAYS} days. Log a session or connect Strava or Garmin to show up again.`}
+            </Callout>
+            <XStack gap={10} mt={10}>
+              <Button icon="plus" onPress={() => router.push('/log-training')} style={{ flex: 1 }}>
+                Log training
+              </Button>
+              {!me.stravaConnected && !me.garminConnected ? (
+                <Button
+                  variant="secondary"
+                  onPress={() =>
+                    router.push({ pathname: '/connect/[provider]', params: { provider: 'strava' } })
+                  }
+                  style={{ flex: 1 }}
+                >
+                  Connect Strava
+                </Button>
+              ) : null}
+            </XStack>
+          </YStack>
+        ) : null}
         <Text color="$text" fontSize={15} lineHeight={22} mt={14}>
           {me.bio || 'No bio yet — add one in Edit profile.'}
         </Text>
@@ -198,10 +244,21 @@ export default function ProfileScreen() {
         <YStack mt={12} p={16} rounded={20} borderWidth={1} borderColor="$border" bg="$card">
           <Heatmap
             rhythm={myRhythm}
-            seed={3}
-            data={me.sync?.weeks}
-            source={me.sync ? syncLabel(me.sync) : undefined}
+            data={training.heatmap}
+            source={
+              training.all.length
+                ? `${activity.thisWeek} session${activity.thisWeek === 1 ? '' : 's'} this week${me.sync ? ` · ${syncLabel(me.sync)}` : ''}`
+                : 'Nothing logged yet'
+            }
           />
+          <Button
+            variant="ghost"
+            icon="plus"
+            onPress={() => router.push('/log-training')}
+            style={{ width: '100%', marginTop: 12 }}
+          >
+            Log training
+          </Button>
         </YStack>
 
         <YStack
@@ -242,11 +299,88 @@ export default function ProfileScreen() {
           )}
         </YStack>
 
-        {me.pbs.length ? (
-          <YStack mt={12}>
+        <YStack mt={20} gap={10}>
+          <XStack items="baseline" justify="space-between">
+            <Text fontFamily="$semibold" fontSize={17} color="$text">
+              Personal bests
+            </Text>
+            <Text
+              fontFamily="$semibold"
+              fontSize={14}
+              color="$accentText"
+              accessibilityRole="button"
+              onPress={() => router.push('/edit-highlights')}
+            >
+              {me.pbs.length ? 'Edit' : 'Add'}
+            </Text>
+          </XStack>
+          {me.pbs.length ? (
             <PersonalBests pbs={me.pbs} />
-          </YStack>
-        ) : null}
+          ) : (
+            <Button
+              variant="ghost"
+              icon="plus"
+              onPress={() => router.push('/edit-highlights')}
+              style={{ width: '100%' }}
+            >
+              Add a personal best
+            </Button>
+          )}
+        </YStack>
+
+        <YStack mt={20} gap={10}>
+          <XStack items="baseline" justify="space-between">
+            <Text fontFamily="$semibold" fontSize={17} color="$text">
+              Favourite routes
+            </Text>
+            <Text
+              fontFamily="$semibold"
+              fontSize={14}
+              color="$accentText"
+              accessibilityRole="button"
+              onPress={() => router.push('/edit-highlights')}
+            >
+              {me.routes.length ? 'Edit' : 'Add'}
+            </Text>
+          </XStack>
+          {me.routes.length ? (
+            <YStack p={16} gap={12} rounded={20} borderWidth={1} borderColor="$border" bg="$card">
+              {me.routes.map((r) => (
+                <XStack key={r.name} items="center" gap={12}>
+                  <XStack
+                    width={38}
+                    height={38}
+                    rounded={12}
+                    bg="$surface"
+                    items="center"
+                    justify="center"
+                  >
+                    <Icon name="map" size={18} color={colors.accentText} />
+                  </XStack>
+                  <YStack flex={1}>
+                    <Text fontFamily="$semibold" fontSize={15} color="$text">
+                      {r.name}
+                    </Text>
+                    {r.detail ? (
+                      <Text fontSize={13} color="$muted">
+                        {r.detail}
+                      </Text>
+                    ) : null}
+                  </YStack>
+                </XStack>
+              ))}
+            </YStack>
+          ) : (
+            <Button
+              variant="ghost"
+              icon="plus"
+              onPress={() => router.push('/edit-highlights')}
+              style={{ width: '100%' }}
+            >
+              Add a favourite route
+            </Button>
+          )}
+        </YStack>
 
         {me.prompts.map((p) => (
           <YStack key={p.q} mt={12}>

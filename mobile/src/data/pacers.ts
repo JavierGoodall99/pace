@@ -12,8 +12,7 @@ import type { MeProfile } from './session';
 // card at a time. Swipe right to like, left to pass. A like on someone who
 // already liked you is a match, and only matches can invite to train.
 // The daily like budget (trust.LIKES_PER_DAY) keeps likes meaningful, so
-// the deck itself doesn't need a daily cap. Standouts shows who's getting
-// the most likes near you.
+// the deck itself doesn't need a daily cap.
 
 export interface Suggestion {
   activity: Discipline;
@@ -94,11 +93,4 @@ export function pacerDeck(me: MeProfile, excluded: number[], now: Date = new Dat
       return { athlete, compat, suggestion: suggestSession(me, athlete, compat, now) };
     })
     .sort((x, y) => y.compat.score - x.compat.score);
-}
-
-// Most-liked people near you this week who'd also want to see you.
-export function standouts(me: MeProfile, excluded: number[], limit = 4): Athlete[] {
-  return candidates(me, excluded)
-    .sort((x, y) => depthFor(y).likesThisWeek - depthFor(x).likesThisWeek)
-    .slice(0, limit);
 }

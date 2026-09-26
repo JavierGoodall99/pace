@@ -18,8 +18,6 @@ export function seeking(g: Gender | null | undefined): Gender | null {
   return g === 'woman' ? 'man' : g === 'man' ? 'woman' : null;
 }
 
-export const HEIGHT_RANGE = { min: 145, max: 210 };
-
 export function formatHeight(cm: number | null | undefined): string {
   return cm ? `${cm} cm` : '';
 }

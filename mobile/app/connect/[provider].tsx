@@ -7,6 +7,7 @@ import { Button, Callout, ScreenHeader } from '../../src/components/ui';
 import { showPip } from '../../src/components/PipKit';
 import { updateMe, useMe } from '../../src/data/session';
 import { importActivities, PROVIDER_LABEL } from '../../src/data/sync';
+import { importSynced } from '../../src/data/training';
 import { useColors } from '../../src/theme/appearance';
 
 const PROVIDERS: Record<
@@ -43,6 +44,9 @@ export default function ConnectScreen() {
     // `connectProvider(providerKey, token)` endpoint call.
     setTimeout(async () => {
       const sync = importActivities(providerKey, me);
+      // Dated activities land in the training log, which is what keeps
+      // you "recently active" for other people's decks.
+      importSynced(sync, me.disciplines[0] ?? 'RUNNING');
       await updateMe({
         ...(providerKey === 'garmin' ? { garminConnected: true } : { stravaConnected: true }),
         sync,

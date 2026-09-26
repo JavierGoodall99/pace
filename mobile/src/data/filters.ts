@@ -12,9 +12,8 @@ export interface DiscoverFilterState {
   ageMin: number;
   ageMax: number;
   radiusKm: number | null; // null = anywhere
+  // Empty = any time. Otherwise only people who train at one of these.
   times: string[];
-  heightMin: number;
-  heightMax: number;
 }
 
 export const RADIUS_OPTIONS: { label: string; km: number }[] = [
@@ -28,14 +27,12 @@ export const AVAILABILITY_OPTIONS = ['EARLY MORNING', 'MIDDAY', 'EVENING', 'WEEK
 
 export const AGE_RANGE = { min: 18, max: 60 };
 
-const DEFAULT_FILTERS: DiscoverFilterState = {
+export const DEFAULT_FILTERS: DiscoverFilterState = {
   ageAuto: true,
   ageMin: 18,
   ageMax: 60,
   radiusKm: DEFAULT_RADIUS_KM,
   times: [],
-  heightMin: 145,
-  heightMax: 210,
 };
 
 let state: DiscoverFilterState = DEFAULT_FILTERS;

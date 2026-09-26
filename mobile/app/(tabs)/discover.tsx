@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
-import { Image, LayoutChangeEvent, useWindowDimensions } from 'react-native';
+import { LayoutChangeEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
 import { LikeSheet } from '../../src/components/LikeSheet';
 import { Mascot } from '../../src/components/Mascot';
@@ -12,19 +12,19 @@ import { WhyChips } from '../../src/components/Proof';
 import { RhythmStrip, SyncBadge } from '../../src/components/Rhythm';
 import { SwipeDeck, SwipeDeckHandle, SwipeDir } from '../../src/components/SwipeDeck';
 import { useTabBarSpace } from '../../src/components/TabBar';
-import { Button, DisplayTitle, IconButton, SegmentedControl } from '../../src/components/ui';
+import { Button, DisplayTitle, IconButton } from '../../src/components/ui';
 import { depthFor } from '../../src/data/athleteDepth';
 import { hasLiked, LikeTarget, likesLeftToday, sendLike, useChat } from '../../src/data/chat';
 import { formatWhen } from '../../src/data/dates';
-import { filteredOut, usePacerDeck } from '../../src/data/deck';
+import { usePacerDeck } from '../../src/data/deck';
 import { useFilters } from '../../src/data/filters';
 import { ACTIVE_DAYS, activityLabel, DEFAULT_RADIUS_KM, LIKES_PER_DAY } from '../../src/data/trust';
 import { formatHeight, freshnessLabel, lifestyleChips } from '../../src/data/identity';
 import { Athlete } from '../../src/data/mockData';
-import { Pacer, standouts } from '../../src/data/pacers';
-import { ATHLETE_PHOTOS, galleryFor } from '../../src/data/photos';
+import type { Pacer } from '../../src/data/pacers';
+import { galleryFor } from '../../src/data/photos';
 import { formatKm } from '../../src/data/places';
-import { activeCity, isTravelling, useMe } from '../../src/data/session';
+import { useMe } from '../../src/data/session';
 import { clearPasses, passPacer, undoLastPass, useSocial } from '../../src/data/social';
 import { successHaptic, tapHaptic } from '../../src/lib/haptics';
 import { upcomingEvents } from '../../src/data/capeTown';
@@ -37,9 +37,7 @@ import { shadow } from '../../src/theme/tokens';
 // first. Swipe right (or tap the heart) to like, left to pass. Tapping the
 // heart on a photo or prompt likes it with a comment. When you both like
 // each other it's a match, and only then can you invite them to train.
-// Standouts shows the most-liked people near you.
 
-const TABS = ['For you', 'Standouts'];
 const CONTROLS_HEIGHT = 84;
 
 type Liking = { athlete: Athlete; target: LikeTarget; source?: StoryPage } | null;
@@ -50,10 +48,9 @@ export default function PacersScreen() {
   const tabBarSpace = useTabBarSpace();
   const router = useRouter();
   const me = useMe();
-  const { blocked, matches } = useSocial();
+  const { blocked } = useSocial();
   const filters = useFilters();
   const chat = useChat();
-  const [tab, setTab] = useState(TABS[0]);
   const [areaHeight, setAreaHeight] = useState(0);
   const [liking, setLiking] = useState<Liking>(null);
   // The pass you just undid goes back on top of the deck.
@@ -69,15 +66,8 @@ export default function PacersScreen() {
   }, [ranked, rewound]);
   const likesLeft = likesLeftToday(chat, now);
 
-  const stand = useMemo(
-    () => standouts(me, [...blocked, ...matches, ...filteredOut(me, filters, now)]),
-    [me, blocked, matches, filters] // eslint-disable-line react-hooks/exhaustive-deps
-  );
   const filtersActive =
-    !filters.ageAuto ||
-    filters.radiusKm !== DEFAULT_RADIUS_KM ||
-    filters.heightMin > 145 ||
-    filters.heightMax < 210;
+    !filters.ageAuto || filters.radiusKm !== DEFAULT_RADIUS_KM || filters.times.length > 0;
 
   // When the deck runs dry, point at events where people you'd like are going.
   const goingCount = new Set(
@@ -88,7 +78,6 @@ export default function PacersScreen() {
   const goingNote = goingCount
     ? `${goingCount} pacer${goingCount === 1 ? '' : 's'} you might like ${goingCount === 1 ? 'is' : 'are'} going to Cape Town events this week.`
     : undefined;
-  const travelling = isTravelling(me, now);
 
   function openMatch(athleteId: number) {
     successHaptic();
@@ -150,15 +139,6 @@ export default function PacersScreen() {
           </Text>
         </YStack>
         <XStack gap={8}>
-          <IconButton
-            size={40}
-            tone={travelling ? 'accent' : undefined}
-            onPress={() => router.push('/travel')}
-            accessibilityLabel="Travel mode"
-            aria-label="Travel mode"
-          >
-            <Icon name="plane" size={18} color={travelling ? colors.accentText : colors.text} />
-          </IconButton>
           <YStack>
             <IconButton
               size={40}
@@ -185,126 +165,80 @@ export default function PacersScreen() {
         </XStack>
       </XStack>
 
-      <YStack px={20} mt={12} gap={10}>
-        {travelling ? (
-          <XStack
-            accessibilityRole="button"
-            onPress={() => router.push('/travel')}
-            items="center"
-            gap={8}
-            px={12}
-            height={36}
-            rounded="$full"
-            bg="$accentSoft"
-            self="flex-start"
-          >
-            <Icon name="plane" size={14} color={colors.accentText} />
-            <Text fontFamily="$semibold" fontSize={13} color="$accentText">
-              Matching in {activeCity(me, now)} until{' '}
-              {new Date(me.travel!.until).toLocaleDateString('en-ZA', {
-                weekday: 'short',
-                day: 'numeric',
-                month: 'short',
-              })}
-            </Text>
-          </XStack>
-        ) : null}
-        <SegmentedControl options={TABS} value={tab} onChange={setTab} />
-      </YStack>
-
-      {tab === 'Standouts' ? (
-        <Standouts
-          list={stand}
-          liked={(id) => hasLiked(chat, id)}
-          bottom={tabBarSpace + 16}
-          onOpen={(a) => router.push({ pathname: '/athlete/[id]', params: { id: String(a.id) } })}
-          onLike={(a) => {
-            const g = galleryFor(a.slotId)[0];
-            setLiking({
-              athlete: a,
-              target: { kind: 'photo', index: 0, label: g?.caption ?? `${a.name}’s photo` },
-              source: g ? { kind: 'photo', source: g.source, label: g.label } : undefined,
-            });
-          }}
-        />
-      ) : (
-        <YStack
-          flex={1}
-          mt={12}
-          mb={tabBarSpace - 4}
-          onLayout={(e: LayoutChangeEvent) => setAreaHeight(e.nativeEvent.layout.height)}
-        >
-          {deck.length === 0 ? (
-            <DeckDone
-              empty={ranked.length === 0 && passedCount === 0}
-              passedCount={passedCount}
-              radius={filters.radiusKm}
-              onReviewPassed={() => clearPasses()}
-              onBrowse={() => setTab('Standouts')}
-              onTravel={() => router.push('/travel')}
-              onFilters={() => router.push('/discover-filters')}
-              onClubs={() => router.push('/(tabs)/sessions')}
-              goingNote={goingNote}
+      <YStack
+        flex={1}
+        mt={12}
+        mb={tabBarSpace - 4}
+        onLayout={(e: LayoutChangeEvent) => setAreaHeight(e.nativeEvent.layout.height)}
+      >
+        {deck.length === 0 ? (
+          <DeckDone
+            empty={ranked.length === 0 && passedCount === 0}
+            passedCount={passedCount}
+            radius={filters.radiusKm}
+            onReviewPassed={() => clearPasses()}
+            onFilters={() => router.push('/discover-filters')}
+            onClubs={() => router.push('/(tabs)/sessions')}
+            goingNote={goingNote}
+          />
+        ) : areaHeight > 0 ? (
+          <>
+            <SwipeDeck
+              deckRef={deckRef}
+              items={deck}
+              keyOf={(p) => p.athlete.id}
+              height={areaHeight - CONTROLS_HEIGHT}
+              allow={allowSwipe}
+              onSwiped={onSwiped}
+              renderCard={(p, isTop) => (
+                <PacerCard
+                  pacer={p}
+                  height={areaHeight - CONTROLS_HEIGHT}
+                  liked={hasLiked(chat, p.athlete.id)}
+                  onOpen={() =>
+                    router.push({
+                      pathname: '/athlete/[id]',
+                      params: { id: String(p.athlete.id) },
+                    })
+                  }
+                  onLike={
+                    isTop
+                      ? (pg, index) =>
+                          setLiking({
+                            athlete: p.athlete,
+                            source: pg,
+                            target:
+                              pg.kind === 'prompt'
+                                ? {
+                                    kind: 'prompt',
+                                    index,
+                                    label: pg.prompt.q,
+                                    text: pg.prompt.a,
+                                  }
+                                : {
+                                    kind: 'photo',
+                                    index,
+                                    label:
+                                      pg.kind === 'photo' && pg.caption
+                                        ? pg.caption
+                                        : `${p.athlete.name}’s photo`,
+                                  },
+                          })
+                      : undefined
+                  }
+                />
+              )}
             />
-          ) : areaHeight > 0 ? (
-            <>
-              <SwipeDeck
-                deckRef={deckRef}
-                items={deck}
-                keyOf={(p) => p.athlete.id}
-                height={areaHeight - CONTROLS_HEIGHT}
-                allow={allowSwipe}
-                onSwiped={onSwiped}
-                renderCard={(p, isTop) => (
-                  <PacerCard
-                    pacer={p}
-                    height={areaHeight - CONTROLS_HEIGHT}
-                    liked={hasLiked(chat, p.athlete.id)}
-                    onOpen={() =>
-                      router.push({
-                        pathname: '/athlete/[id]',
-                        params: { id: String(p.athlete.id) },
-                      })
-                    }
-                    onLike={
-                      isTop
-                        ? (pg, index) =>
-                            setLiking({
-                              athlete: p.athlete,
-                              source: pg,
-                              target:
-                                pg.kind === 'prompt'
-                                  ? {
-                                      kind: 'prompt',
-                                      index,
-                                      label: pg.prompt.q,
-                                      text: pg.prompt.a,
-                                    }
-                                  : {
-                                      kind: 'photo',
-                                      index,
-                                      label:
-                                        pg.kind === 'photo' && pg.caption
-                                          ? pg.caption
-                                          : `${p.athlete.name}’s photo`,
-                                    },
-                            })
-                        : undefined
-                    }
-                  />
-                )}
-              />
-              <DeckControls
-                name={deck[0].athlete.name}
-                canUndo={canUndo}
-                onUndo={undo}
-                onPass={() => deckRef.current?.swipe('left')}
-                onLike={() => deckRef.current?.swipe('right')}
-              />
-            </>
-          ) : null}
-        </YStack>
-      )}
+            <DeckControls
+              name={deck[0].athlete.name}
+              canUndo={canUndo}
+              onUndo={undo}
+              onPass={() => deckRef.current?.swipe('left')}
+              onLike={() => deckRef.current?.swipe('right')}
+            />
+          </>
+        ) : null}
+      </YStack>
 
       {liking ? (
         <LikeSheet
@@ -516,111 +450,11 @@ function InfoPage({ pacer }: { pacer: Pacer }) {
   );
 }
 
-function Standouts({
-  list,
-  liked,
-  bottom,
-  onOpen,
-  onLike,
-}: {
-  list: Athlete[];
-  liked: (id: number) => boolean;
-  bottom: number;
-  onOpen: (a: Athlete) => void;
-  onLike: (a: Athlete) => void;
-}) {
-  const colors = useColors();
-  const { width } = useWindowDimensions();
-  const tile = (width - 40 - 12) / 2;
-  if (!list.length) {
-    return (
-      <YStack flex={1} items="center" justify="center" px={32} gap={10}>
-        <Mascot size={110} mood="thinking" />
-        <Text fontSize={15} color="$muted" text="center">
-          No standouts near you yet. Try widening your filters.
-        </Text>
-      </YStack>
-    );
-  }
-  return (
-    <ScrollView flex={1} contentContainerStyle={{ px: 20, pt: 14, pb: bottom, gap: 12 }}>
-      <Text fontSize={14} color="$muted">
-        The most-liked people near you this week. A like with a comment stands out most.
-      </Text>
-      <XStack flexWrap="wrap" gap={12}>
-        {list.map((a) => {
-          const d = depthFor(a);
-          const isLiked = liked(a.id);
-          return (
-            <YStack
-              key={a.id}
-              width={tile}
-              height={tile * 1.45}
-              rounded={22}
-              overflow="hidden"
-              bg="$surface"
-              onPress={() => onOpen(a)}
-              accessibilityRole="button"
-              accessibilityLabel={`View ${a.name}`}
-              aria-label={`View ${a.name}`}
-            >
-              <Image
-                source={ATHLETE_PHOTOS[a.slotId]}
-                resizeMode="cover"
-                style={{ position: 'absolute', width: '100%', height: '100%' }}
-              />
-              <YStack position="absolute" l={0} r={0} b={0} p={12} gap={2} bg="rgba(18,16,14,0.5)">
-                <Text fontFamily="$bold" fontSize={16} color="#FFFFFF">
-                  {a.name}, {a.age}
-                </Text>
-                <XStack items="center" gap={4}>
-                  <Icon name="star" size={12} color="#FFFFFF" strokeWidth={2.2} />
-                  <Text fontFamily="$medium" fontSize={12} color="rgba(255,255,255,0.9)">
-                    {d.likesThisWeek} likes this week
-                  </Text>
-                </XStack>
-              </YStack>
-              <XStack
-                position="absolute"
-                t={10}
-                r={10}
-                width={40}
-                height={40}
-                rounded={20}
-                items="center"
-                justify="center"
-                bg={isLiked ? '$accent' : '$card'}
-                accessibilityRole="button"
-                accessibilityLabel={`Like ${a.name}`}
-                aria-label={`Like ${a.name}`}
-                onPress={(e) => {
-                  e.stopPropagation();
-                  if (!isLiked) onLike(a);
-                }}
-              >
-                <Icon
-                  name="heart"
-                  size={19}
-                  color={isLiked ? colors.onAccent : colors.accent}
-                  filled={isLiked}
-                  strokeWidth={2.2}
-                />
-              </XStack>
-            </YStack>
-          );
-        })}
-      </XStack>
-    </ScrollView>
-  );
-}
-
 function DeckDone({
   empty,
   passedCount,
   radius,
   onReviewPassed,
-  onBrowse,
-  onTravel,
   onFilters,
   onClubs,
   goingNote,
@@ -629,8 +463,6 @@ function DeckDone({
   passedCount: number;
   radius: number | null;
   onReviewPassed: () => void;
-  onBrowse: () => void;
-  onTravel: () => void;
   onFilters: () => void;
   onClubs: () => void;
   goingNote?: string;
@@ -657,14 +489,9 @@ function DeckDone({
           <Button icon="map" onPress={onClubs} style={{ width: '100%' }}>
             Explore Cape Town
           </Button>
-          <XStack gap={10}>
-            <Button variant="secondary" icon="plane" onPress={onTravel} style={{ flex: 1 }}>
-              Travel
-            </Button>
-            <Button variant="secondary" icon="sliders" onPress={onFilters} style={{ flex: 1 }}>
-              Filters
-            </Button>
-          </XStack>
+          <Button variant="secondary" icon="sliders" onPress={onFilters} style={{ width: '100%' }}>
+            Filters
+          </Button>
         </YStack>
       </YStack>
     );
@@ -697,14 +524,9 @@ function DeckDone({
         >
           Explore Cape Town
         </Button>
-        <XStack gap={10}>
-          <Button variant="secondary" icon="star" onPress={onBrowse} style={{ flex: 1 }}>
-            Standouts
-          </Button>
-          <Button variant="secondary" icon="sliders" onPress={onFilters} style={{ flex: 1 }}>
-            Filters
-          </Button>
-        </XStack>
+        <Button variant="secondary" icon="sliders" onPress={onFilters} style={{ width: '100%' }}>
+          Filters
+        </Button>
       </YStack>
     </YStack>
   );

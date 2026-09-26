@@ -24,7 +24,6 @@ import {
   Lifestyle,
   REST_DAYS,
 } from '../src/data/identity';
-import { CITIES } from '../src/data/places';
 import { daysPerWeek } from '../src/data/rhythm';
 import { updateMe, useMe } from '../src/data/session';
 import { formatLabel } from '../src/theme/tokens';
@@ -41,7 +40,6 @@ export default function EditProfileScreen() {
   const [name, setName] = useState(me.name);
   const [age, setAge] = useState(me.age);
   const [height, setHeight] = useState(me.heightCm ? String(me.heightCm) : '');
-  const [city, setCity] = useState(me.city);
   const [bio, setBio] = useState(me.bio);
   const [gender, setGender] = useState<Gender | null>(me.gender);
   const [lifestyle, setLifestyle] = useState<Lifestyle>(me.lifestyle);
@@ -70,16 +68,11 @@ export default function EditProfileScreen() {
       setError('Pace is for adults only. Enter your age (18 or older).');
       return;
     }
-    if (!city) {
-      setError('Pick the city you train in.');
-      return;
-    }
     setError(null);
     await updateMe({
       name: name.trim() || me.name,
       age: age.trim(),
       heightCm: Number(height) || null,
-      city,
       bio: bio.trim(),
       gender,
       lifestyle,
@@ -158,11 +151,6 @@ export default function EditProfileScreen() {
         </YStack>
 
         <YStack>
-          <SectionTitle>Where you train</SectionTitle>
-          <PickRow options={[...CITIES] as string[]} value={city || null} onChange={setCity} />
-        </YStack>
-
-        <YStack>
           <SectionTitle>I am a</SectionTitle>
           <XStack flexWrap="wrap" gap={8}>
             {GENDERS.map((g) => (
@@ -222,6 +210,16 @@ export default function EditProfileScreen() {
           </Text>
           <Button variant="ghost" onPress={() => router.push('/settings-preferences')}>
             Edit sports, week, level & race
+          </Button>
+        </YStack>
+
+        <YStack gap={10}>
+          <SectionTitle>Personal bests & routes</SectionTitle>
+          <Text fontSize={15} color="$muted">
+            {`${me.pbs.length} PB${me.pbs.length === 1 ? '' : 's'} · ${me.routes.length} route${me.routes.length === 1 ? '' : 's'}`}
+          </Text>
+          <Button variant="ghost" onPress={() => router.push('/edit-highlights')}>
+            Edit PBs & favourite routes
           </Button>
         </YStack>
 

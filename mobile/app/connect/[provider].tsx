@@ -8,6 +8,7 @@ import { showPip } from '../../src/components/PipKit';
 import { updateMe, useMe } from '../../src/data/session';
 import { importActivities, isProvider, PROVIDER_INFO, PROVIDER_LABEL } from '../../src/data/sync';
 import { importSynced } from '../../src/data/training';
+import { track } from '../../src/lib/analytics';
 import { useColors } from '../../src/theme/appearance';
 
 export default function ConnectScreen() {
@@ -36,6 +37,7 @@ export default function ConnectScreen() {
         sync,
         pbs: me.pbs.map((pb) => ({ ...pb, source: providerKey })),
       });
+      track('sync_connected', { provider: providerKey });
       showPip(`Imported ${sync.activities} activities. Stats verified!`, 'excited');
       setConnecting(false);
     }, 1400);

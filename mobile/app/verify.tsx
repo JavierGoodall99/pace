@@ -15,6 +15,7 @@ import {
   stepLiveness,
 } from '../src/data/liveness';
 import { updateMe, useMe } from '../src/data/session';
+import { track } from '../src/lib/analytics';
 import { successHaptic, tapHaptic } from '../src/lib/haptics';
 import { useColors } from '../src/theme/appearance';
 
@@ -52,6 +53,7 @@ export default function VerifyScreen() {
     if (next.index > prev.index) tapHaptic();
     if (next.status === 'passed') {
       successHaptic();
+      track('verify_completed');
       updateMe({ verified: true }).then(() => setDone(true));
     }
   }, []);

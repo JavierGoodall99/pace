@@ -29,6 +29,15 @@ import { PickRow } from '../src/components/Sessions';
 import { PhotoGrid } from '../src/components/PhotoGrid';
 import { RhythmStrip } from '../src/components/Rhythm';
 import { Badge, Button, Callout, DisplayTitle, IconButton, Input } from '../src/components/ui';
+import { track } from '../src/lib/analytics';
+import { buy, configurePurchases, offeringFor, ONBOARDING_PLACEMENT } from '../src/lib/purchases';
+import {
+  AppleButton,
+  googleEnabled,
+  signInWithApple,
+  signInWithGoogle,
+  useAppleAvailable,
+} from '../src/lib/socialAuth';
 import { successHaptic } from '../src/lib/haptics';
 import { forgetPhoto, keepAndCheck } from '../src/lib/photoStore';
 import { ATHLETES, DISCIPLINES, Discipline, SPORT_ILLO } from '../src/data/mockData';
@@ -56,18 +65,34 @@ import { depthFor, LEVELS } from '../src/data/athleteDepth';
 import { athletesTrainingFor, formatRaceDate, raceById, upcomingRaces } from '../src/data/races';
 import { availableProviders, hasSync, PROVIDER_INFO, PROVIDER_LABEL } from '../src/data/sync';
 import { seedDemoFor } from '../src/data/account';
+import {
+  answered,
+  markPaywallSeen,
+  markStarted,
+  PROFILE_QUESTIONS,
+  QUESTIONS,
+  resumeIndex,
+  saveProfileStep,
+  STEPS,
+  type StepId,
+  useOnboardingProgress,
+} from '../src/data/onboardingFlow';
 import type { LegalDoc } from '../src/data/legal';
+import { PRO_FEATURES } from '../src/data/pro';
 import {
   completeOnboarding,
   createAccount,
+  createSocialAccount,
+  getAccount,
   Intent,
   MeProfile,
+  MIN_PASSWORD,
   updateMe,
   useMe,
   useSession,
 } from '../src/data/session';
 import { DIETS, DRINKS, GENDERS, photoProblem, REST_DAYS } from '../src/data/identity';
-import { useColors } from '../src/theme/appearance';
+import { useAppearance, useColors } from '../src/theme/appearance';
 import { brand, formatLabel, shadow } from '../src/theme/tokens';
 
 // Onboarding, Duolingo-style: Pip (the mascot) asks one question per
@@ -77,70 +102,8 @@ import { brand, formatLabel, shadow } from '../src/theme/tokens';
 // the time the card is built, the user has something to lose.
 //
 // Every answer writes straight into the session profile (`updateMe`),
-// the same store Profile and Discover read from.
-
-type StepId =
-  | 'welcome'
-  | 'meet'
-  | 'city'
-  | 'name'
-  | 'gender'
-  | 'intent'
-  | 'sports'
-  | 'week'
-  | 'time'
-  | 'level'
-  | 'goal'
-  | 'basics'
-  | 'lifestyle'
-  | 'photos'
-  | 'sync'
-  | 'verify'
-  | 'account'
-  | 'building'
-  | 'reveal'
-  | 'launch';
-
-const STEPS: StepId[] = [
-  'welcome',
-  'meet',
-  'city',
-  'name',
-  'gender',
-  'intent',
-  'sports',
-  'week',
-  'level',
-  'time',
-  'goal',
-  'basics',
-  'lifestyle',
-  'photos',
-  'sync',
-  'verify',
-  'account',
-  'building',
-  'reveal',
-  'launch',
-];
-
-// Steps that count toward the progress bar.
-const QUESTIONS: StepId[] = [
-  'city',
-  'name',
-  'gender',
-  'intent',
-  'sports',
-  'week',
-  'level',
-  'time',
-  'goal',
-  'basics',
-  'lifestyle',
-  'photos',
-  'sync',
-  'verify',
-];
+// the same store Profile and Discover read from. Step order, progress
+// and resume live in src/data/onboardingFlow.ts.
 
 const MAX_PHOTOS = 4;
 
@@ -202,42 +165,6 @@ const CTA_STYLE = {
   shadowOffset: { width: 0, height: 6 },
   elevation: 6,
 } as const;
-
-function answered(step: StepId, me: MeProfile): boolean {
-  switch (step) {
-    case 'city':
-      // Only Cape Town can carry on; everyone else joins the waitlist.
-      return isLaunchCity(me.city);
-    case 'name':
-      return me.name.trim().length > 0;
-    case 'gender':
-      return !!me.gender;
-    case 'intent':
-      return !!me.intent;
-    case 'sports':
-      return me.disciplines.length > 0;
-    case 'week':
-      return !!me.trainingDays?.some(Boolean);
-    case 'time':
-      return me.times.length > 0;
-    case 'level':
-      return me.level != null;
-    case 'goal':
-      return me.goalRaceId !== null;
-    case 'basics':
-      return Number(me.age) >= 18;
-    case 'lifestyle':
-      return !!me.lifestyle.drinks && !!me.lifestyle.diet && !!me.lifestyle.restDay;
-    case 'photos':
-      return photoProblem(me.photos, me.photoLabels, me.photoFaces) === null;
-    case 'sync':
-      return hasSync(me);
-    case 'verify':
-      return me.verified;
-    default:
-      return true;
-  }
-}
 
 // What Pip says on each step — a prompt until answered, then a reaction.
 function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
@@ -339,7 +266,7 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
       if (me.age && Number(me.age) < 18)
         return { text: 'Pace is for adults only — you need to be 18+.', mood: 'thinking' };
       if (done) return { text: 'Perfect. Nearly done!', mood: 'excited' };
-      return { text: 'Almost there. How old are you?', mood: 'happy' };
+      return { text: 'How old are you?', mood: 'happy' };
     case 'lifestyle':
       return done
         ? { text: 'Perfect. Deal-breakers sorted.', mood: 'excited' }
@@ -374,10 +301,7 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
             mood: 'happy',
           };
     case 'account':
-      return {
-        text: `Your card’s ready${first ? `, ${first}` : ''}! Save it with an email.`,
-        mood: 'excited',
-      };
+      return { text: 'Great start! Save your card so it’s never lost.', mood: 'excited' };
     case 'building':
       return { text: 'Finding people who move like you…', mood: 'thinking' };
     default:
@@ -385,33 +309,55 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
   }
 }
 
+// Waits for saved progress, then opens the flow at the first step that
+// isn't done yet — so a closed app picks up where it left off.
 export default function OnboardingScreen() {
+  const me = useMe();
+  const { signedIn, onboarded } = useSession();
+  const progress = useOnboardingProgress();
+  if (!progress.ready) return null;
+
+  // First-timers create their account inside the flow; anyone who signed
+  // up first skips that step. Fixed at mount so the step list doesn't
+  // shift under the index once the account exists.
+  const steps = signedIn ? STEPS.filter((s) => s !== 'account') : STEPS;
+  // Finished users only get here from the dev preview: start at the top.
+  const start = onboarded ? 0 : resumeIndex(steps, progress, me, signedIn);
+  return <OnboardingFlow steps={steps} startIndex={start} />;
+}
+
+function OnboardingFlow({ steps, startIndex }: { steps: StepId[]; startIndex: number }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
   const { signedIn, onboarded } = useSession();
 
-  // First-timers create their account inside the flow; anyone who signed
-  // up first skips that step. Fixed at mount so the step list doesn't
-  // shift under the index once the account exists.
-  const [steps] = useState(() => (signedIn ? STEPS.filter((s) => s !== 'account') : STEPS));
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(startIndex);
   const step = steps[index];
+  const appleAvailable = useAppleAvailable();
+  const { scheme } = useAppearance();
+
+  useEffect(() => {
+    if (!onboarded) markStarted();
+  }, [onboarded]);
+
+  // Under-18s can't continue; log it once a full age is typed.
+  const underage = me.age.length === 2 && Number(me.age) < 18;
+  useEffect(() => {
+    if (underage) track('age_blocked');
+  }, [underage]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [accountError, setAccountError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const questionIndex = QUESTIONS.indexOf(step);
-  const doneCount = QUESTIONS.filter((q) => answered(q, me)).length;
-  const profileStrength = Math.round((doneCount / QUESTIONS.length) * 100);
+  const doneCount = PROFILE_QUESTIONS.filter((q) => answered(q, me)).length;
+  const profileStrength = Math.round((doneCount / PROFILE_QUESTIONS.length) * 100);
+  const stepDone = step === 'account' ? signedIn : answered(step, me);
   const progressPct =
-    step === 'account'
-      ? 100
-      : questionIndex >= 0
-        ? ((questionIndex + (answered(step, me) ? 1 : 0.35)) / QUESTIONS.length) * 100
-        : 0;
+    questionIndex >= 0 ? ((questionIndex + (stepDone ? 1 : 0.35)) / QUESTIONS.length) * 100 : 0;
 
   const myRhythm = rhythmForMe(me.cadence, me.trainingDays);
   const pip = pipLine(step, me);
@@ -420,10 +366,20 @@ export default function OnboardingScreen() {
 
   function next() {
     if (QUESTIONS.includes(step) && answered(step, me)) successHaptic();
+    if (step === 'sync' && !hasSync(me)) track('sync_skipped');
+    if (step === 'verify' && !me.verified) track('verify_skipped');
+    saveProfileStep(step, signedIn);
     setIndex((i) => Math.min(i + 1, steps.length - 1));
   }
   function back() {
     setIndex((i) => Math.max(i - 1, 0));
+  }
+  function accountCreated(method: 'email' | 'apple' | 'google') {
+    track('account_created', { method });
+    // Purchases belong to the account, so RevenueCat starts here.
+    const account = getAccount();
+    if (account) configurePurchases(account.userId);
+    next();
   }
   async function submitAccount() {
     setAccountError(null);
@@ -434,7 +390,24 @@ export default function OnboardingScreen() {
       setAccountError(result.error);
       return;
     }
-    next();
+    accountCreated('email');
+  }
+  async function socialAccount(method: 'apple' | 'google') {
+    setAccountError(null);
+    setBusy(true);
+    const r = method === 'apple' ? await signInWithApple() : await signInWithGoogle();
+    if (!r.ok) {
+      setBusy(false);
+      if (!r.cancelled) setAccountError(r.error ?? 'That didn’t work. Try again.');
+      return;
+    }
+    const result = await createSocialAccount(r.profile);
+    setBusy(false);
+    if (!result.ok) {
+      setAccountError(result.error);
+      return;
+    }
+    accountCreated(method);
   }
 
   function toggleDiscipline(d: Discipline) {
@@ -795,6 +768,25 @@ export default function OnboardingScreen() {
 
               {step === 'account' && (
                 <YStack gap={14}>
+                  <DisplayTitle size={34}>Save your *card*</DisplayTitle>
+                  {appleAvailable ? (
+                    <AppleButton dark={scheme === 'dark'} onPress={() => socialAccount('apple')} />
+                  ) : null}
+                  {googleEnabled ? (
+                    <Button
+                      variant="secondary"
+                      disabled={busy}
+                      onPress={() => socialAccount('google')}
+                      style={{ width: '100%' }}
+                    >
+                      Continue with Google
+                    </Button>
+                  ) : null}
+                  {appleAvailable || googleEnabled ? (
+                    <Text fontSize={13} color="$muted" text="center">
+                      or use email
+                    </Text>
+                  ) : null}
                   <Input
                     placeholder="Email"
                     value={email}
@@ -808,7 +800,7 @@ export default function OnboardingScreen() {
                     returnKeyType="next"
                   />
                   <Input
-                    placeholder="Password (6+ characters)"
+                    placeholder={`Password (${MIN_PASSWORD}+ characters)`}
                     value={password}
                     onChangeText={(v) => {
                       setPassword(v);
@@ -830,6 +822,8 @@ export default function OnboardingScreen() {
 
               {step === 'building' && <BuildingStep text={pip.text} onDone={next} />}
 
+              {step === 'paywall' && <PaywallStep onDone={next} />}
+
               {step === 'reveal' && <RevealStep me={me} rhythm={myRhythm} />}
 
               {step === 'launch' && (
@@ -844,7 +838,7 @@ export default function OnboardingScreen() {
           )}
         </ScrollView>
 
-        {step === 'building' ? null : (
+        {step === 'building' || step === 'paywall' ? null : (
           <YStack
             px={20}
             pt={14}
@@ -861,7 +855,9 @@ export default function OnboardingScreen() {
                   successHaptic();
                   // Only a first run seeds; re-running onboarding keeps real matches.
                   if (!onboarded) await seedDemoFor(me.gender);
+                  saveProfileStep(step, signedIn);
                   await completeOnboarding();
+                  track('onboarding_completed');
                   router.replace('/(tabs)/today');
                 } else if (step === 'account') {
                   await submitAccount();
@@ -912,6 +908,97 @@ function LegalLink({ doc, children }: { doc: LegalDoc; children: string }) {
   );
 }
 
+// Soft paywall after Reveal: shown once, easy to skip. Loads the
+// RevenueCat offering for the "onboarding_end" placement; with no offering
+// (keys not set, web, nothing configured) it steps aside silently.
+type Offering = NonNullable<Awaited<ReturnType<typeof offeringFor>>>;
+
+function PaywallStep({ onDone }: { onDone: () => void }) {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const [offering, setOffering] = useState<Offering | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    const account = getAccount();
+    (account ? offeringFor(ONBOARDING_PLACEMENT, account.userId) : Promise.resolve(null)).then(
+      (o) => {
+        if (!live) return;
+        markPaywallSeen();
+        if (!o) {
+          onDone();
+          return;
+        }
+        track('paywall_viewed');
+        setOffering(o);
+      }
+    );
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (!offering) return null;
+  const pkg = offering.availablePackages[0];
+
+  async function purchase() {
+    setBusy(true);
+    setError(null);
+    const result = await buy(pkg);
+    setBusy(false);
+    if (result === 'purchased') {
+      track('purchase_completed', { product: pkg.product.identifier });
+      successHaptic();
+      onDone();
+    } else if (result === 'failed') {
+      setError('That didn’t go through. You haven’t been charged.');
+    }
+  }
+
+  return (
+    <YStack flex={1} gap={20} style={{ paddingBottom: insets.bottom }}>
+      <DisplayTitle size={40}>Go *Pro*</DisplayTitle>
+      <YStack gap={12}>
+        {PRO_FEATURES.map((f) => (
+          <XStack key={f} gap={10} items="center">
+            <Icon name="check" size={18} color={colors.accentText} strokeWidth={2.4} />
+            <Text flex={1} fontSize={16} color="$text">
+              {f}
+            </Text>
+          </XStack>
+        ))}
+      </YStack>
+      <YStack flex={1} />
+      {error ? (
+        <Text fontSize={14} color="$accentText" text="center">
+          {error}
+        </Text>
+      ) : null}
+      <Button onPress={purchase} disabled={busy} style={CTA_STYLE}>
+        {busy ? 'One moment…' : `Start Pro · ${pkg.product.priceString}`}
+      </Button>
+      <XStack justify="center">
+        <Text
+          fontFamily="$semibold"
+          fontSize={16}
+          color="$muted"
+          py={8}
+          accessibilityRole="button"
+          onPress={() => {
+            track('paywall_skipped');
+            onDone();
+          }}
+        >
+          Not now
+        </Text>
+      </XStack>
+    </YStack>
+  );
+}
+
 function MeetStep({ text }: { text: string }) {
   return (
     <YStack flex={1} items="center" justify="center" gap={28} py={20}>
@@ -932,7 +1019,7 @@ function MeetStep({ text }: { text: string }) {
         </YStack>
       </YStack>
       <Text fontSize={14} color="$muted" text="center">
-        About 2 minutes
+        A few minutes
       </Text>
     </YStack>
   );
@@ -1024,6 +1111,11 @@ function RevealStep({ me, rhythm }: { me: MeProfile; rhythm: Rhythm }) {
   );
   const top = ranked.slice(0, 3);
   const inSync = ranked.filter((r) => r.sync >= 60).length || ranked.length;
+
+  useEffect(() => {
+    track('reveal_viewed', { match_count: ranked.length });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const city = me.city.trim() || 'you';
 
   const count = useRef(new Animated.Value(0)).current;
@@ -1359,6 +1451,13 @@ function CityStep() {
   const city = me.city.trim();
   const outside = !!city && !isLaunchCity(city);
   const joined = outside && isOnWaitlist(email || me.email, city, waitlist);
+
+  // Typed cities change per keystroke: log once the name settles.
+  useEffect(() => {
+    if (!outside) return;
+    const t = setTimeout(() => track('city_blocked', { city }), 1200);
+    return () => clearTimeout(t);
+  }, [outside, city]);
 
   async function join() {
     const res = await joinWaitlist(email, city);

@@ -38,6 +38,14 @@ privacy policy (`mobile/src/data/legal.ts`) must say what is uploaded and for ho
 
 - **Accounts and auth** — `mobile/src/data/session.ts` stores the password on the phone. Replace
   with real sign-up / sign-in; account deletion must delete server data too.
+- **Apple / Google sign-in** — the provider's user id is stored on the phone as the account key.
+  The server must verify the identity token (Apple / Google) and own the account.
+- **Onboarding saves** — `saveProfileStep` in `mobile/src/data/onboardingFlow.ts` is where each
+  post-account step (name → verify) should be written to the server; pre-account answers should
+  be sent in one go when the account is created, then the local draft cleared.
+- **RevenueCat user id** — accounts get a local id (`u-…`) used as the RevenueCat app user id.
+  When server accounts exist, switch to the server id with `Purchases.logIn` so purchases carry
+  over.
 - **Shared data** — likes, matches, chats, sessions, moments and reports are local mocks; move
   them to the server so two people actually see each other.
 - **Push notifications** — likes, messages, matches and invites need server push. (Streak

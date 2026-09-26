@@ -18,11 +18,11 @@ describe('signUp', () => {
     expect(result).toEqual({ ok: false, error: 'Enter a valid email.' });
   });
 
-  test('rejects a password under 6 characters', async () => {
-    const result = await session.signUp('Ada', 'a@example.com', '123');
+  test('rejects a password under 8 characters', async () => {
+    const result = await session.signUp('Ada', 'a@example.com', 'seven77');
     expect(result).toEqual({
       ok: false,
-      error: 'Password must be at least 6 characters.',
+      error: 'Password must be at least 8 characters.',
     });
   });
 
@@ -80,8 +80,8 @@ describe('createAccount', () => {
   });
 
   test('rejects a short password', async () => {
-    const result = await session.createAccount('a@example.com', '123');
-    expect(result).toEqual({ ok: false, error: 'Password must be at least 6 characters.' });
+    const result = await session.createAccount('a@example.com', 'seven77');
+    expect(result).toEqual({ ok: false, error: 'Password must be at least 8 characters.' });
   });
 
   test('lets the new account sign in', async () => {
@@ -134,5 +134,54 @@ describe('verified badge', () => {
     await session.updateMe({ photos: ['a'], verified: false });
     await session.updateMe({ photos: ['a', 'b'], verified: true });
     expect(session.getMe().verified).toBe(true);
+  });
+});
+
+describe('Apple and Google accounts', () => {
+  const apple = {
+    method: 'apple' as const,
+    providerId: 'apple-123',
+    email: null,
+    name: 'Ada Lovelace',
+  };
+
+  test('keeps onboarding answers and prefills the name', async () => {
+    await session.updateMe({ city: 'Cape Town' });
+    expect(await session.createSocialAccount(apple)).toEqual({ ok: true });
+    const me = session.getMe();
+    expect(me.name).toBe('Ada Lovelace');
+    expect(me.city).toBe('Cape Town');
+    expect(session.getAccount()).toMatchObject({
+      method: 'apple',
+      providerId: 'apple-123',
+      email: '',
+    });
+  });
+
+  test('does not overwrite a name already typed', async () => {
+    await session.updateMe({ name: 'Ada' });
+    await session.createSocialAccount({ ...apple, name: 'Someone Else' });
+    expect(session.getMe().name).toBe('Ada');
+  });
+
+  test('signs back in only with the same provider account', async () => {
+    await session.createSocialAccount(apple);
+    await session.signOut();
+    expect((await session.signInWithProfile({ ...apple, providerId: 'other' })).ok).toBe(false);
+    expect((await session.signInWithProfile(apple)).ok).toBe(true);
+  });
+
+  test('email sign-in points Apple users to Apple', async () => {
+    await session.createSocialAccount({ ...apple, email: 'x@privaterelay.appleid.com' });
+    await session.signOut();
+    expect(await session.signIn('x@privaterelay.appleid.com', 'whatever1')).toEqual({
+      ok: false,
+      error: 'This account uses Sign in with Apple.',
+    });
+  });
+
+  test('every account gets a stable user id', async () => {
+    await session.createAccount('a@example.com', 'password1');
+    expect(session.getAccount()?.userId).toMatch(/^u-/);
   });
 });

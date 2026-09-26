@@ -4,14 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../src/components/Icon';
 import { Badge, Button, Card, ScreenHeader } from '../src/components/ui';
+import { PRO_FEATURES } from '../src/data/pro';
 import { useColors } from '../src/theme/appearance';
-
-const PRO_FEATURES = [
-  '10 extra likes a day',
-  'Every Standout, not just the top four',
-  'Advanced filters: level, lifestyle, race goal',
-  'First pick of spots in singles run clubs',
-];
 
 // Never paywalled. Other apps hide messages until you pay — Pace doesn't.
 const ALWAYS_FREE = [

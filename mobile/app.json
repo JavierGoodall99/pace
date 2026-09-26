@@ -10,6 +10,8 @@
     "backgroundColor": "#FAF8F6",
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.javiergoodall.pace",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Pace uses your front camera for a quick selfie check that proves you are a real person."
       }
@@ -40,7 +42,14 @@
           "photosPermission": "Allow Pace to access your photos so you can add them to your card."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.REPLACE_WITH_IOS_CLIENT_ID"
+        }
+      ],
+      "expo-apple-authentication"
     ]
   }
 }

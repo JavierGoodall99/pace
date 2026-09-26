@@ -8,7 +8,7 @@ import { ME_AVATAR } from '../src/data/photos';
 import { daysPerWeek } from '../src/data/rhythm';
 import { deleteAccountAndData } from '../src/data/account';
 import type { LegalDoc } from '../src/data/legal';
-import { MeProfile, signOut, useMe } from '../src/data/session';
+import { getAccount, MeProfile, signInLabel, signOut, useMe } from '../src/data/session';
 import { confirmAction } from '../src/lib/dialogs';
 import {
   AppearancePreference,
@@ -114,7 +114,7 @@ export default function SettingsScreen() {
             {me.name || 'You'}
           </Text>
           <Text fontSize={14} color="$muted" mt={2} numberOfLines={1}>
-            {me.email}
+            {signInLabel(getAccount(), me.email)}
           </Text>
         </YStack>
         <Badge

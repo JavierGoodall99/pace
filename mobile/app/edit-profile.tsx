@@ -34,7 +34,7 @@ import {
   REST_DAYS,
 } from '../src/data/identity';
 import { daysPerWeek } from '../src/data/rhythm';
-import { Intent, updateMe, useMe } from '../src/data/session';
+import { getAccount, Intent, signInLabel, updateMe, useMe } from '../src/data/session';
 import { confirmAction } from '../src/lib/dialogs';
 import { forgetPhoto, keepAndCheck } from '../src/lib/photoStore';
 import { useColors } from '../src/theme/appearance';
@@ -355,7 +355,7 @@ export default function EditProfileScreen() {
           </Button>
         </YStack>
 
-        <Callout icon="mail" title={`Signed in as ${me.email}`} />
+        <Callout icon="mail" title={`Signed in with ${signInLabel(getAccount(), me.email)}`} />
 
         {error ? (
           <Text fontFamily="$medium" fontSize={14} color="$accentText">

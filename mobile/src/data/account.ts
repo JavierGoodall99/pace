@@ -3,6 +3,7 @@ import { resetExplore } from './explore';
 import { resetFilters } from './filters';
 import { resetMoments } from './moments';
 import { resetNotifications } from './notifications';
+import { resetOnboardingProgress } from './onboardingFlow';
 import { getPlansState, removePlansWith, resetPlans } from './plans';
 import type { Gender } from './identity';
 import { deleteAccount } from './session';
@@ -28,6 +29,7 @@ export async function deleteAccountAndData() {
   resetSettings();
   resetWaitlist();
   resetNotifications();
+  resetOnboardingProgress();
 }
 
 // When onboarding finishes: give the new account a demo cast that fits

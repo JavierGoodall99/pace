@@ -1,5 +1,6 @@
 import { setAnalyticsSink } from '../lib/analytics';
 import {
+  answerSummary,
   getOnboardingProgress,
   isStepDone,
   OnboardingProgress,
@@ -133,4 +134,25 @@ test('finishing a step logs it, and post-account steps count as saved', () => {
     ['profile_step_saved', { step: 'photos' }],
   ]);
   expect(getOnboardingProgress().completed).toEqual(['sports', 'photos']);
+});
+
+test('the Account screen summarises every pre-account answer', () => {
+  const rows = answerSummary({
+    ...preAccount,
+    disciplines: ['RUNNING', 'TRAIL'],
+    goalRaceId: '',
+  });
+  expect(rows.map((r) => r.step)).toEqual(
+    STEPS.slice(STEPS.indexOf('city'), STEPS.indexOf('account'))
+  );
+  expect(Object.fromEntries(rows.map((r) => [r.label, r.value]))).toEqual({
+    City: 'Cape Town',
+    Age: '29',
+    Sports: 'Running, Trail',
+    Trains: 'Mon, Wed, Fri',
+    Level: 'Steady',
+    Time: 'Early morning',
+    'Here for': 'Open to both',
+    Goal: 'No race',
+  });
 });

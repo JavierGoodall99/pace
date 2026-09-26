@@ -67,6 +67,7 @@ import { availableProviders, hasSync, PROVIDER_INFO, PROVIDER_LABEL } from '../s
 import { seedDemoFor } from '../src/data/account';
 import {
   answered,
+  answerSummary,
   markPaywallSeen,
   markStarted,
   PROFILE_QUESTIONS,
@@ -75,6 +76,7 @@ import {
   saveProfileStep,
   STEPS,
   type StepId,
+  type SummaryRow,
   useOnboardingProgress,
 } from '../src/data/onboardingFlow';
 import type { LegalDoc } from '../src/data/legal';
@@ -173,7 +175,7 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
   switch (step) {
     case 'meet':
       return {
-        text: 'Hey, I’m Pip! Let’s build your card.',
+        text: 'Hey, I’m Pip! Let’s build your profile.',
         mood: 'excited',
       };
     case 'city': {
@@ -301,7 +303,7 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
             mood: 'happy',
           };
     case 'account':
-      return { text: 'Great start! Save your card so it’s never lost.', mood: 'excited' };
+      return { text: 'Nice! Here’s what you told me.', mood: 'excited' };
     case 'building':
       return { text: 'Finding people who move like you…', mood: 'thinking' };
     default:
@@ -335,6 +337,8 @@ function OnboardingFlow({ steps, startIndex }: { steps: StepId[]; startIndex: nu
 
   const [index, setIndex] = useState(startIndex);
   const step = steps[index];
+  // Editing an answer from the Account summary comes straight back to it.
+  const [returnTo, setReturnTo] = useState<number | null>(null);
   const appleAvailable = useAppleAvailable();
   const { scheme } = useAppearance();
 
@@ -369,7 +373,16 @@ function OnboardingFlow({ steps, startIndex }: { steps: StepId[]; startIndex: nu
     if (step === 'sync' && !hasSync(me)) track('sync_skipped');
     if (step === 'verify' && !me.verified) track('verify_skipped');
     saveProfileStep(step, signedIn);
+    if (returnTo !== null) {
+      setIndex(returnTo);
+      setReturnTo(null);
+      return;
+    }
     setIndex((i) => Math.min(i + 1, steps.length - 1));
+  }
+  function editAnswer(target: StepId) {
+    setReturnTo(index);
+    setIndex(steps.indexOf(target));
   }
   function back() {
     setIndex((i) => Math.max(i - 1, 0));
@@ -448,21 +461,23 @@ function OnboardingFlow({ steps, startIndex }: { steps: StepId[]; startIndex: nu
       ? !!email.trim() && !!password && !busy
       : !QUESTIONS.includes(step) || answered(step, me) || skippable;
   const ctaLabel =
-    step === 'welcome'
-      ? 'Get started'
-      : step === 'meet'
-        ? 'Let’s go!'
-        : step === 'reveal'
-          ? 'See my card'
-          : step === 'launch'
-            ? 'Start exploring'
-            : step === 'account'
-              ? busy
-                ? 'Saving…'
-                : 'Create account'
-              : skippable && !answered(step, me)
-                ? 'Maybe later'
-                : 'Continue';
+    returnTo !== null
+      ? 'Done'
+      : step === 'welcome'
+        ? 'Get started'
+        : step === 'meet'
+          ? 'Let’s go!'
+          : step === 'reveal'
+            ? 'See my profile'
+            : step === 'launch'
+              ? 'Start exploring'
+              : step === 'account'
+                ? busy
+                  ? 'Saving…'
+                  : 'Create account'
+                : skippable && !answered(step, me)
+                  ? 'Maybe later'
+                  : 'Continue';
 
   const showHeader = QUESTIONS.includes(step) || step === 'account';
 
@@ -768,7 +783,8 @@ function OnboardingFlow({ steps, startIndex }: { steps: StepId[]; startIndex: nu
 
               {step === 'account' && (
                 <YStack gap={14}>
-                  <DisplayTitle size={34}>Save your *card*</DisplayTitle>
+                  <DisplayTitle size={34}>Save your *profile*</DisplayTitle>
+                  <AnswerSummary rows={answerSummary(me)} onEdit={editAnswer} />
                   {appleAvailable ? (
                     <AppleButton dark={scheme === 'dark'} onPress={() => socialAccount('apple')} />
                   ) : null}
@@ -995,6 +1011,37 @@ function PaywallStep({ onDone }: { onDone: () => void }) {
           Not now
         </Text>
       </XStack>
+    </YStack>
+  );
+}
+
+// Account screen: what they're about to save. Tap a row to change it.
+function AnswerSummary({ rows, onEdit }: { rows: SummaryRow[]; onEdit: (step: StepId) => void }) {
+  const colors = useColors();
+  return (
+    <YStack rounded={20} borderWidth={1} borderColor="$border" bg="$card" px={16} py={4}>
+      {rows.map((r, i) => (
+        <XStack
+          key={r.step}
+          items="center"
+          gap={12}
+          py={11}
+          borderBottomWidth={i === rows.length - 1 ? 0 : 1}
+          borderBottomColor="$border"
+          pressStyle={{ opacity: 0.6 }}
+          accessibilityRole="button"
+          accessibilityLabel={`Change ${r.label}`}
+          onPress={() => onEdit(r.step)}
+        >
+          <Text width={72} fontSize={14} color="$muted">
+            {r.label}
+          </Text>
+          <Text flex={1} fontFamily="$semibold" fontSize={15} color="$text" numberOfLines={1}>
+            {r.value || '—'}
+          </Text>
+          <Icon name="pencil" size={14} color={colors.muted} />
+        </XStack>
+      ))}
     </YStack>
   );
 }
@@ -1398,7 +1445,7 @@ function LaunchStep({
         </DisplayTitle>
       </YStack>
       <Text color="$muted" fontSize={15} lineHeight={22} text="center">
-        Your card, as others see it.
+        Your profile card, as others see it.
       </Text>
 
       <Confetti pieces={CONFETTI_PIECES} />

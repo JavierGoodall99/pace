@@ -1,8 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import { track } from '../lib/analytics';
-import { photoProblem } from './identity';
+import { formatLabel } from '../theme/tokens';
+import { levelLabel } from './athleteDepth';
+import { DAY } from './dates';
+import { intentLabel, photoProblem } from './identity';
 import { isLaunchCity } from './places';
+import { raceById } from './races';
+import { TRAINING_TIMES } from './rhythm';
 import type { MeProfile } from './session';
 import { hasSync } from './sync';
 
@@ -224,4 +229,34 @@ export function resumeIndex(
 ): number {
   const i = steps.findIndex((s) => !isStepDone(s, p, me, signedIn));
   return i === -1 ? steps.length - 1 : i;
+}
+
+// ---- Account-screen summary ----------------------------------------
+
+export interface SummaryRow {
+  step: StepId;
+  label: string;
+  value: string;
+}
+
+// What the user told us before the account, one row per question, so
+// the Account screen can show what they're saving (tap a row to edit).
+export function answerSummary(me: MeProfile): SummaryRow[] {
+  const days = (me.trainingDays ?? []).map((on, i) => (on ? DAY[i] : null)).filter(Boolean);
+  const times = me.times.map((t) => TRAINING_TIMES.find((x) => x.id === t)?.title).filter(Boolean);
+  const race = raceById(me.goalRaceId);
+  return [
+    { step: 'city', label: 'City', value: me.city },
+    { step: 'basics', label: 'Age', value: me.age },
+    { step: 'sports', label: 'Sports', value: me.disciplines.map(formatLabel).join(', ') },
+    { step: 'week', label: 'Trains', value: days.join(', ') },
+    { step: 'level', label: 'Level', value: me.level ? levelLabel(me.level) : '' },
+    { step: 'time', label: 'Time', value: times.join(', ') },
+    { step: 'intent', label: 'Here for', value: intentLabel(me.intent) },
+    {
+      step: 'goal',
+      label: 'Goal',
+      value: race ? race.name : me.goalRaceId === '' ? 'No race' : '',
+    },
+  ];
 }

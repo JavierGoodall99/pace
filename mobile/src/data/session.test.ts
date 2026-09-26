@@ -116,3 +116,23 @@ describe('signOut', () => {
     });
   });
 });
+
+describe('verified badge', () => {
+  test('adding a new photo removes it', async () => {
+    await session.updateMe({ photos: ['a', 'b'], verified: true });
+    await session.updateMe({ photos: ['a', 'b', 'c'] });
+    expect(session.getMe().verified).toBe(false);
+  });
+
+  test('removing a photo keeps it', async () => {
+    await session.updateMe({ photos: ['a', 'b'], verified: true });
+    await session.updateMe({ photos: ['a'] });
+    expect(session.getMe().verified).toBe(true);
+  });
+
+  test('passing the selfie check with new photos keeps it', async () => {
+    await session.updateMe({ photos: ['a'], verified: false });
+    await session.updateMe({ photos: ['a', 'b'], verified: true });
+    expect(session.getMe().verified).toBe(true);
+  });
+});

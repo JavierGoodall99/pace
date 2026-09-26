@@ -103,12 +103,22 @@ export const PHOTO_LABELS: { id: PhotoLabel; label: string }[] = [
 export const MIN_PHOTOS = 2;
 
 // The photo rule for every card: at least two, each labelled, one Off
-// the clock. Returns what's missing, or null when the set is good.
+// the clock, and they have to show you — the main photo exactly one
+// face, and at least two photos with a face. `faces` holds the on-device
+// face count per photo; null or missing means it couldn't be checked
+// (web, or photos added before the check existed) and isn't held against
+// you. Returns what's missing, or null when the set is good.
 export function photoProblem(
   photos: string[],
-  labels: (PhotoLabel | null | undefined)[]
+  labels: (PhotoLabel | null | undefined)[],
+  faces: (number | null | undefined)[] = []
 ): string | null {
   if (photos.length < MIN_PHOTOS) return `Add at least ${MIN_PHOTOS} photos.`;
+  const count = (i: number) => (typeof faces[i] === 'number' ? (faces[i] as number) : null);
+  if (count(0) === 0) return 'Your main photo needs to show your face.';
+  if ((count(0) ?? 1) > 1) return 'Your main photo should show just you.';
+  const withFace = photos.filter((_, i) => (count(i) ?? 1) > 0).length;
+  if (withFace < MIN_PHOTOS) return 'Add another photo that shows your face.';
   if (!photos.every((_, i) => !!labels[i])) return 'Give every photo a label.';
   if (!labels.includes('offclock')) return 'Mark one photo Off the clock.';
   return null;

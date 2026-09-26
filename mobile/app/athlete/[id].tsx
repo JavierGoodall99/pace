@@ -197,7 +197,7 @@ export default function AthleteDetailScreen() {
             <Icon name="camera" size={14} color={colors.muted} />
             <Text fontSize={13} color="$muted">
               {freshnessLabel(depth.photosDaysAgo)}
-              {athlete.verified ? ' · Selfie matches photos' : ''}
+              {athlete.verified ? ' · Selfie verified' : ''}
             </Text>
           </XStack>
           <XStack items="center" gap={6} mt={6}>

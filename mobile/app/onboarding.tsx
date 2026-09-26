@@ -30,7 +30,7 @@ import { PhotoGrid } from '../src/components/PhotoGrid';
 import { RhythmStrip } from '../src/components/Rhythm';
 import { Badge, Button, Callout, DisplayTitle, IconButton, Input } from '../src/components/ui';
 import { successHaptic } from '../src/lib/haptics';
-import { forgetPhoto, keepPhotos } from '../src/lib/photoStore';
+import { forgetPhoto, keepAndCheck } from '../src/lib/photoStore';
 import { ATHLETES, DISCIPLINES, Discipline, SPORT_ILLO } from '../src/data/mockData';
 import { ATHLETE_PHOTOS, HERO_RUNNERS } from '../src/data/photos';
 import {
@@ -229,7 +229,7 @@ function answered(step: StepId, me: MeProfile): boolean {
     case 'lifestyle':
       return !!me.lifestyle.drinks && !!me.lifestyle.diet && !!me.lifestyle.restDay;
     case 'photos':
-      return photoProblem(me.photos, me.photoLabels) === null;
+      return photoProblem(me.photos, me.photoLabels, me.photoFaces) === null;
     case 'sync':
       return hasSync(me);
     case 'verify':
@@ -350,12 +350,11 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
           text: 'Looking great!',
           mood: 'excited',
         };
-      if (me.photos.length >= 2 && !me.photoLabels.includes('offclock'))
+      if (me.photos.length >= 2)
         return {
-          text: 'Mark one photo Off the clock.',
-          mood: 'wink',
+          text: photoProblem(me.photos, me.photoLabels, me.photoFaces) ?? 'Looking great!',
+          mood: 'thinking',
         };
-      if (me.photos.length >= 2) return { text: 'Now label each photo.', mood: 'happy' };
       return {
         text: 'Add 2–4 photos — one in action, one off the clock.',
         mood: 'happy',
@@ -459,9 +458,14 @@ export default function OnboardingScreen() {
       quality: 0.8,
     });
     if (result.canceled) return;
-    const picked = keepPhotos(result.assets.map((a) => a.uri));
-    const merged = [...me.photos, ...picked].slice(0, MAX_PHOTOS);
-    await updateMe({ photos: merged, photosUpdatedAt: new Date().toISOString() });
+    const picked = keepAndCheck(result.assets.map((a) => a.uri));
+    const current = me.photos.map((uri, i) => ({ uri, faces: me.photoFaces[i] ?? null }));
+    const merged = [...current, ...picked].slice(0, MAX_PHOTOS);
+    await updateMe({
+      photos: merged.map((p) => p.uri),
+      photoFaces: merged.map((p) => p.faces),
+      photosUpdatedAt: new Date().toISOString(),
+    });
   }
 
   // Footer CTA per step.
@@ -735,6 +739,7 @@ export default function OnboardingScreen() {
                     updateMe({
                       photos: me.photos.filter((_, k) => k !== i),
                       photoLabels: me.photoLabels.filter((_, k) => k !== i),
+                      photoFaces: me.photoFaces.filter((_, k) => k !== i),
                     });
                   }}
                 />

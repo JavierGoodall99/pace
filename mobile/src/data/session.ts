@@ -43,6 +43,8 @@ export interface MeProfile {
   lifestyle: Lifestyle;
   // One label per entry in `photos` (same order).
   photoLabels: PhotoLabel[];
+  // Faces found in each photo (same order); null = couldn't be checked.
+  photoFaces: (number | null)[];
   photosUpdatedAt: string | null;
   // Women-first messaging: after a match, only you can start the chat.
   womenFirst: boolean;
@@ -100,6 +102,10 @@ export function useSession(): SessionState {
 
 export function useMe(): MeProfile {
   return useSession().me;
+}
+
+export function getMe(): MeProfile {
+  return state.me;
 }
 
 async function persist() {
@@ -178,6 +184,7 @@ export function freshMe(name: string, email: string): MeProfile {
     gender: null,
     lifestyle: { drinks: null, diet: null, restDay: null },
     photoLabels: [],
+    photoFaces: [],
     photosUpdatedAt: null,
     womenFirst: false,
     sync: null,
@@ -263,6 +270,13 @@ export async function deleteAccount() {
 
 export async function updateMe(patch: Partial<MeProfile>) {
   const next = { ...state.me, ...patch };
+  // The badge vouches for the photos it was earned with. Adding a new
+  // photo takes it away until the selfie check is done again, so nobody
+  // can verify and then swap in someone else's pictures.
+  if (patch.photos && patch.verified === undefined && state.me.verified) {
+    const added = patch.photos.some((p) => !state.me.photos.includes(p));
+    if (added) next.verified = false;
+  }
   setState({ me: patch.city !== undefined ? normaliseMe(next) : next });
   await persist();
 }

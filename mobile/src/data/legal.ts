@@ -60,7 +60,7 @@ export const LEGAL: Record<LegalDoc, { title: string; intro: string; sections: L
       },
       {
         heading: 'Selfie check',
-        body: 'Verification uses your front camera to check you are a real person who matches your photos. The check runs on your phone; the camera frames are not uploaded or kept.',
+        body: 'Verification uses your front camera to check you are a real, live person. Profile photos are checked for a face when you add them. Both checks run on your phone; nothing is uploaded or kept.',
       },
       {
         heading: 'Activity and health data',

@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../src/components/Icon';
 import { PhotoGrid } from '../src/components/PhotoGrid';
+import { showPip } from '../src/components/PipKit';
 import { PickRow } from '../src/components/Sessions';
 import {
   Button,
@@ -35,7 +36,7 @@ import {
 import { daysPerWeek } from '../src/data/rhythm';
 import { Intent, updateMe, useMe } from '../src/data/session';
 import { confirmAction } from '../src/lib/dialogs';
-import { forgetPhoto, keepPhotos } from '../src/lib/photoStore';
+import { forgetPhoto, keepAndCheck } from '../src/lib/photoStore';
 import { useColors } from '../src/theme/appearance';
 import { formatLabel } from '../src/theme/tokens';
 
@@ -60,6 +61,9 @@ export default function EditProfileScreen() {
   const [lifestyle, setLifestyle] = useState<Lifestyle>(me.lifestyle);
   const [photos, setPhotos] = useState<string[]>(me.photos);
   const [labels, setLabels] = useState<PhotoLabel[]>(me.photoLabels);
+  const [faces, setFaces] = useState<(number | null)[]>(
+    me.photos.map((_, i) => me.photoFaces[i] ?? null)
+  );
   const [prompts, setPrompts] = useState<Prompt[]>(me.prompts);
   const [choosingPrompt, setChoosingPrompt] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,7 +104,8 @@ export default function EditProfileScreen() {
   }, [navigation, dirty, photos, original.photos]);
 
   const days = daysSince(original.photosUpdatedAt);
-  const photoIssue = photos.length > 0 ? photoProblem(photos, labels) : null;
+  const photoIssue = photos.length > 0 ? photoProblem(photos, labels, faces) : null;
+  const addsPhotos = photos.some((p) => !original.photos.includes(p));
   const usedQuestions = prompts.map((p) => p.q);
 
   async function pickPhotos() {
@@ -111,8 +116,9 @@ export default function EditProfileScreen() {
       quality: 0.8,
     });
     if (result.canceled) return;
-    const picked = keepPhotos(result.assets.map((a) => a.uri));
-    setPhotos((p) => [...p, ...picked].slice(0, MAX_PHOTOS));
+    const picked = keepAndCheck(result.assets.map((a) => a.uri));
+    setPhotos((p) => [...p, ...picked.map((x) => x.uri)].slice(0, MAX_PHOTOS));
+    setFaces((f) => [...f, ...picked.map((x) => x.faces)].slice(0, MAX_PHOTOS));
   }
 
   async function save() {
@@ -121,7 +127,7 @@ export default function EditProfileScreen() {
       setError('Pace is for adults only. Enter your age (18 or older).');
       return;
     }
-    const problem = photoProblem(photos, labels);
+    const problem = photoProblem(photos, labels, faces);
     if (problem) {
       setError(problem);
       return;
@@ -137,11 +143,15 @@ export default function EditProfileScreen() {
       lifestyle,
       photos,
       photoLabels: labels.slice(0, photos.length),
+      photoFaces: faces.slice(0, photos.length),
       ...(photosChanged ? { photosUpdatedAt: new Date().toISOString() } : null),
       // Drop prompts left without an answer.
       prompts: prompts.map((p) => ({ q: p.q, a: p.a.trim() })).filter((p) => p.a),
     });
     saved.current = true;
+    if (addsPhotos && original.verified) {
+      showPip('New photos — redo your selfie check to get your badge back.', 'thinking');
+    }
     router.back();
   }
 
@@ -179,9 +189,14 @@ export default function EditProfileScreen() {
             onRemove={(i) => {
               setPhotos((p) => p.filter((_, k) => k !== i));
               setLabels((l) => l.filter((_, k) => k !== i));
+              setFaces((f) => f.filter((_, k) => k !== i));
             }}
           />
-          {photoIssue ? <Callout icon="camera" title={photoIssue} /> : null}
+          {photoIssue ? (
+            <Callout icon="camera" title={photoIssue} />
+          ) : addsPhotos && original.verified ? (
+            <Callout icon="shield-check" title="New photos need a new selfie check" />
+          ) : null}
         </YStack>
 
         <YStack>

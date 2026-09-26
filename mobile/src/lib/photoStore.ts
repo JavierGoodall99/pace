@@ -1,5 +1,6 @@
 import { Directory, File, Paths } from 'expo-file-system';
 import { Platform } from 'react-native';
+import { countFaces } from './photoFaces';
 
 // The image picker hands back files in a temporary cache the OS may clear
 // at any time, so a saved profile photo could vanish. Copy each picked
@@ -51,4 +52,9 @@ export function forgetPhoto(uri: string) {
   } catch {
     // Already gone.
   }
+}
+
+// Keeps each picked photo and counts the faces in it (see photoFaces.ts).
+export function keepAndCheck(uris: string[]): { uri: string; faces: number | null }[] {
+  return keepPhotos(uris).map((uri) => ({ uri, faces: countFaces(uri) }));
 }

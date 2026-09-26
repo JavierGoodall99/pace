@@ -97,3 +97,26 @@ describe('notification read state', () => {
     expect(visibleNotifications([id]).some((n) => n.athleteId === id)).toBe(false);
   });
 });
+
+describe('photos have to show you', () => {
+  const two = ['a', 'b'];
+  const labels = ['action', 'offclock'] as const;
+
+  test('an object as the main photo is rejected', () => {
+    expect(photoProblem(two, [...labels], [0, 1])).toMatch(/main photo needs to show your face/);
+  });
+
+  test('a group shot as the main photo is rejected', () => {
+    expect(photoProblem(two, [...labels], [3, 1])).toMatch(/just you/);
+  });
+
+  test('needs two photos with a face', () => {
+    expect(photoProblem(two, [...labels], [1, 0])).toMatch(/another photo/);
+    expect(photoProblem(two, [...labels], [1, 1])).toBeNull();
+  });
+
+  test('unchecked photos (web, older profiles) are not held against you', () => {
+    expect(photoProblem(two, [...labels], [null, null])).toBeNull();
+    expect(photoProblem(two, [...labels])).toBeNull();
+  });
+});

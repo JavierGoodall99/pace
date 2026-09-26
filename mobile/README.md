@@ -4,6 +4,10 @@ Expo Router + React Native + TypeScript build of the Pace app, ported from
 the Claude Design mockup at `../Pace App.dc.html` (colors, type, spacing,
 and copy all sourced from that file's design-system tokens).
 
+There is no backend yet — everything is stored on the phone. What's waiting
+on one (starting with photo verification) is listed in
+[`../docs/backend-todo.md`](../docs/backend-todo.md).
+
 ## Stack
 
 - Expo SDK 57, Expo Router (file-based navigation)

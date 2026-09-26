@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import type { IlloName } from '../src/components/Illustrations';
 import { buildConfettiPieces, Confetti } from '../src/components/Confetti';
 import { Icon } from '../src/components/Icon';
 import { Mascot, Mood, SpeechBubble } from '../src/components/Mascot';
@@ -27,7 +28,7 @@ import { PhotoSlot } from '../src/components/PhotoSlot';
 import { RhythmStrip } from '../src/components/Rhythm';
 import { Badge, Button, Callout, DisplayTitle, IconButton, Input } from '../src/components/ui';
 import { successHaptic } from '../src/lib/haptics';
-import { ATHLETES, DISCIPLINES, Discipline, SPORT_EMOJI } from '../src/data/mockData';
+import { ATHLETES, DISCIPLINES, Discipline, SPORT_ILLO } from '../src/data/mockData';
 import { ATHLETE_PHOTOS, HERO_RUNNERS } from '../src/data/photos';
 import { cadenceForDays, Rhythm, rhythmForMe } from '../src/data/rhythm';
 import { compatibility } from '../src/data/compat';
@@ -104,50 +105,50 @@ const BODY_STYLE = { px: 20, pt: 8, pb: 24, flexGrow: 1 };
 const WELCOME_BODY_STYLE = { pb: 0, flexGrow: 1 };
 const NO_DAYS = [false, false, false, false, false, false, false];
 
-const INTENTS: { id: Intent; emoji: string; title: string; subtitle: string; reply: string }[] = [
+const INTENTS: { id: Intent; illo: IlloName; title: string; subtitle: string; reply: string }[] = [
   {
     id: 'love',
-    emoji: '💕',
+    illo: 'heart',
     title: 'Love',
     subtitle: 'Someone to date who shares my drive',
-    reply: 'Someone who gets your 5am alarm? Love that. 💕',
+    reply: 'Someone who gets your 5am alarm? Love that.',
   },
   {
     id: 'partner',
-    emoji: '🤝',
+    illo: 'buddies',
     title: 'A training partner',
     subtitle: 'Someone to train with — maybe more',
-    reply: 'Accountability buddy it is. Who knows where it leads! 😉',
+    reply: 'Accountability buddy it is. Who knows where it leads!',
   },
   {
     id: 'both',
-    emoji: '✨',
+    illo: 'sparkle',
     title: 'Open to both',
     subtitle: 'Let’s see where the miles take us',
-    reply: 'Why choose? Best of both worlds. ✨',
+    reply: 'Why choose? Best of both worlds.',
   },
 ];
 
-const TIMES: { id: string; emoji: string; title: string; subtitle: string }[] = [
+const TIMES: { id: string; illo: IlloName; title: string; subtitle: string }[] = [
   {
     id: 'EARLY MORNING',
-    emoji: '🌅',
+    illo: 'sunrise',
     title: 'Early morning',
     subtitle: 'Before the world wakes up',
   },
-  { id: 'MIDDAY', emoji: '☀️', title: 'Midday', subtitle: 'Lunch-break sessions' },
-  { id: 'EVENING', emoji: '🌙', title: 'Evening', subtitle: 'After work, under the lights' },
-  { id: 'WEEKENDS', emoji: '🗓️', title: 'Weekends', subtitle: 'Long runs and big rides' },
+  { id: 'MIDDAY', illo: 'sun', title: 'Midday', subtitle: 'Lunch-break sessions' },
+  { id: 'EVENING', illo: 'moon', title: 'Evening', subtitle: 'After work, under the lights' },
+  { id: 'WEEKENDS', illo: 'calendar', title: 'Weekends', subtitle: 'Long runs and big rides' },
 ];
 
 const CONFETTI_COLORS = [
   brand.accent,
   brand.peach,
-  brand.lilac,
+  brand.sky,
   brand.sun,
   brand.accent,
   brand.peach,
-  brand.lilac,
+  brand.sky,
   brand.accent,
   brand.sun,
   brand.peach,
@@ -200,12 +201,12 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
   switch (step) {
     case 'meet':
       return {
-        text: 'Hey, I’m Pip! 👋 I help athletes find people who move like them. Ready to build your card?',
+        text: 'Hey, I’m Pip! I help athletes find people who move like them. Ready to build your card?',
         mood: 'excited',
       };
     case 'name':
       return done
-        ? { text: `Nice to meet you, ${first}! 🙌`, mood: 'excited' }
+        ? { text: `Nice to meet you, ${first}!`, mood: 'excited' }
         : { text: 'First things first — what should I call you?', mood: 'happy' };
     case 'intent': {
       const pick = INTENTS.find((i) => i.id === me.intent);
@@ -218,10 +219,10 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
       if (n === 0) return { text: 'What do you train? Pick as many as you like.', mood: 'happy' };
       if (n === 1)
         return {
-          text: `A ${formatLabel(me.disciplines[0])} specialist. Respect. 💪`,
+          text: `A ${formatLabel(me.disciplines[0])} specialist. Respect.`,
           mood: 'excited',
         };
-      return { text: `${n} sports — a true all-rounder! 🏅`, mood: 'excited' };
+      return { text: `${n} sports — a true all-rounder!`, mood: 'excited' };
     }
     case 'week': {
       const n = me.trainingDays?.filter(Boolean).length ?? 0;
@@ -232,13 +233,13 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
           text: `${n} day${n === 1 ? '' : 's'} a week — every session counts!`,
           mood: 'happy',
         };
-      if (n <= 4) return { text: `${n} days a week — that’s a solid rhythm! 🔥`, mood: 'excited' };
-      if (n <= 6) return { text: `${n} days?! Serious dedication. 🔥`, mood: 'excited' };
-      return { text: 'Every. Single. Day. Absolute legend. 🏆', mood: 'excited' };
+      if (n <= 4) return { text: `${n} days a week — that’s a solid rhythm!`, mood: 'excited' };
+      if (n <= 6) return { text: `${n} days?! Serious dedication.`, mood: 'excited' };
+      return { text: 'Every. Single. Day. Absolute legend.', mood: 'excited' };
     }
     case 'time':
       if (me.times.includes('EARLY MORNING'))
-        return { text: 'An early bird! We’ll find you other early birds. 🌅', mood: 'excited' };
+        return { text: 'An early bird! We’ll find you other early birds.', mood: 'excited' };
       if (done)
         return { text: 'Got it — we’ll match you with people on the same clock.', mood: 'happy' };
       return { text: 'When do you like to train?', mood: 'happy' };
@@ -250,11 +251,11 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
           mood: 'happy',
         };
       if (l.id === 4)
-        return { text: 'Racing mode! We’ll find people who can hang. 🔥', mood: 'excited' };
+        return { text: 'Racing mode! We’ll find people who can hang.', mood: 'excited' };
       if (l.id === 1)
-        return { text: 'Chatty pace is the best pace. Great for first sessions. 🐢', mood: 'wink' };
+        return { text: 'Chatty pace is the best pace. Great for first sessions.', mood: 'wink' };
       return {
-        text: `${l.label} it is — we’ll keep your matches within reach. 💪`,
+        text: `${l.label} it is — we’ll keep your matches within reach.`,
         mood: 'excited',
       };
     }
@@ -265,12 +266,12 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
           mood: 'happy',
         };
       const race = raceById(me.goalRaceId);
-      if (!race) return { text: 'No race? No problem — training is the point. 🌱', mood: 'happy' };
+      if (!race) return { text: 'No race? No problem — training is the point.', mood: 'happy' };
       const n = athletesTrainingFor(race.id).length;
       return {
         text: n
-          ? `${race.name}! ${n} pacer${n === 1 ? ' is' : 's are'} training for it too. 🏁`
-          : `${race.name} — let’s find you training partners. 🏁`,
+          ? `${race.name}! ${n} pacer${n === 1 ? ' is' : 's are'} training for it too.`
+          : `${race.name} — let’s find you training partners.`,
         mood: 'excited',
       };
     }
@@ -279,21 +280,21 @@ function pipLine(step: StepId, me: MeProfile): { text: string; mood: Mood } {
         return { text: 'Pace is for adults only — you need to be 18+.', mood: 'thinking' };
       if (done)
         return {
-          text: `${me.city.trim()}! Plenty of athletes training there. 📍`,
+          text: `${me.city.trim()}! Plenty of athletes training there.`,
           mood: 'excited',
         };
       return { text: 'Almost there. How old are you, and where do you train?', mood: 'happy' };
     case 'photos':
       return done
-        ? { text: 'Looking strong! 💪 Action shots get 3× more likes.', mood: 'excited' }
+        ? { text: 'Looking strong! Action shots get 3× more likes.', mood: 'excited' }
         : { text: 'Show off your training! One good action shot beats a long bio.', mood: 'happy' };
     case 'sync':
       return done
-        ? { text: 'Synced! Your stats now carry a verified badge. ✅', mood: 'excited' }
+        ? { text: 'Synced! Your stats now carry a verified badge.', mood: 'excited' }
         : { text: 'Connect Strava or Garmin — matches trust real numbers.', mood: 'happy' };
     case 'verify':
       return done
-        ? { text: 'Verified! You just unlocked Gold. 🥇', mood: 'excited' }
+        ? { text: 'Verified! You just unlocked Gold.', mood: 'excited' }
         : { text: 'Last one: a quick selfie check so everyone knows you’re real.', mood: 'happy' };
     case 'building':
       return { text: 'Hold tight — finding people who move like you…', mood: 'thinking' };
@@ -449,7 +450,7 @@ export default function OnboardingScreen() {
                   {INTENTS.map((i) => (
                     <OptionCard
                       key={i.id}
-                      emoji={i.emoji}
+                      illo={i.illo}
                       title={i.title}
                       subtitle={i.subtitle}
                       selected={me.intent === i.id}
@@ -464,7 +465,7 @@ export default function OnboardingScreen() {
                   {DISCIPLINES.map((d) => (
                     <SportTile
                       key={d}
-                      emoji={SPORT_EMOJI[d]}
+                      illo={SPORT_ILLO[d]}
                       label={formatLabel(d)}
                       selected={me.disciplines.includes(d)}
                       onPress={() => toggleDiscipline(d)}
@@ -496,7 +497,7 @@ export default function OnboardingScreen() {
                   {LEVELS.map((l) => (
                     <OptionCard
                       key={l.id}
-                      emoji={l.emoji}
+                      illo={l.illo}
                       title={l.label}
                       subtitle={l.detail}
                       selected={me.level === l.id}
@@ -513,7 +514,7 @@ export default function OnboardingScreen() {
                     return (
                       <OptionCard
                         key={r.id}
-                        emoji={r.emoji}
+                        illo={r.illo}
                         title={r.name}
                         subtitle={`${formatRaceDate(r.date)} · ${r.city}${n ? ` · ${n} pacer${n === 1 ? '' : 's'}` : ''}`}
                         selected={me.goalRaceId === r.id}
@@ -522,7 +523,7 @@ export default function OnboardingScreen() {
                     );
                   })}
                   <OptionCard
-                    emoji="🌱"
+                    illo="seedling"
                     title="Nothing specific right now"
                     subtitle="Just training for the love of it"
                     selected={me.goalRaceId === ''}
@@ -536,7 +537,7 @@ export default function OnboardingScreen() {
                   {TIMES.map((t) => (
                     <OptionCard
                       key={t.id}
-                      emoji={t.emoji}
+                      illo={t.illo}
                       title={t.title}
                       subtitle={t.subtitle}
                       selected={me.times.includes(t.id)}

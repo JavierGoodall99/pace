@@ -1,4 +1,5 @@
 import type { Athlete } from './mockData';
+import type { IlloName } from '../components/Illustrations';
 
 // The "proof of effort" side of each athlete — effort level, when they
 // like to train, what they're training for, personal bests, prompts and
@@ -10,11 +11,11 @@ import type { Athlete } from './mockData';
 // matches within a level or one apart so sessions actually work.
 export type Level = 1 | 2 | 3 | 4;
 
-export const LEVELS: { id: Level; emoji: string; label: string; detail: string }[] = [
-  { id: 1, emoji: '🐢', label: 'Easy going', detail: 'Chatty pace, no watch-checking' },
-  { id: 2, emoji: '🙂', label: 'Steady', detail: 'Consistent, comfortably hard' },
-  { id: 3, emoji: '💪', label: 'Strong', detail: 'Intervals, tempo, pushing limits' },
-  { id: 4, emoji: '🔥', label: 'Racing', detail: 'Chasing podiums and PBs' },
+export const LEVELS: { id: Level; illo: IlloName; label: string; detail: string }[] = [
+  { id: 1, illo: 'level1', label: 'Easy going', detail: 'Chatty pace, no watch-checking' },
+  { id: 2, illo: 'level2', label: 'Steady', detail: 'Consistent, comfortably hard' },
+  { id: 3, illo: 'level3', label: 'Strong', detail: 'Intervals, tempo, pushing limits' },
+  { id: 4, illo: 'level4', label: 'Racing', detail: 'Chasing podiums and PBs' },
 ];
 
 export function levelLabel(level: Level | null | undefined): string {

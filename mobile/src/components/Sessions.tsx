@@ -2,10 +2,11 @@ import React from 'react';
 import { Share } from 'react-native';
 import { Text, XStack, YStack } from 'tamagui';
 import { Icon } from './Icon';
+import { Illo, IlloName } from './Illustrations';
 import { Mascot } from './Mascot';
 import { PhotoSlot } from './PhotoSlot';
 import { Badge, Toggle } from './ui';
-import { athleteById, Discipline, SPORT_EMOJI } from '../data/mockData';
+import { athleteById, Discipline, SPORT_ILLO } from '../data/mockData';
 import { ATHLETE_PHOTOS } from '../data/photos';
 import { formatWhen } from '../data/dates';
 import { CheckIn, checkInOutcome, Plan, PlanStatus } from '../data/plans';
@@ -81,7 +82,7 @@ export function SessionCard({
               items="center"
               justify="center"
             >
-              <Text fontSize={22}>{SPORT_EMOJI[activity]}</Text>
+              <Illo name={SPORT_ILLO[activity]} size={34} />
             </XStack>
           )}
           {a ? (
@@ -96,7 +97,7 @@ export function SessionCard({
               items="center"
               justify="center"
             >
-              <Text fontSize={12}>{SPORT_EMOJI[activity]}</Text>
+              <Illo name={SPORT_ILLO[activity]} size={17} />
             </XStack>
           ) : null}
         </YStack>
@@ -221,23 +222,23 @@ function SafetyRow({
   );
 }
 
-const CHECKIN_OPTIONS: { id: CheckIn; emoji: string; label: string }[] = [
-  { id: 'again', emoji: '🔁', label: 'Train again' },
-  { id: 'coffee', emoji: '☕', label: 'Grab coffee next time' },
-  { id: 'buddies', emoji: '🤝', label: 'Just training buddies' },
+const CHECKIN_OPTIONS: { id: CheckIn; illo: IlloName; label: string }[] = [
+  { id: 'again', illo: 'repeat', label: 'Train again' },
+  { id: 'coffee', illo: 'coffee', label: 'Grab coffee next time' },
+  { id: 'buddies', illo: 'buddies', label: 'Just training buddies' },
 ];
 
 const OUTCOME_COPY: Record<CheckIn | 'waiting', { title: string; body: string }> = {
   coffee: {
-    title: 'You both said coffee ☕',
+    title: 'You both said coffee',
     body: 'It’s mutual. Plan a coffee after your next session?',
   },
   again: {
-    title: 'Training partners 🔁',
+    title: 'Training partners',
     body: 'You both want to go again — pick another session.',
   },
   buddies: {
-    title: 'Training buddies 🤝',
+    title: 'Training buddies',
     body: 'Great sessions, no pressure. Keep each other honest.',
   },
   waiting: {
@@ -313,7 +314,7 @@ export function CheckInCard({ plan, onAnswer }: { plan: Plan; onAnswer: (c: Chec
               borderWidth={1}
               borderColor="$border"
             >
-              <Text fontSize={18}>{o.emoji}</Text>
+              <Illo name={o.illo} size={28} />
               <Text fontFamily="$semibold" fontSize={15} color="$text">
                 {o.label}
               </Text>
@@ -331,12 +332,15 @@ export function PickRow<T extends string>({
   value,
   onChange,
   render,
+  illo,
 }: {
   options: T[];
   value: T | null;
   onChange: (v: T) => void;
   render?: (v: T) => string;
+  illo?: (v: T) => IlloName;
 }) {
+  const c = useColors();
   return (
     <XStack flexWrap="wrap" gap={8}>
       {options.map((o) => {
@@ -354,10 +358,15 @@ export function PickRow<T extends string>({
             px={14}
             rounded="$full"
             items="center"
+            gap={6}
+            pl={illo ? 8 : 14}
             borderWidth={1}
             bg={active ? '$accent' : '$card'}
             borderColor={active ? '$accent' : '$border'}
           >
+            {illo ? (
+              <Illo name={illo(o)} size={24} color={active ? c.onAccent : undefined} />
+            ) : null}
             <Text fontFamily="$semibold" fontSize={14} color={active ? '$onAccent' : '$text'}>
               {render ? render(o) : o}
             </Text>

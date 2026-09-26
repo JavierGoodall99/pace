@@ -59,7 +59,7 @@ export default function SafetyScreen() {
           line={{
             key: 'safety-intro',
             mood: 'happy',
-            text: 'Training first is safer than a first drink. Here’s how I look out for you. 💪',
+            text: 'Training first is safer than a first drink. Here’s how I look out for you.',
           }}
         />
         {TIPS.map((t) => (

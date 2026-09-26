@@ -9,7 +9,7 @@ import { isPublicSpot, SafetyPanel } from '../../src/components/Sessions';
 import { Badge, Button, Callout, DisplayTitle, ScreenHeader } from '../../src/components/ui';
 import { levelLabel } from '../../src/data/athleteDepth';
 import { formatWhen } from '../../src/data/dates';
-import { athleteById, SPORT_EMOJI } from '../../src/data/mockData';
+import { athleteById, SPORT_ILLO } from '../../src/data/mockData';
 import { ATHLETE_PHOTOS, ME_AVATAR } from '../../src/data/photos';
 import { joinOpen, leaveOpen, usePlans } from '../../src/data/plans';
 import { useMe } from '../../src/data/session';
@@ -50,7 +50,9 @@ export default function SessionDetailScreen() {
         <ScreenHeader title={s.title} onBack={() => router.back()} />
         <YStack px={20} gap={16} mt={12}>
           <XStack gap={8} flexWrap="wrap">
-            <Badge tone="accent">{`${SPORT_EMOJI[s.activity]} ${formatLabel(s.activity)}`}</Badge>
+            <Badge tone="accent" illo={SPORT_ILLO[s.activity]}>
+              {formatLabel(s.activity)}
+            </Badge>
             <Badge>{levelLabel(s.level)}</Badge>
             <Badge>{s.spots > 1 ? `Group · ${s.spots} spots` : '1-on-1'}</Badge>
           </XStack>
@@ -172,7 +174,7 @@ export default function SessionDetailScreen() {
               disabled={full}
               onPress={() => {
                 joinOpen(s.id);
-                showPip(`You’re in! See you at ${s.place}. 🙌`);
+                showPip(`You’re in! See you at ${s.place}.`);
               }}
               style={{ flex: 1 }}
             >

@@ -84,7 +84,7 @@ export function Aurora({ height = 420, bleed = 0 }: { height?: number; bleed?: n
   const c = useColors();
   const pools = [
     { id: 'a1', cx: '18%', cy: '22%', r: '55%', color: c.accent },
-    { id: 'a2', cx: '85%', cy: '12%', r: '50%', color: c.lilac },
+    { id: 'a2', cx: '85%', cy: '12%', r: '50%', color: c.sky },
     { id: 'a3', cx: '65%', cy: '70%', r: '45%', color: c.peach },
   ];
   return (

@@ -19,10 +19,10 @@ const lightPalette = {
   onPhoto: '#FFFFFF', // copy sitting on a photo scrim
 
   // Brand
-  accent: '#D6336C', // fills — 4.6:1 against white text
-  accentText: '#D6336C', // accent-colored copy on canvas/card
-  accentSoft: '#FCEAF0',
-  accentBorder: '#F6C9D8',
+  accent: '#CF4A12', // ember orange fills — 4.5:1 against white text
+  accentText: '#C2410C', // accent-colored copy on canvas/card — 4.9:1
+  accentSoft: '#FDEEE5',
+  accentBorder: '#F8D0BA',
 
   // Status
   success: '#178A5B',
@@ -36,7 +36,7 @@ const lightPalette = {
 
   // Celebration / aurora accents
   peach: '#FFB38A',
-  lilac: '#B9A6F5',
+  sky: '#9CC9DC',
   sun: '#FFD166',
   auroraOpacity: 0.55,
 };
@@ -44,32 +44,32 @@ const lightPalette = {
 export type Palette = { [K in keyof typeof lightPalette]: (typeof lightPalette)[K] };
 
 const darkPalette: Palette = {
-  canvas: '#131011',
-  card: '#1D1A1B',
-  surface: '#282425',
-  border: '#2F2A2B',
-  borderStrong: '#443D3E',
+  canvas: '#131211',
+  card: '#1D1B1A',
+  surface: '#282624',
+  border: '#2F2C2A',
+  borderStrong: '#45413D',
 
   text: '#F5F0EC',
   muted: '#A8A09B', // 7:1 on canvas
   onAccent: '#FFFFFF',
   onPhoto: '#FFFFFF',
 
-  accent: '#D6336C',
-  accentText: '#EC5C86', // 5.8:1 on canvas
-  accentSoft: '#3A1A26',
-  accentBorder: '#5E2740',
+  accent: '#CF4A12',
+  accentText: '#FF7A45', // 7:1 on canvas
+  accentSoft: '#3A2218',
+  accentBorder: '#5E3421',
 
   success: '#3CCB8A',
   successSoft: '#15302A',
 
   scrim: 'rgba(0,0,0,0.6)',
-  glass: 'rgba(29,26,27,0.82)',
-  tabBar: '#211D1E',
-  raised: '#3D3738',
+  glass: 'rgba(29,27,26,0.82)',
+  tabBar: '#211F1D',
+  raised: '#3D3A37',
 
   peach: '#FF9E70',
-  lilac: '#9B85F0',
+  sky: '#6FA9C2',
   sun: '#FFC94D',
   auroraOpacity: 0.35,
 };
@@ -81,7 +81,7 @@ export const palettes = { light: lightPalette, dark: darkPalette } as const;
 export const brand = {
   accent: lightPalette.accent,
   peach: lightPalette.peach,
-  lilac: lightPalette.lilac,
+  sky: lightPalette.sky,
   sun: lightPalette.sun,
 } as const;
 

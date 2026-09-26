@@ -1,12 +1,13 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, XStack, YStack } from 'tamagui';
+import { Illo } from '../../src/components/Illustrations';
 import { buildConfettiPieces, Confetti } from '../../src/components/Confetti';
 import { Mascot } from '../../src/components/Mascot';
 import { Aurora, PulseLine } from '../../src/components/Motif';
 import { RhythmStrip, SyncBadge } from '../../src/components/Rhythm';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { Badge, Button, DisplayTitle } from '../../src/components/ui';
-import { athleteById, SPORT_EMOJI } from '../../src/data/mockData';
+import { athleteById, SPORT_ILLO } from '../../src/data/mockData';
 import { rhythmForAthlete, rhythmForMe, sharedDaysLabel } from '../../src/data/rhythm';
 import { compatibility } from '../../src/data/compat';
 import { formatWhen } from '../../src/data/dates';
@@ -19,7 +20,7 @@ import { brand, shadow } from '../../src/theme/tokens';
 // Ported from the "MATCH CELEBRATION OVERLAY" in `../../Pace App.dc.html`
 // — shown when a swipe-right lands on a mutual-interest athlete (see
 // MATCH_IDS in discover.tsx).
-const CONFETTI_COLORS = [brand.accent, brand.peach, brand.lilac, brand.sun];
+const CONFETTI_COLORS = [brand.accent, brand.peach, brand.sky, brand.sun];
 const CONFETTI_PIECES = buildConfettiPieces(
   Array.from({ length: 12 }, (_, i) => CONFETTI_COLORS[i % CONFETTI_COLORS.length]),
   { leftStep: 31, durationBase: 1.8, durationStep: 0.3, delayStep: 0.1 }
@@ -101,7 +102,7 @@ export default function MatchScreen() {
           <RhythmStrip mine={mine} theirs={theirs} height={30} />
           {plan ? (
             <XStack items="center" gap={10} p={12} rounded={16} bg="$accentSoft">
-              <Text fontSize={22}>{SPORT_EMOJI[plan.activity]}</Text>
+              <Illo name={SPORT_ILLO[plan.activity]} size={34} />
               <YStack flex={1}>
                 <Text fontFamily="$semibold" fontSize={15} color="$text">
                   {formatWhen(plan.date)}

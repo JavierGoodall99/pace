@@ -33,7 +33,7 @@ export function todayLine(
     const who = athleteById(pendingCheckIn.athleteId)?.name ?? 'them';
     return {
       key: `checkin-${pendingCheckIn.id}`,
-      text: `How did it go with ${who}? Your answer stays private unless it’s mutual. 🤫`,
+      text: `How did it go with ${who}? Your answer stays private unless it’s mutual.`,
       mood: 'wink',
     };
   }
@@ -43,7 +43,7 @@ export function todayLine(
     const who = athleteById(invite.athleteId)?.name ?? 'Someone';
     return {
       key: `invite-${invite.id}`,
-      text: `${who} wants to train with you! Say “I’m in” below. 🏃`,
+      text: `${who} wants to train with you! Say “I’m in” below.`,
       mood: 'excited',
     };
   }
@@ -57,7 +57,7 @@ export function todayLine(
       key: `next-${next.id}`,
       text: `Next up: ${who}, ${formatWhen(next.date, now)
         .replace(' · ', ' at ')
-        .replace(/^(Today|Tomorrow)/, (d) => d.toLowerCase())}. Don’t forget water! 💧`,
+        .replace(/^(Today|Tomorrow)/, (d) => d.toLowerCase())}. Don’t forget water!`,
       mood: 'happy',
     };
   }
@@ -65,7 +65,7 @@ export function todayLine(
   if (pacersLeft > 0) {
     return {
       key: 'pacers',
-      text: `${pacersLeft} pacer${pacersLeft === 1 ? ' is' : 's are'} waiting for you this week, ${first}. ✨`,
+      text: `${pacersLeft} pacer${pacersLeft === 1 ? ' is' : 's are'} waiting for you this week, ${first}.`,
       mood: 'excited',
       cta: { label: 'See pacers', href: '/(tabs)/discover' },
     };
@@ -109,7 +109,7 @@ export function profileTip(me: MeProfile, now: Date = new Date()): PipLine {
   const days = daysUntil(race.date, now);
   return {
     key: 'tip-race-countdown',
-    text: `${days} days to ${race.name}. Find a pacer for your long runs! 🏁`,
+    text: `${days} days to ${race.name}. Find a pacer for your long runs!`,
     mood: 'excited',
     cta: { label: 'See race', href: `/race/${race.id}` },
   };

@@ -4,6 +4,7 @@ import type { Level } from './athleteDepth';
 import { daysFrom, nextDateFor, weekKey } from './dates';
 import type { Discipline } from './mockData';
 import { likeBack } from './social';
+import type { IlloName } from '../components/Illustrations';
 
 // Sessions are the core of Pace: a match is an accepted invite to train,
 // and the relationship moves forward through sessions, not chat.
@@ -372,11 +373,11 @@ export function sessionsTogether(s: PlansState, athleteId: number, now: Date = n
 }
 
 export type Stage = 'match' | 'train' | 'coffee' | 'date';
-export const STAGES: { id: Stage; label: string; emoji: string }[] = [
-  { id: 'match', label: 'Match', emoji: '🤝' },
-  { id: 'train', label: 'Train', emoji: '🏃' },
-  { id: 'coffee', label: 'Coffee', emoji: '☕' },
-  { id: 'date', label: 'Date', emoji: '💕' },
+export const STAGES: { id: Stage; label: string; illo: IlloName }[] = [
+  { id: 'match', label: 'Match', illo: 'buddies' },
+  { id: 'train', label: 'Train', illo: 'run' },
+  { id: 'coffee', label: 'Coffee', illo: 'coffee' },
+  { id: 'date', label: 'Date', illo: 'heart' },
 ];
 
 // How far along you are with someone. "Date" is never automatic — it's

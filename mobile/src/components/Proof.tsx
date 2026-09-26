@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 import { Icon, IconName } from './Icon';
+import { Illo } from './Illustrations';
 import { DisplayTitle } from './ui';
 import { Compat, FactorKey } from '../data/compat';
 import { Rhythm } from '../data/rhythm';
@@ -190,9 +191,12 @@ export function GoalCard({
         <Text fontFamily="$medium" fontSize={12} color="$muted">
           {mine ? 'You’re training for' : 'Training for'}
         </Text>
-        <Text fontFamily="$bold" fontSize={16} color="$text">
-          {race.emoji} {race.name}
-        </Text>
+        <XStack items="center" gap={6}>
+          <Illo name={race.illo} size={22} />
+          <Text flex={1} fontFamily="$bold" fontSize={16} color="$text">
+            {race.name}
+          </Text>
+        </XStack>
         <Text fontSize={13} color="$muted">
           {formatRaceDate(race.date)} · {race.distance}
           {others > 0 ? ` · ${others} pacer${others === 1 ? '' : 's'} too` : ''}
@@ -285,7 +289,11 @@ export function JourneyLadder({
                   borderColor="$accentBorder"
                   borderStyle="dashed"
                 >
-                  <Text fontSize={compact ? 14 : 17}>{s.emoji}</Text>
+                  <Illo
+                    name={s.illo}
+                    size={compact ? 20 : 26}
+                    color={done ? c.onAccent : c.muted}
+                  />
                 </XStack>
                 {compact ? null : (
                   <Text

@@ -23,9 +23,9 @@ test('Today puts the most urgent thing first', () => {
   expect(todayLine(me, [next, invite, done], 5, now).key).toBe('checkin-done');
   expect(todayLine(me, [next, invite], 5, now).text).toMatch(/^Kagiso wants to train/);
   expect(todayLine(me, [next], 5, now).text).toBe(
-    'Next up: Lerato, tomorrow at 18:00. Don’t forget water! 💧'
+    'Next up: Lerato, tomorrow at 18:00. Don’t forget water!'
   );
-  expect(todayLine(me, [], 3, now).text).toBe('3 pacers are waiting for you this week, Naledi. ✨');
+  expect(todayLine(me, [], 3, now).text).toBe('3 pacers are waiting for you this week, Naledi.');
   expect(todayLine(me, [], 0, now).key).toBe('quiet');
 });
 
@@ -46,5 +46,5 @@ test('profile tips walk through the next best improvement', () => {
   expect(profileTip(withPhotos, now).key).toBe('tip-verify');
   expect(profileTip({ ...withPhotos, verified: true }, now).key).toBe('tip-race');
   const racing = profileTip({ ...withPhotos, verified: true, goalRaceId: 'soweto-marathon' }, now);
-  expect(racing.text).toBe('37 days to Soweto Marathon. Find a pacer for your long runs! 🏁');
+  expect(racing.text).toBe('37 days to Soweto Marathon. Find a pacer for your long runs!');
 });

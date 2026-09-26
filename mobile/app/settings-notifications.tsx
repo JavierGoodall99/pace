@@ -1,8 +1,11 @@
 import { useRouter } from 'expo-router';
+import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, YStack } from 'tamagui';
 import { Callout, Card, ScreenHeader, SectionTitle, ToggleRow } from '../src/components/ui';
 import { EmailKey, PushKey, setEmail, setPush, useSettings } from '../src/data/settings';
+import { notify } from '../src/lib/dialogs';
+import { allowNotifications } from '../src/lib/reminders';
 
 const PUSH_ITEMS: { key: PushKey; label: string; hint: string }[] = [
   { key: 'likes', label: 'Likes & kudos', hint: 'When someone likes your run or workout' },
@@ -43,7 +46,22 @@ export default function SettingsNotificationsScreen() {
                 hint={item.hint}
                 last={i === PUSH_ITEMS.length - 1}
                 value={push[item.key]}
-                onChange={(v) => setPush(item.key, v)}
+                onChange={async (v) => {
+                  // Reminders are scheduled on this phone, so they need permission now.
+                  if (
+                    v &&
+                    item.key === 'reminders' &&
+                    Platform.OS !== 'web' &&
+                    !(await allowNotifications())
+                  ) {
+                    notify(
+                      'Notifications are off',
+                      'Turn on notifications for Pace in your phone settings to get training reminders.'
+                    );
+                    return;
+                  }
+                  setPush(item.key, v);
+                }}
               />
             ))}
           </Card>

@@ -1,6 +1,7 @@
 import type { Athlete } from './mockData';
 import type { IlloName } from '../components/Illustrations';
 import type { Gender, Lifestyle } from './identity';
+import type { Intent } from './session';
 
 // The "proof of effort" side of each athlete — effort level, when they
 // like to train, what they're training for, personal bests, prompts and
@@ -59,6 +60,8 @@ export interface AthleteDepth {
   // The ages they want to see — mutual with yours.
   ageRange: [number, number];
   replies: 'fast' | 'usually';
+  // What they're on Pace for — same options as yours.
+  intent: Intent;
 }
 
 export const DEPTH: Record<number, AthleteDepth> = {
@@ -88,6 +91,7 @@ export const DEPTH: Record<number, AthleteDepth> = {
     activitySource: 'strava',
     ageRange: [25, 36],
     replies: 'fast',
+    intent: 'both',
   },
   2: {
     level: 2,
@@ -112,6 +116,7 @@ export const DEPTH: Record<number, AthleteDepth> = {
     activitySource: 'strava',
     ageRange: [23, 34],
     replies: 'usually',
+    intent: 'love',
   },
   3: {
     level: 1,
@@ -136,6 +141,7 @@ export const DEPTH: Record<number, AthleteDepth> = {
     activitySource: 'garmin',
     ageRange: [24, 34],
     replies: 'fast',
+    intent: 'partner',
   },
   4: {
     level: 3,
@@ -157,6 +163,7 @@ export const DEPTH: Record<number, AthleteDepth> = {
     activitySource: 'garmin',
     ageRange: [26, 38],
     replies: 'usually',
+    intent: 'both',
   },
   5: {
     level: 3,
@@ -178,6 +185,7 @@ export const DEPTH: Record<number, AthleteDepth> = {
     activitySource: 'sessions',
     ageRange: [26, 38],
     replies: 'fast',
+    intent: 'love',
   },
   6: {
     level: 2,
@@ -196,6 +204,7 @@ export const DEPTH: Record<number, AthleteDepth> = {
     activitySource: 'strava',
     ageRange: [22, 34],
     replies: 'usually',
+    intent: 'partner',
   },
   7: {
     level: 3,
@@ -214,6 +223,7 @@ export const DEPTH: Record<number, AthleteDepth> = {
     activitySource: 'strava',
     ageRange: [26, 37],
     replies: 'fast',
+    intent: 'both',
   },
   8: {
     level: 4,
@@ -235,6 +245,7 @@ export const DEPTH: Record<number, AthleteDepth> = {
     activitySource: 'strava',
     ageRange: [24, 35],
     replies: 'fast',
+    intent: 'love',
   },
 };
 
@@ -257,6 +268,7 @@ export function depthFor(a: Pick<Athlete, 'id'>): AthleteDepth {
       activitySource: 'sessions',
       ageRange: [18, 60],
       replies: 'usually',
+      intent: 'both',
     }
   );
 }

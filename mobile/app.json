@@ -39,7 +39,8 @@
         {
           "photosPermission": "Allow Pace to access your photos so you can add them to your card."
         }
-      ]
+      ],
+      "expo-notifications"
     ]
   }
 }

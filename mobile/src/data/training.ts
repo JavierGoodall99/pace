@@ -249,6 +249,42 @@ export function weeklyStreak(all: TrainingEntry[], now: Date = new Date()): Stre
   return { weeks, atRisk: weeks > 0 && !thisWeekDone, best };
 }
 
+// When to nudge about the streak, and what to say. The reminder is for
+// the first week that has no session yet: Saturday 09:00, or Sunday 17:00
+// if Saturday has passed. Rescheduled whenever training changes, so
+// logging a session pushes it to next week.
+export function nextStreakReminder(
+  s: Streak,
+  now: Date = new Date()
+): { at: Date; title: string; body: string } {
+  const monday = startOfDay(now);
+  monday.setDate(monday.getDate() - dayIndex(now));
+  const trainedThisWeek = s.weeks > 0 && !s.atRisk;
+  if (trainedThisWeek) monday.setDate(monday.getDate() + 7);
+
+  const at = new Date(monday);
+  at.setDate(monday.getDate() + 5);
+  at.setHours(9, 0, 0, 0);
+  if (at.getTime() <= now.getTime()) {
+    at.setDate(monday.getDate() + 6);
+    at.setHours(17, 0, 0, 0);
+  }
+  if (at.getTime() <= now.getTime()) {
+    // Sunday evening already: nothing left this week, aim for next.
+    at.setDate(monday.getDate() + 12);
+    at.setHours(9, 0, 0, 0);
+  }
+
+  const weeks = s.weeks;
+  return weeks > 0
+    ? {
+        at,
+        title: `Keep your ${weeks}-week streak`,
+        body: 'No session logged this week yet. One is all it takes — Sunday is the cut-off.',
+      }
+    : { at, title: 'Start a streak', body: 'Log one session this week to start your streak.' };
+}
+
 // "3-week streak" / "3-week streak · log a session this week to keep it"
 export function streakText(s: Streak): string {
   if (s.weeks === 0) return 'Log a session to start a streak';

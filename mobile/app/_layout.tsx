@@ -89,6 +89,7 @@ export default function RootLayout() {
             <Stack.Screen name="crew/[id]" />
             <Stack.Screen name="edit-highlights" />
             <Stack.Screen name="log-training" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="legal/[doc]" options={{ presentation: 'modal' }} />
           </Stack>
           <PipToastHost />
         </Theme>

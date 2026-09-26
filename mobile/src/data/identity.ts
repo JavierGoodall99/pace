@@ -2,7 +2,37 @@
 // next to the training data. Kept as plain options + formatters so
 // onboarding, edit profile, filters and profile cards share one source.
 
+import type { Intent } from './session';
+
 export type Gender = 'woman' | 'man';
+
+// What you're on Pace for. Decides whether you see people as dates,
+// training partners or both (see pacers.ts).
+export const INTENT_OPTIONS: { id: Intent; label: string; subtitle: string }[] = [
+  { id: 'love', label: 'Love', subtitle: 'Someone to date who shares my drive' },
+  { id: 'partner', label: 'A training partner', subtitle: 'Someone to train with — maybe more' },
+  { id: 'both', label: 'Open to both', subtitle: 'Let’s see where the miles take us' },
+];
+
+export function intentLabel(i: Intent | null | undefined): string {
+  return INTENT_OPTIONS.find((x) => x.id === i)?.label ?? '';
+}
+
+// Card prompts: pick a question, write a line.
+export const MAX_PROMPTS = 3;
+export const PROMPT_QUESTIONS = [
+  'Coffee after…',
+  'My ideal first date',
+  'The workout I’d never skip',
+  'My post-long-run meal is…',
+  'I’m happiest when…',
+  'Green flag',
+  'Unpopular opinion',
+  'Chasing',
+  'Best coffee stop',
+  'Slow down for…',
+  'Current project',
+];
 
 export const GENDERS: { id: Gender; label: string; plural: string }[] = [
   { id: 'woman', label: 'Woman', plural: 'Women' },
@@ -69,6 +99,20 @@ export const PHOTO_LABELS: { id: PhotoLabel; label: string }[] = [
   { id: 'race', label: 'Race day' },
   { id: 'offclock', label: 'Off the clock' },
 ];
+
+export const MIN_PHOTOS = 2;
+
+// The photo rule for every card: at least two, each labelled, one Off
+// the clock. Returns what's missing, or null when the set is good.
+export function photoProblem(
+  photos: string[],
+  labels: (PhotoLabel | null | undefined)[]
+): string | null {
+  if (photos.length < MIN_PHOTOS) return `Add at least ${MIN_PHOTOS} photos.`;
+  if (!photos.every((_, i) => !!labels[i])) return 'Give every photo a label.';
+  if (!labels.includes('offclock')) return 'Mark one photo Off the clock.';
+  return null;
+}
 
 export function photoLabel(id: PhotoLabel | null | undefined): string {
   return PHOTO_LABELS.find((x) => x.id === id)?.label ?? 'Photo';

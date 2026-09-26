@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { IconName } from '../../src/components/Icon';
 import { FloatingTabBar } from '../../src/components/TabBar';
 import { clearCelebrate, usePlans } from '../../src/data/plans';
+import { useStreakReminder } from '../../src/lib/reminders';
 
 const TABS: Record<string, { label: string; icon: IconName }> = {
   today: { label: 'Today', icon: 'calendar' },
@@ -15,6 +16,7 @@ const TABS: Record<string, { label: string; icon: IconName }> = {
 export default function TabsLayout() {
   const router = useRouter();
   const { celebrate, plans } = usePlans();
+  useStreakReminder();
 
   // When someone accepts your invite to train, that's the match — show it.
   useEffect(() => {

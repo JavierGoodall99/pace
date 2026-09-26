@@ -2,6 +2,7 @@ import { resetChat } from './chat';
 import { resetExplore } from './explore';
 import { resetFilters } from './filters';
 import { resetMoments } from './moments';
+import { resetNotifications } from './notifications';
 import { getPlansState, removePlansWith, resetPlans } from './plans';
 import type { Gender } from './identity';
 import { deleteAccount } from './session';
@@ -26,6 +27,7 @@ export async function deleteAccountAndData() {
   resetFilters();
   resetSettings();
   resetWaitlist();
+  resetNotifications();
 }
 
 // When onboarding finishes: give the new account a demo cast that fits

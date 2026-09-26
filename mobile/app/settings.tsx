@@ -7,6 +7,7 @@ import { Badge, Card, ScreenHeader, SegmentedControl } from '../src/components/u
 import { ME_AVATAR } from '../src/data/photos';
 import { daysPerWeek } from '../src/data/rhythm';
 import { deleteAccountAndData } from '../src/data/account';
+import type { LegalDoc } from '../src/data/legal';
 import { MeProfile, signOut, useMe } from '../src/data/session';
 import { confirmAction } from '../src/lib/dialogs';
 import {
@@ -46,6 +47,12 @@ const APPEARANCE_LABEL: Record<AppearancePreference, string> = {
   light: 'Light',
   dark: 'Dark',
 };
+
+const LEGAL_ROWS: { doc: LegalDoc; label: string; icon: IconName }[] = [
+  { doc: 'terms', label: 'Terms of use', icon: 'flag' },
+  { doc: 'privacy', label: 'Privacy policy', icon: 'lock' },
+  { doc: 'community', label: 'Community code', icon: 'users' },
+];
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -138,6 +145,21 @@ export default function SettingsScreen() {
               value={row.route === '/settings-preferences' ? trainingSummary(me) : row.value}
               last={i === PREFERENCE_ROWS.length - 1}
               onPress={() => router.push(row.route)}
+            />
+          ))}
+        </Card>
+      </YStack>
+
+      <GroupLabel>Legal</GroupLabel>
+      <YStack mx={20}>
+        <Card>
+          {LEGAL_ROWS.map((row, i) => (
+            <Row
+              key={row.doc}
+              icon={row.icon}
+              label={row.label}
+              last={i === LEGAL_ROWS.length - 1}
+              onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: row.doc } })}
             />
           ))}
         </Card>

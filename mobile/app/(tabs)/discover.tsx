@@ -21,7 +21,7 @@ import { useFilters } from '../../src/data/filters';
 import { ACTIVE_DAYS, activityLabel, DEFAULT_RADIUS_KM, LIKES_PER_DAY } from '../../src/data/trust';
 import { freshnessLabel, lifestyleChips } from '../../src/data/identity';
 import { Athlete } from '../../src/data/mockData';
-import type { Pacer } from '../../src/data/pacers';
+import { matchKind, type Pacer } from '../../src/data/pacers';
 import { galleryFor } from '../../src/data/photos';
 import { formatKm } from '../../src/data/places';
 import { useMe } from '../../src/data/session';
@@ -291,6 +291,7 @@ function PacerCard({
   onLike?: (page: StoryPage, index: number) => void;
 }) {
   const colors = useColors();
+  const me = useMe();
   const { athlete: a, compat } = pacer;
   const d = depthFor(a);
   const pages = useMemo(() => pagesFor(pacer), [pacer]);
@@ -331,6 +332,7 @@ function PacerCard({
               </XStack>
               <Text fontFamily="$medium" fontSize={13} color="rgba(255,255,255,0.88)">
                 {a.city} · {formatKm(compat.distanceKm)}
+                {matchKind(me, a) === 'partner' ? ' · Training partner' : ''}
               </Text>
               <XStack items="center" gap={5}>
                 <Icon name="zap" size={13} color="#FFFFFF" filled />

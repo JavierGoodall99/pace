@@ -388,6 +388,16 @@ export default function ProfileScreen() {
             <PromptCard prompt={p} />
           </YStack>
         ))}
+        {me.prompts.length === 0 ? (
+          <Button
+            variant="ghost"
+            icon="plus"
+            onPress={() => router.push('/edit-profile')}
+            style={{ width: '100%', marginTop: 12 }}
+          >
+            Add a prompt to your card
+          </Button>
+        ) : null}
 
         <XStack items="center" justify="space-between" mt={28} mb={12}>
           <Text fontFamily="$semibold" fontSize={17} color="$text">

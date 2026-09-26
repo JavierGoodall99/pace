@@ -15,6 +15,7 @@ import { useMe } from '../src/data/session';
 import { successHaptic } from '../src/lib/haptics';
 import { useColors } from '../src/theme/appearance';
 import { formatLabel } from '../src/theme/tokens';
+import { keepPhoto } from '../src/lib/photoStore';
 
 // Post a session moment: one photo from today's training, visible to
 // your matches for 24 hours.
@@ -34,7 +35,7 @@ export default function NewMomentScreen() {
       quality: 0.8,
     });
     if (result.canceled || !result.assets[0]) return;
-    setSource({ uri: result.assets[0].uri });
+    setSource({ uri: keepPhoto(result.assets[0].uri) });
   }
 
   function post() {

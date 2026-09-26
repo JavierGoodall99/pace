@@ -30,6 +30,7 @@ import { PhotoGrid } from '../src/components/PhotoGrid';
 import { RhythmStrip } from '../src/components/Rhythm';
 import { Badge, Button, Callout, DisplayTitle, IconButton, Input } from '../src/components/ui';
 import { successHaptic } from '../src/lib/haptics';
+import { forgetPhoto, keepPhotos } from '../src/lib/photoStore';
 import { ATHLETES, DISCIPLINES, Discipline, SPORT_ILLO } from '../src/data/mockData';
 import { ATHLETE_PHOTOS, HERO_RUNNERS } from '../src/data/photos';
 import {
@@ -61,6 +62,7 @@ import {
   providerList,
 } from '../src/data/sync';
 import { seedDemoFor } from '../src/data/account';
+import type { LegalDoc } from '../src/data/legal';
 import {
   completeOnboarding,
   createAccount,
@@ -70,7 +72,7 @@ import {
   useMe,
   useSession,
 } from '../src/data/session';
-import { DIETS, DRINKS, GENDERS, REST_DAYS } from '../src/data/identity';
+import { DIETS, DRINKS, GENDERS, photoProblem, REST_DAYS } from '../src/data/identity';
 import { useColors } from '../src/theme/appearance';
 import { brand, formatLabel, shadow } from '../src/theme/tokens';
 
@@ -233,11 +235,7 @@ function answered(step: StepId, me: MeProfile): boolean {
     case 'lifestyle':
       return !!me.lifestyle.drinks && !!me.lifestyle.diet && !!me.lifestyle.restDay;
     case 'photos':
-      return (
-        me.photos.length >= 2 &&
-        me.photos.every((_, i) => !!me.photoLabels[i]) &&
-        me.photoLabels.includes('offclock')
-      );
+      return photoProblem(me.photos, me.photoLabels) === null;
     case 'sync':
       return hasSync(me);
     case 'verify':
@@ -470,7 +468,8 @@ export default function OnboardingScreen() {
       quality: 0.8,
     });
     if (result.canceled) return;
-    const merged = [...me.photos, ...result.assets.map((a) => a.uri)].slice(0, MAX_PHOTOS);
+    const picked = keepPhotos(result.assets.map((a) => a.uri));
+    const merged = [...me.photos, ...picked].slice(0, MAX_PHOTOS);
     await updateMe({ photos: merged, photosUpdatedAt: new Date().toISOString() });
   }
 
@@ -744,12 +743,13 @@ export default function OnboardingScreen() {
                     labels[i] = l;
                     updateMe({ photoLabels: labels });
                   }}
-                  onRemove={(i) =>
+                  onRemove={(i) => {
+                    forgetPhoto(me.photos[i]);
                     updateMe({
                       photos: me.photos.filter((_, k) => k !== i),
                       photoLabels: me.photoLabels.filter((_, k) => k !== i),
-                    })
-                  }
+                    });
+                  }}
                 />
               )}
 
@@ -896,7 +896,9 @@ export default function OnboardingScreen() {
                   </Text>
                 </XStack>
                 <Text fontSize={12} lineHeight={17} color="$muted" text="center">
-                  By continuing, you agree to Pace&apos;s Terms &amp; Community Code.
+                  By continuing, you agree to Pace&apos;s <LegalLink doc="terms">Terms</LegalLink>,{' '}
+                  <LegalLink doc="community">Community Code</LegalLink> and{' '}
+                  <LegalLink doc="privacy">Privacy Policy</LegalLink>.
                 </Text>
               </YStack>
             ) : null}
@@ -904,6 +906,22 @@ export default function OnboardingScreen() {
         )}
       </YStack>
     </KeyboardAvoidingView>
+  );
+}
+
+function LegalLink({ doc, children }: { doc: LegalDoc; children: string }) {
+  const router = useRouter();
+  return (
+    <Text
+      fontSize={12}
+      fontFamily="$semibold"
+      color="$text"
+      textDecorationLine="underline"
+      accessibilityRole="link"
+      onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc } })}
+    >
+      {children}
+    </Text>
   );
 }
 

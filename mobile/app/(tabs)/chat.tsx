@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { NotificationBell } from '../../src/components/NotificationBell';
 import { Icon, IconName } from '../../src/components/Icon';
 import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { useTabBarSpace } from '../../src/components/TabBar';
 import { useNow } from '../../src/lib/useNow';
-import { DisplayTitle, IconButton } from '../../src/components/ui';
+import { DisplayTitle } from '../../src/components/ui';
 import { depthFor } from '../../src/data/athleteDepth';
 import { activeMatches, messagesWith, previewOf, useChat } from '../../src/data/chat';
 import { agoShort } from '../../src/data/dates';
@@ -18,7 +19,6 @@ import { useColors } from '../../src/theme/appearance';
 import { formatLabel } from '../../src/theme/tokens';
 
 export default function ChatScreen() {
-  const colors = useColors();
   const insets = useSafeAreaInsets();
   const tabBarSpace = useTabBarSpace();
   const router = useRouter();
@@ -63,14 +63,7 @@ export default function ChatScreen() {
         <YStack flex={1}>
           <DisplayTitle size={42}>Your *chats*</DisplayTitle>
         </YStack>
-        <IconButton
-          size={40}
-          onPress={() => router.push('/notifications')}
-          accessibilityLabel="Notifications"
-          aria-label="Notifications"
-        >
-          <Icon name="bell" size={18} color={colors.text} />
-        </IconButton>
+        <NotificationBell />
       </XStack>
 
       <XStack gap={10} px={20} pt={4} pb={12}>

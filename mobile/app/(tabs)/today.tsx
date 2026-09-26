@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Illo } from '../../src/components/Illustrations';
+import { NotificationBell } from '../../src/components/NotificationBell';
 import { Icon } from '../../src/components/Icon';
 import { ConditionsCard } from '../../src/components/Explore';
 import { MomentsRow } from '../../src/components/Moments';
@@ -10,7 +11,7 @@ import { PipTip, showPip } from '../../src/components/PipKit';
 import { GoalCard } from '../../src/components/Proof';
 import { CheckInCard, SessionCard } from '../../src/components/Sessions';
 import { useTabBarSpace } from '../../src/components/TabBar';
-import { Button, DisplayTitle, IconButton } from '../../src/components/ui';
+import { Button, DisplayTitle } from '../../src/components/ui';
 import { dayIndex, startOfDay } from '../../src/data/dates';
 import { athleteById } from '../../src/data/mockData';
 import {
@@ -94,14 +95,7 @@ export default function TodayScreen() {
           </Text>
           <DisplayTitle size={42}>{`Ready to move, *${first}*?`}</DisplayTitle>
         </YStack>
-        <IconButton
-          size={40}
-          onPress={() => router.push('/notifications')}
-          accessibilityLabel="Notifications"
-          aria-label="Notifications"
-        >
-          <Icon name="bell" size={18} color={colors.text} />
-        </IconButton>
+        <NotificationBell />
       </XStack>
 
       <YStack mt={18}>

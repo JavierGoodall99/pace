@@ -35,6 +35,7 @@ import { useSocial } from '../../src/data/social';
 import { tapHaptic } from '../../src/lib/haptics';
 import { useColors } from '../../src/theme/appearance';
 import { formatLabel } from '../../src/theme/tokens';
+import { keepPhoto } from '../../src/lib/photoStore';
 
 // A conversation. Text, voice notes and photo replies; a like on a
 // photo or prompt shows as a quote at the top of the thread. The
@@ -111,7 +112,7 @@ export default function ThreadScreen() {
       quality: 0.7,
     });
     if (result.canceled || !result.assets[0]) return;
-    sendMessage(athlete.id, { from: 'me', text: '', photoUri: result.assets[0].uri });
+    sendMessage(athlete.id, { from: 'me', text: '', photoUri: keepPhoto(result.assets[0].uri) });
   }
 
   const respondTo = (index: number, status: 'CONFIRMED' | 'DECLINED') => {

@@ -1,11 +1,18 @@
 import { useRouter, type Href } from 'expo-router';
-import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon, IconName } from '../src/components/Icon';
 import { PhotoSlot } from '../src/components/PhotoSlot';
 import { Card, ScreenHeader, SectionTitle, TextAction } from '../src/components/ui';
-import { athleteById, AppNotification, NOTIFICATIONS } from '../src/data/mockData';
+import { athleteById, AppNotification } from '../src/data/mockData';
+import {
+  isUnread as unreadIn,
+  markAllRead,
+  markRead,
+  useReadNotifications,
+  visibleNotifications,
+} from '../src/data/notifications';
+import { useSocial } from '../src/data/social';
 import { ATHLETE_PHOTOS } from '../src/data/photos';
 import { useColors } from '../src/theme/appearance';
 import { formatLabel } from '../src/theme/tokens';
@@ -35,11 +42,11 @@ export default function NotificationsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [unread, setUnread] = useState<Record<number, boolean>>(
-    Object.fromEntries(NOTIFICATIONS.filter((n) => n.unread).map((n) => [n.id, true]))
-  );
+  const readIds = useReadNotifications();
+  const { blocked } = useSocial();
+  const notifications = visibleNotifications(blocked);
 
-  const unreadCount = Object.keys(unread).length;
+  const unreadCount = notifications.filter((n) => unreadIn(n, readIds)).length;
 
   return (
     <ScrollView flex={1} bg="$canvas" contentContainerStyle={{ pb: insets.bottom + 32 }}>
@@ -52,14 +59,12 @@ export default function NotificationsScreen() {
         }
         onBack={() => router.back()}
         action={
-          unreadCount > 0 ? (
-            <TextAction onPress={() => setUnread({})}>Mark all read</TextAction>
-          ) : null
+          unreadCount > 0 ? <TextAction onPress={markAllRead}>Mark all read</TextAction> : null
         }
       />
 
       {GROUPS.map((group) => {
-        const items = NOTIFICATIONS.filter((n) => n.group === group);
+        const items = notifications.filter((n) => n.group === group);
         if (items.length === 0) return null;
         return (
           <YStack key={group} px={20} mt={24}>
@@ -68,14 +73,12 @@ export default function NotificationsScreen() {
               {items.map((n, i) => {
                 const a = athleteById(n.athleteId);
                 if (!a) return null;
-                const isUnread = !!unread[n.id];
+                const isUnread = unreadIn(n, readIds);
                 return (
                   <XStack
                     key={n.id}
                     onPress={() => {
-                      if (isUnread) {
-                        setUnread((prev) => ({ ...prev, [n.id]: false }));
-                      }
+                      markRead(n.id);
                       router.push(routeFor(n));
                     }}
                     pressStyle={{ bg: '$surface' }}

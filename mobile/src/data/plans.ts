@@ -3,16 +3,18 @@ import { useSyncExternalStore } from 'react';
 import type { Level } from './athleteDepth';
 import { dateFromWhenLabel, daysFrom, dropKey, nextDateFor } from './dates';
 import type { Discipline, PlanCard, PlanStatus as CardStatus } from './mockData';
-import { likeBack } from './social';
+import { isMatched } from './social';
 import type { IlloName } from '../components/Illustrations';
 
-// Sessions are the core of Pace: a match is an accepted invite to train,
-// and the relationship moves forward through sessions, not chat.
+// Sessions are the core of Pace: once two people match (they liked each
+// other), the relationship moves forward through sessions, not chat.
+// Invites to train are only possible between matches.
 //
 //   Plan         — a 1:1 session with someone (sent/received invite →
 //                  confirmed → done), plus private post-session check-ins
 //   OpenSession  — a session anyone can ask to join (1:1 or group)
-//   drop         — this week's pacers and what you did with each
+//   drop         — legacy daily-drop actions (the swipe deck replaced it;
+//                  passes now live in social.ts)
 //
 // Local mock until a backend exists; seeds are relative to "now" so the
 // demo always has something upcoming and something to check in on.
@@ -90,13 +92,14 @@ function seed(now: Date = new Date()): PlansState {
         shareWithFriend: true,
       },
       {
-        id: 'p-kagiso-invite',
-        athleteId: 8,
-        activity: 'RUNNING',
-        date: iso(nextDateFor(1, '17:30', now)),
-        place: 'Green Point Athletics Stadium',
+        // Invites only come from matches; Zanele (7) is one.
+        id: 'p-zanele-invite',
+        athleteId: 7,
+        activity: 'TRIATHLON',
+        date: iso(nextDateFor(1, '06:30', now)),
+        place: 'Sea Point Pavilion pool',
         status: 'received',
-        note: 'Easy 400s, then tacos?',
+        note: 'Easy swim set, then coffee?',
       },
       {
         // Lerato's "trail with me?" card in chat points at this plan.
@@ -319,10 +322,13 @@ export function effectiveStatus(p: Plan, now: Date = new Date()): PlanStatus {
   return p.status;
 }
 
+// Only between matches: returns null (and does nothing) if you haven't
+// both liked each other.
 export function sendInvite(
   input: Omit<Plan, 'id' | 'status'>,
   opts: { replyDelayMs?: number } = {}
-): Plan {
+): Plan | null {
+  if (!isMatched(input.athleteId)) return null;
   const plan: Plan = { ...input, id: newId('p'), status: 'sent' };
   setState({ plans: [plan, ...state.plans] });
   if (RESPONDERS.includes(input.athleteId)) {
@@ -330,7 +336,6 @@ export function sendInvite(
       const current = state.plans.find((p) => p.id === plan.id);
       if (current?.status !== 'sent') return;
       updatePlan(plan.id, { status: 'confirmed' });
-      likeBack(plan.athleteId);
       setState({ celebrate: plan.id });
     }, opts.replyDelayMs ?? 2200);
   }
@@ -341,7 +346,6 @@ export function respondToInvite(id: string, accept: boolean) {
   const plan = state.plans.find((p) => p.id === id);
   if (!plan) return;
   updatePlan(id, { status: accept ? 'confirmed' : 'declined' });
-  if (accept) likeBack(plan.athleteId);
 }
 
 // Accept or decline an invite card from a chat thread. The card's plan
@@ -419,16 +423,6 @@ export function hostOpen(input: Omit<OpenSession, 'id' | 'hostId' | 'joined'>): 
   const s: OpenSession = { ...input, id: newId('o'), hostId: 'me', joined: [] };
   setState({ open: [s, ...state.open] });
   return s;
-}
-
-export function dropAction(athleteId: number, action: DropAction, now: Date = new Date()) {
-  const week = dropKey(now);
-  const actions = state.drop.week === week ? state.drop.actions : {};
-  setState({ drop: { week, actions: { ...actions, [athleteId]: action } } });
-}
-
-export function dropActions(s: PlansState, now: Date = new Date()): Record<number, DropAction> {
-  return s.drop.week === dropKey(now) ? s.drop.actions : {};
 }
 
 // ── Relationship progress ────────────────────────────────────────────

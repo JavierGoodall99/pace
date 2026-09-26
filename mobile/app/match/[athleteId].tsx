@@ -18,8 +18,8 @@ import { useColors } from '../../src/theme/appearance';
 import { brand, shadow } from '../../src/theme/tokens';
 
 // Ported from the "MATCH CELEBRATION OVERLAY" in `../../Pace App.dc.html`
-// — shown when a swipe-right lands on a mutual-interest athlete (see
-// MATCH_IDS in discover.tsx).
+// — shown when a like becomes mutual (a swipe right or a like with a
+// comment). Matching is what unlocks invites to train.
 const CONFETTI_COLORS = [brand.accent, brand.peach, brand.sky, brand.sun];
 const CONFETTI_PIECES = buildConfettiPieces(
   Array.from({ length: 12 }, (_, i) => CONFETTI_COLORS[i % CONFETTI_COLORS.length]),
@@ -131,12 +131,27 @@ export default function MatchScreen() {
           >
             {`Message ${athlete.name}`}
           </Button>
+          {!plan ? (
+            <Button
+              variant="secondary"
+              icon="send"
+              style={{ width: '100%' }}
+              onPress={() =>
+                router.replace({
+                  pathname: '/invite/[athleteId]',
+                  params: { athleteId: String(athlete.id) },
+                })
+              }
+            >
+              Invite to train
+            </Button>
+          ) : null}
           <Button
-            variant="secondary"
+            variant={plan ? 'secondary' : 'ghost'}
             style={{ width: '100%' }}
             onPress={() => (plan ? router.replace('/(tabs)/today') : router.back())}
           >
-            {plan ? 'See my week' : 'Keep going'}
+            {plan ? 'See my week' : 'Keep swiping'}
           </Button>
         </YStack>
       </YStack>

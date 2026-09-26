@@ -7,12 +7,13 @@ import { ATHLETES, Athlete, Discipline } from './mockData';
 import { spotsFor } from './places';
 import type { MeProfile } from './session';
 
-// The daily drop: instead of an endless swipe deck, Pace hands you a
-// handful of people who fit your training, each with a session already
-// suggested. A fresh drop lands every morning at 07:00, and Standouts
-// shows who's getting the most likes near you.
-
-export const DROP_SIZE = 5;
+// The pacer deck: everyone near you who fits (verified, recently active,
+// mutual gender and age preferences), best training fit first, shown one
+// card at a time. Swipe right to like, left to pass. A like on someone who
+// already liked you is a match, and only matches can invite to train.
+// The daily like budget (trust.LIKES_PER_DAY) keeps likes meaningful, so
+// the deck itself doesn't need a daily cap. Standouts shows who's getting
+// the most likes near you.
 
 export interface Suggestion {
   activity: Discipline;
@@ -83,14 +84,16 @@ function candidates(me: MeProfile, excluded: number[]): Athlete[] {
   );
 }
 
-export function dailyPacers(me: MeProfile, excluded: number[], now: Date = new Date()): Pacer[] {
+// The whole deck, ranked by training fit. `excluded` is everyone who
+// shouldn't appear: blocked, matched, already liked, recently passed, or
+// outside your filters.
+export function pacerDeck(me: MeProfile, excluded: number[], now: Date = new Date()): Pacer[] {
   return candidates(me, excluded)
     .map((athlete) => {
       const compat = compatibility(me, athlete);
       return { athlete, compat, suggestion: suggestSession(me, athlete, compat, now) };
     })
-    .sort((x, y) => y.compat.score - x.compat.score)
-    .slice(0, DROP_SIZE);
+    .sort((x, y) => y.compat.score - x.compat.score);
 }
 
 // Most-liked people near you this week who'd also want to see you.

@@ -1,5 +1,6 @@
 import { dayIndex } from './dates';
-import { DROP_SIZE, dailyPacers, standouts } from './pacers';
+import { ATHLETES } from './mockData';
+import { isShowable, pacerDeck, standouts, wantEachOther } from './pacers';
 import { freshMe } from './session';
 
 const me = {
@@ -10,9 +11,12 @@ const me = {
   trainingDays: [true, false, true, false, false, true, true],
 };
 
-test('the daily drop is a short, ranked list without you or blocked people', () => {
-  const drop = dailyPacers(me, [8]);
-  expect(drop).toHaveLength(DROP_SIZE);
+test('the deck holds everyone eligible, ranked, without you or excluded people', () => {
+  const drop = pacerDeck(me, [8]);
+  const eligible = ATHLETES.filter(
+    (a) => a.id !== 8 && a.name !== 'Naledi' && isShowable(a) && wantEachOther(me, a)
+  );
+  expect(drop).toHaveLength(eligible.length);
   expect(drop.map((p) => p.athlete.name)).not.toContain('Naledi');
   expect(drop.map((p) => p.athlete.id)).not.toContain(8);
   const scores = drop.map((p) => p.compat.score);
@@ -21,7 +25,7 @@ test('the daily drop is a short, ranked list without you or blocked people', () 
 
 test('each pacer comes with a session on a day you both train', () => {
   const now = new Date(2026, 8, 21, 20, 0); // Monday evening
-  dailyPacers(me, [], now).forEach(({ compat, suggestion }) => {
+  pacerDeck(me, [], now).forEach(({ compat, suggestion }) => {
     expect(suggestion.date.getTime()).toBeGreaterThan(now.getTime());
     if (compat.sharedDayIdx.length)
       expect(compat.sharedDayIdx).toContain(dayIndex(suggestion.date));
@@ -29,9 +33,9 @@ test('each pacer comes with a session on a day you both train', () => {
   });
 });
 
-test('the drop only shows people who want to see each other', () => {
+test('the deck only shows people who want to see each other', () => {
   const woman = { ...me, gender: 'woman' as const };
-  const drop = dailyPacers(woman, []);
+  const drop = pacerDeck(woman, []);
   expect(drop.length).toBeGreaterThan(0);
   drop.forEach(({ athlete }) =>
     expect(['Sipho', 'Jacques', 'Dean', 'Kagiso']).toContain(athlete.name)

@@ -10,12 +10,12 @@ import { LikeTarget, likesLeftToday, sendLike, useChat } from '../data/chat';
 import { useMe } from '../data/session';
 import { LIKES_PER_DAY } from '../data/trust';
 import type { Athlete } from '../data/mockData';
-import { dropAction } from '../data/plans';
 import { successHaptic } from '../lib/haptics';
 import { useColors } from '../theme/appearance';
 
-// Like a specific photo or prompt, with an optional comment. Lighter
-// than an invite to train — if it's mutual, your comment opens the chat.
+// Like a specific photo or prompt, with an optional comment. If it's
+// mutual you match: your comment opens the chat and you can invite each
+// other to train. Invites aren't offered here; they need a match first.
 
 const QUICK: Record<LikeTarget['kind'], string[]> = {
   photo: ['That view though', 'Okay, strong', 'Teach me your ways'],
@@ -26,13 +26,14 @@ export function LikeSheet({
   athlete,
   target,
   source,
-  fromDrop,
+  onMatch,
   onClose,
 }: {
   athlete: Athlete;
   target: LikeTarget | null;
   source?: ImageSourcePropType;
-  fromDrop?: boolean;
+  // Where to go on a match; defaults to the match screen.
+  onMatch?: (athleteId: number) => void;
   onClose: () => void;
 }) {
   const c = useColors();
@@ -44,29 +45,23 @@ export function LikeSheet({
   function send() {
     if (!target || left <= 0 || !me.verified) return;
     successHaptic();
-    sendLike(athlete.id, target, comment, {
+    const result = sendLike(athlete.id, target, comment, {
       onMatch: (id) => {
         showPip(`It’s mutual! ${athlete.name} liked you back.`, 'excited');
-        router.push({ pathname: '/thread/[athleteId]', params: { athleteId: String(id) } });
+        if (onMatch) onMatch(id);
+        else router.push({ pathname: '/match/[athleteId]', params: { athleteId: String(id) } });
       },
     });
-    if (fromDrop) dropAction(athlete.id, 'liked');
-    showPip(
-      comment.trim()
-        ? `Comment sent! ${athlete.name} sees exactly what caught your eye.`
-        : `Like sent! I’ll tell you if ${athlete.name} likes you back.`,
-      'wink'
-    );
+    if (result === 'sent') {
+      showPip(
+        comment.trim()
+          ? `Comment sent! ${athlete.name} sees exactly what caught your eye.`
+          : `Like sent! I’ll tell you if ${athlete.name} likes you back.`,
+        'wink'
+      );
+    }
     setComment('');
     onClose();
-  }
-
-  function invite() {
-    onClose();
-    router.push({
-      pathname: '/invite/[athleteId]',
-      params: { athleteId: String(athlete.id), fromDrop: fromDrop ? '1' : undefined },
-    });
   }
 
   return (
@@ -181,12 +176,9 @@ export function LikeSheet({
                     {!me.verified
                       ? 'Only selfie-verified members can like — it keeps fakes out.'
                       : left <= 0
-                        ? 'Likes reset at midnight. Invites to train are unlimited.'
+                        ? 'Likes reset at midnight. Once you match, invites to train are unlimited.'
                         : `${left} of ${LIKES_PER_DAY} likes left today — make them count.`}
                   </Text>
-                  <Button variant="ghost" icon="send" onPress={invite} style={{ width: '100%' }}>
-                    Invite to train instead
-                  </Button>
                 </YStack>
               </>
             ) : null}

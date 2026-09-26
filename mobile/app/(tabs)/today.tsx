@@ -17,13 +17,11 @@ import {
   checkIn,
   checkInOutcome,
   effectiveStatus,
-  dropActions,
   respondToInvite,
   usePlans,
 } from '../../src/data/plans';
-import { dailyPacers } from '../../src/data/pacers';
+import { usePacerDeck } from '../../src/data/deck';
 import { todayLine } from '../../src/data/pip';
-import { useSocial } from '../../src/data/social';
 import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { rhythmForMe, WEEK_DAY_NAMES } from '../../src/data/rhythm';
 import { useMe } from '../../src/data/session';
@@ -80,11 +78,7 @@ export default function TodayScreen() {
   });
 
   const goal = raceById(me.goalRaceId);
-  const { blocked, matches } = useSocial();
-  const actions = dropActions(state, now);
-  const pacersLeft = dailyPacers(me, [...blocked, ...matches], now).filter(
-    (p) => !actions[p.athlete.id]
-  ).length;
+  const pacersLeft = usePacerDeck(now).deck.length;
 
   return (
     <ScrollView

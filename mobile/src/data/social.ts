@@ -25,7 +25,14 @@ interface SocialState {
   reports: Report[];
   // When each match happened — silent matches expire (MATCH_TTL_DAYS).
   matchedAt: Record<number, string>;
+  // People you swiped left on, and when. They stay out of the deck for
+  // PASS_COOLDOWN_DAYS, then may come back.
+  passed: Record<number, string>;
+  // Order of passes, newest last, so the latest can be undone.
+  passOrder: number[];
 }
+
+export const PASS_COOLDOWN_DAYS = 30;
 
 const STORAGE_KEY = 'pace.social.v1';
 
@@ -35,6 +42,8 @@ const DEFAULT_STATE: SocialState = {
   blocked: [],
   reports: [],
   matchedAt: {},
+  passed: {},
+  passOrder: [],
 };
 
 let state: SocialState = DEFAULT_STATE;
@@ -52,6 +61,49 @@ function getSnapshot(): SocialState {
 function subscribe(listener: () => void) {
   listeners.add(listener);
   return () => listeners.delete(listener);
+}
+
+export function getSocialState(): SocialState {
+  return state;
+}
+
+// Invites to train are only for people you've matched with: you both
+// liked each other.
+export function isMatched(athleteId: number, s: SocialState = state): boolean {
+  return s.matches.includes(athleteId);
+}
+
+// Recently passed people, excluded from the swipe deck.
+export function recentlyPassed(s: SocialState, now: Date = new Date()): number[] {
+  const cutoff = now.getTime() - PASS_COOLDOWN_DAYS * 86400000;
+  return Object.entries(s.passed)
+    .filter(([, at]) => new Date(at).getTime() >= cutoff)
+    .map(([id]) => Number(id));
+}
+
+export async function passPacer(athleteId: number, now: Date = new Date()) {
+  setState({
+    passed: { ...state.passed, [athleteId]: now.toISOString() },
+    passOrder: [...state.passOrder.filter((id) => id !== athleteId), athleteId],
+  });
+  await persist();
+}
+
+// Rewind the most recent pass. Returns the athlete brought back, if any.
+export async function undoLastPass(): Promise<number | null> {
+  const id = state.passOrder[state.passOrder.length - 1];
+  if (id === undefined) return null;
+  const passed = { ...state.passed };
+  delete passed[id];
+  setState({ passed, passOrder: state.passOrder.slice(0, -1) });
+  await persist();
+  return id;
+}
+
+// "Show people I passed on" from the empty deck.
+export async function clearPasses() {
+  setState({ passed: {}, passOrder: [] });
+  await persist();
 }
 
 export function useSocial(): SocialState {
@@ -76,6 +128,8 @@ AsyncStorage.getItem(STORAGE_KEY)
         blocked: saved.blocked ?? [],
         reports: saved.reports ?? [],
         matchedAt: saved.matchedAt ?? {},
+        passed: saved.passed ?? {},
+        passOrder: saved.passOrder ?? [],
       });
     }
   })

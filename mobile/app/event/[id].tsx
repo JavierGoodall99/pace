@@ -31,7 +31,7 @@ export default function EventScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const me = useMe();
-  const { blocked } = useSocial();
+  const { blocked, matches } = useSocial();
   const explore = useExplore();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [now] = useState(() => new Date());
@@ -103,8 +103,8 @@ export default function EventScreen() {
             <YStack gap={10}>
               <DisplayTitle size={26}>{`Pacers you might *like*`}</DisplayTitle>
               <Text fontSize={14} color="$muted">
-                Going too. Say you’re going and they’ll see you on the list — or invite one to warm
-                up together.
+                Going too. Say you’re going and they’ll see you on the list. Matched with one?
+                Invite them to warm up together.
               </Text>
               {pacers.map((a) => (
                 <XStack
@@ -135,32 +135,53 @@ export default function EventScreen() {
                       {a.name}, {a.age}
                     </Text>
                   </XStack>
-                  <XStack
-                    accessibilityRole="button"
-                    aria-label={`Invite ${a.name}`}
-                    onPress={() =>
-                      router.push({
-                        pathname: '/invite/[athleteId]',
-                        params: {
-                          athleteId: String(a.id),
-                          date: at?.toISOString(),
-                          place: spot?.name ?? event.where,
-                          activity: event.sport,
-                        },
-                      })
-                    }
-                    height={34}
-                    px={12}
-                    gap={6}
-                    rounded="$full"
-                    items="center"
-                    bg="$accentSoft"
-                  >
-                    <Icon name="send" size={13} color={colors.accentText} />
-                    <Text fontFamily="$semibold" fontSize={13} color="$accentText">
-                      Go together
-                    </Text>
-                  </XStack>
+                  {matches.includes(a.id) ? (
+                    <XStack
+                      accessibilityRole="button"
+                      aria-label={`Invite ${a.name}`}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/invite/[athleteId]',
+                          params: {
+                            athleteId: String(a.id),
+                            date: at?.toISOString(),
+                            place: spot?.name ?? event.where,
+                            activity: event.sport,
+                          },
+                        })
+                      }
+                      height={34}
+                      px={12}
+                      gap={6}
+                      rounded="$full"
+                      items="center"
+                      bg="$accentSoft"
+                    >
+                      <Icon name="send" size={13} color={colors.accentText} />
+                      <Text fontFamily="$semibold" fontSize={13} color="$accentText">
+                        Go together
+                      </Text>
+                    </XStack>
+                  ) : (
+                    <XStack
+                      accessibilityRole="button"
+                      aria-label={`View ${a.name}`}
+                      onPress={() =>
+                        router.push({ pathname: '/athlete/[id]', params: { id: String(a.id) } })
+                      }
+                      height={34}
+                      px={12}
+                      gap={6}
+                      rounded="$full"
+                      items="center"
+                      bg="$surface"
+                    >
+                      <Icon name="heart" size={13} color={colors.text} />
+                      <Text fontFamily="$semibold" fontSize={13} color="$text">
+                        View
+                      </Text>
+                    </XStack>
+                  )}
                 </XStack>
               ))}
             </YStack>

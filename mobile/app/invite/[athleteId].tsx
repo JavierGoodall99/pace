@@ -8,6 +8,7 @@ import { PhotoSlot } from '../../src/components/PhotoSlot';
 import { showPip } from '../../src/components/PipKit';
 import { SyncBadge } from '../../src/components/Rhythm';
 import { PickRow, SafetyPanel } from '../../src/components/Sessions';
+import { Mascot } from '../../src/components/Mascot';
 import { Badge, Button, Input, ScreenHeader, SectionTitle } from '../../src/components/ui';
 import { compatibility } from '../../src/data/compat';
 import { dayIndex, formatTime, formatWhen, shortDay, startOfDay } from '../../src/data/dates';
@@ -15,15 +16,15 @@ import { athleteById, Discipline, SPORT_ILLO } from '../../src/data/mockData';
 import { suggestSession } from '../../src/data/pacers';
 import { ATHLETE_PHOTOS } from '../../src/data/photos';
 import { spotsFor } from '../../src/data/places';
-import { dropAction, sendInvite } from '../../src/data/plans';
+import { sendInvite } from '../../src/data/plans';
 import { useMe } from '../../src/data/session';
+import { useSocial } from '../../src/data/social';
 import { successHaptic, tapHaptic } from '../../src/lib/haptics';
 import { useColors } from '../../src/theme/appearance';
 import { formatLabel } from '../../src/theme/tokens';
 
-// Invite to train — Pace's version of a "like". Pre-filled from both of
-// your weeks, public spots only, with safety options built in. An
-// accepted invite is the match.
+// Invite to train. Only for matches (you both liked each other). Pre-filled
+// from both of your weeks, public spots only, with safety options built in.
 
 const TIMES = ['06:00', '06:30', '07:00', '08:00', '12:30', '17:30', '18:30'];
 
@@ -37,9 +38,9 @@ export default function InviteScreen() {
     date?: string;
     place?: string;
     activity?: string;
-    fromDrop?: string;
   }>();
   const athlete = athleteById(Number(params.athleteId));
+  const { matches } = useSocial();
 
   const now = useMemo(() => new Date(), []);
   const compat = useMemo(() => (athlete ? compatibility(me, athlete) : null), [me, athlete]);
@@ -79,6 +80,32 @@ export default function InviteScreen() {
     );
   }
 
+  if (!matches.includes(athlete.id)) {
+    return (
+      <YStack flex={1} bg="$canvas">
+        <ScreenHeader title={`Invite *${athlete.name}*`} onBack={() => router.back()} />
+        <YStack flex={1} items="center" justify="center" px={32} gap={12}>
+          <Mascot size={110} mood="thinking" />
+          <Text fontFamily="$semibold" fontSize={18} color="$text" text="center">
+            Match first, then train
+          </Text>
+          <Text fontSize={15} lineHeight={22} color="$muted" text="center">
+            {`Invites to train are only for matches. Like ${athlete.name}, and if they like you back you can plan a session together.`}
+          </Text>
+          <Button
+            icon="heart"
+            style={{ width: '100%', marginTop: 8 }}
+            onPress={() =>
+              router.replace({ pathname: '/athlete/[id]', params: { id: String(athlete.id) } })
+            }
+          >
+            {`View ${athlete.name}’s profile`}
+          </Button>
+        </YStack>
+      </YStack>
+    );
+  }
+
   const activities = Array.from(new Set<Discipline>([athlete.discipline, ...me.disciplines]));
   const spots = spotsFor(athlete.city, activity);
   const shared = new Set(compat.sharedDayIdx);
@@ -90,7 +117,7 @@ export default function InviteScreen() {
 
   function send() {
     if (!athlete) return;
-    sendInvite({
+    const plan = sendInvite({
       athleteId: athlete.id,
       activity,
       date: when.toISOString(),
@@ -99,7 +126,7 @@ export default function InviteScreen() {
       shareWithFriend: share,
       checkInTimer: timer,
     });
-    if (params.fromDrop) dropAction(athlete.id, 'invited');
+    if (!plan) return;
     successHaptic();
     showPip(`Invite sent! I’ll let you know when ${athlete.name} replies.`);
     router.back();

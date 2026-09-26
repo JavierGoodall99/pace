@@ -5,7 +5,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, YStack } from 'tamagui';
 import { showPip } from '../src/components/PipKit';
 import { PickRow } from '../src/components/Sessions';
-import { Button, Callout, Input, ScreenHeader, SectionTitle } from '../src/components/ui';
+import {
+  Button,
+  Callout,
+  Card,
+  Input,
+  ScreenHeader,
+  SectionTitle,
+  ToggleRow,
+} from '../src/components/ui';
 import { Level, LEVELS } from '../src/data/athleteDepth';
 import { formatWhen, shortDay, startOfDay } from '../src/data/dates';
 import { DISCIPLINES, Discipline, SPORT_ILLO } from '../src/data/mockData';
@@ -47,6 +55,7 @@ export default function NewSessionScreen() {
   const [level, setLevel] = useState<Level>(me.level ?? 2);
   const [size, setSize] = useState(SIZES[1]);
   const [note, setNote] = useState('');
+  const [singles, setSingles] = useState(false);
 
   const when = new Date(day);
   const [h, m] = time.split(':').map(Number);
@@ -61,8 +70,15 @@ export default function NewSessionScreen() {
       city,
       distance: distance.trim() || 'Distance TBC',
       level,
-      spots: SIZE_SPOTS[size],
+      spots: singles ? Math.max(SIZE_SPOTS[size], 7) : SIZE_SPOTS[size],
       note: note.trim() || undefined,
+      singles: singles || undefined,
+      balance: singles
+        ? {
+            women: Math.ceil((Math.max(SIZE_SPOTS[size], 7) + 1) / 2),
+            men: Math.ceil((Math.max(SIZE_SPOTS[size], 7) + 1) / 2),
+          }
+        : undefined,
     });
     successHaptic();
     showPip('Session posted! I’ll tell you when people join.');
@@ -148,6 +164,15 @@ export default function NewSessionScreen() {
               <SectionTitle>Who can join</SectionTitle>
               <PickRow options={SIZES} value={size} onChange={setSize} />
             </YStack>
+            <Card>
+              <ToggleRow
+                label="Singles run club"
+                hint="Singles only, with equal spots for women and men"
+                last
+                value={singles}
+                onChange={setSingles}
+              />
+            </Card>
             <YStack>
               <SectionTitle>Note</SectionTitle>
               <Input

@@ -4,7 +4,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
 import { Button, Callout, ScreenHeader } from '../../src/components/ui';
+import { showPip } from '../../src/components/PipKit';
 import { updateMe, useMe } from '../../src/data/session';
+import { importActivities, PROVIDER_LABEL } from '../../src/data/sync';
 import { useColors } from '../../src/theme/appearance';
 
 const PROVIDERS: Record<
@@ -40,8 +42,15 @@ export default function ConnectScreen() {
     // page, receives a code/token back, and swaps `updateMe` below for a
     // `connectProvider(providerKey, token)` endpoint call.
     setTimeout(async () => {
-      await updateMe(
-        providerKey === 'garmin' ? { garminConnected: true } : { stravaConnected: true }
+      const sync = importActivities(providerKey, me);
+      await updateMe({
+        ...(providerKey === 'garmin' ? { garminConnected: true } : { stravaConnected: true }),
+        sync,
+        pbs: me.pbs.map((pb) => ({ ...pb, source: providerKey })),
+      });
+      showPip(
+        `Imported ${sync.activities} activities from ${PROVIDER_LABEL[providerKey]}. Your stats are now verified.`,
+        'excited'
       );
       setConnecting(false);
     }, 1400);

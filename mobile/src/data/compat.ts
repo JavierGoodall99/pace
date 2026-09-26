@@ -2,7 +2,7 @@ import { depthFor, Level, levelLabel } from './athleteDepth';
 import type { Athlete } from './mockData';
 import { distanceTo } from './places';
 import { Rhythm, rhythmForAthlete, rhythmForMe, sharedDays, WEEK_DAY_NAMES } from './rhythm';
-import type { MeProfile } from './session';
+import { activeCity, MeProfile } from './session';
 
 // Pace compatibility: can you two actually train together? Four
 // factors, each explained in plain words so the score earns trust:
@@ -128,7 +128,7 @@ export function compatibility(me: MeProfile, a: Athlete): Compat {
   const depth = depthFor(a);
   const mine = rhythmForMe(me.cadence, me.trainingDays);
   const theirs = rhythmForAthlete(a);
-  const distanceKm = distanceTo(me.city, a.city, depth.nearKm);
+  const distanceKm = distanceTo(activeCity(me), a.city, depth.nearKm);
   const factors = [
     daysFactor(mine, theirs),
     timeFactor(me.times, depth.times),

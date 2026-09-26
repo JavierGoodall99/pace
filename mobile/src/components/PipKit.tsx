@@ -92,6 +92,7 @@ export function PipTip({ line, dismissible = true }: { line: PipLine; dismissibl
             <XStack
               accessibilityRole="button"
               accessibilityLabel="Dismiss for today"
+              aria-label="Dismiss for today"
               onPress={() => dismiss(line.key)}
               hitSlop={10}
               pt={2}

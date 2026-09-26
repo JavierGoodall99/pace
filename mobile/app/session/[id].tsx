@@ -55,6 +55,11 @@ export default function SessionDetailScreen() {
             </Badge>
             <Badge>{levelLabel(s.level)}</Badge>
             <Badge>{s.spots > 1 ? `Group · ${s.spots} spots` : '1-on-1'}</Badge>
+            {s.singles ? (
+              <Badge tone="accent" icon="heart">
+                Singles run club
+              </Badge>
+            ) : null}
           </XStack>
 
           <YStack p={16} gap={12} rounded={22} bg="$card" borderWidth={1} borderColor="$border">
@@ -116,25 +121,46 @@ export default function SessionDetailScreen() {
                   </YStack>
                 );
               })}
-              {Array.from({ length: Math.max(0, s.spots - s.joined.length) }).map((_, i) => (
-                <YStack key={`open-${i}`} items="center" gap={4}>
+              {Array.from({ length: Math.min(3, Math.max(0, s.spots - s.joined.length)) }).map(
+                (_, i) => (
+                  <YStack key={`open-${i}`} items="center" gap={4}>
+                    <XStack
+                      width={56}
+                      height={56}
+                      rounded={28}
+                      borderWidth={2}
+                      borderStyle="dashed"
+                      borderColor="$borderStrong"
+                      items="center"
+                      justify="center"
+                    >
+                      <Icon name="plus" size={18} color={colors.muted} />
+                    </XStack>
+                    <Text fontSize={12} color="$muted">
+                      Open
+                    </Text>
+                  </YStack>
+                )
+              )}
+              {s.spots - s.joined.length > 3 ? (
+                <YStack items="center" gap={4}>
                   <XStack
                     width={56}
                     height={56}
                     rounded={28}
-                    borderWidth={2}
-                    borderStyle="dashed"
-                    borderColor="$borderStrong"
                     items="center"
                     justify="center"
+                    bg="$surface"
                   >
-                    <Icon name="plus" size={18} color={colors.muted} />
+                    <Text fontFamily="$semibold" fontSize={15} color="$text">
+                      +{s.spots - s.joined.length - 3}
+                    </Text>
                   </XStack>
                   <Text fontSize={12} color="$muted">
-                    Open
+                    more open
                   </Text>
                 </YStack>
-              ))}
+              ) : null}
             </XStack>
           </YStack>
 
@@ -145,7 +171,11 @@ export default function SessionDetailScreen() {
             onTimer={setTimer}
             summary={`${s.title} · ${formatWhen(s.date)} · ${s.place}, ${s.city}`}
           />
-          {s.spots > 1 ? (
+          {s.singles && s.balance ? (
+            <Callout icon="heart" title="Singles only, balanced">
+              {`Spots are held equally: ${s.balance.women} women and ${s.balance.men} men. Everyone here is single and on Pace — name tags, an easy pace and time to chat afterwards.`}
+            </Callout>
+          ) : s.spots > 1 ? (
             <Callout icon="users" title="A great first meet">
               Group sessions keep things easy — meet someone new with others around, then plan a
               1-on-1 if it clicks.

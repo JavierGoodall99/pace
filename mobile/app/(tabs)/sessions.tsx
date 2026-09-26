@@ -1,4 +1,6 @@
 import { useRouter } from 'expo-router';
+import { Icon } from '../../src/components/Icon';
+import { useColors } from '../../src/theme/appearance';
 import { useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
@@ -16,12 +18,15 @@ import { useSocial } from '../../src/data/social';
 // double as low-pressure first meets — you're never alone with a
 // stranger, and you were going to train anyway.
 
-type Filter = 'All' | 'Near me' | 'Group' | '1-on-1';
-const FILTERS: Filter[] = ['All', 'Near me', 'Group', '1-on-1'];
+type Filter = 'All' | 'Singles' | 'Near me' | 'Group' | '1-on-1';
+const FILTERS: Filter[] = ['All', 'Singles', 'Near me', 'Group', '1-on-1'];
 
 export function sessionMeta(o: OpenSession): string {
   const host = o.hostId === 'me' ? 'You' : (athleteById(o.hostId)?.name ?? 'Someone');
   const left = Math.max(0, o.spots - o.joined.length);
+  if (o.singles && o.balance) {
+    return `Hosted by ${host} · Singles · ${o.balance.women} women + ${o.balance.men} men · ${left} spots left · ${o.distance}`;
+  }
   const size =
     o.spots > 1
       ? `Group · ${left} of ${o.spots} spots left`
@@ -35,6 +40,7 @@ export default function SessionsScreen() {
   const insets = useSafeAreaInsets();
   const tabBarSpace = useTabBarSpace();
   const router = useRouter();
+  const colors = useColors();
   const me = useMe();
   const { blocked } = useSocial();
   const { open } = usePlans();
@@ -46,13 +52,15 @@ export default function SessionsScreen() {
       .filter((o) => new Date(o.date).getTime() > now - 3600000)
       .filter((o) => o.hostId === 'me' || !blocked.includes(o.hostId as number))
       .filter((o) =>
-        filter === 'Near me'
-          ? cityDistanceKm(me.city, o.city) <= 60
-          : filter === 'Group'
-            ? o.spots > 1
-            : filter === '1-on-1'
-              ? o.spots === 1
-              : true
+        filter === 'Singles'
+          ? !!o.singles
+          : filter === 'Near me'
+            ? cityDistanceKm(me.city, o.city) <= 60
+            : filter === 'Group'
+              ? o.spots > 1
+              : filter === '1-on-1'
+                ? o.spots === 1
+                : true
       )
       .sort(
         (a, b) =>
@@ -103,6 +111,14 @@ export default function SessionsScreen() {
               meta={`${sessionMeta(o)}${km > 0 ? ` · ${o.city}` : ''}`}
               onPress={() => router.push({ pathname: '/session/[id]', params: { id: o.id } })}
             >
+              {o.singles ? (
+                <XStack items="center" gap={6}>
+                  <Icon name="heart" size={14} color={colors.accentText} filled />
+                  <Text fontFamily="$semibold" fontSize={13} color="$accentText">
+                    Singles run club · gender-balanced
+                  </Text>
+                </XStack>
+              ) : null}
               {o.joined.includes('me') || o.hostId === 'me' ? (
                 <XStack items="center" gap={6}>
                   <YStack width={8} height={8} rounded={4} bg="$success" />

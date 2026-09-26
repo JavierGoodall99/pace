@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Illo } from '../../src/components/Illustrations';
 import { Icon } from '../../src/components/Icon';
+import { MomentsRow } from '../../src/components/Moments';
 import { PipTip, showPip } from '../../src/components/PipKit';
 import { GoalCard } from '../../src/components/Proof';
 import { CheckInCard, SessionCard } from '../../src/components/Sessions';
@@ -19,7 +20,7 @@ import {
   respondToInvite,
   usePlans,
 } from '../../src/data/plans';
-import { weeklyPacers } from '../../src/data/pacers';
+import { dailyPacers } from '../../src/data/pacers';
 import { todayLine } from '../../src/data/pip';
 import { useSocial } from '../../src/data/social';
 import { athletesTrainingFor, raceById } from '../../src/data/races';
@@ -79,7 +80,7 @@ export default function TodayScreen() {
   const goal = raceById(me.goalRaceId);
   const { blocked } = useSocial();
   const actions = dropActions(state, now);
-  const pacersLeft = weeklyPacers(me, blocked, now).filter((p) => !actions[p.athlete.id]).length;
+  const pacersLeft = dailyPacers(me, blocked, now).filter((p) => !actions[p.athlete.id]).length;
 
   return (
     <ScrollView
@@ -98,10 +99,15 @@ export default function TodayScreen() {
           size={40}
           onPress={() => router.push('/notifications')}
           accessibilityLabel="Notifications"
+          aria-label="Notifications"
         >
           <Icon name="bell" size={18} color={colors.text} />
         </IconButton>
       </XStack>
+
+      <YStack mt={18}>
+        <MomentsRow />
+      </YStack>
 
       {/* This week */}
       <XStack

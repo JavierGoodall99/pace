@@ -19,11 +19,17 @@ import {
   setFilters,
   useFilters,
 } from '../src/data/filters';
+import { GENDERS, HEIGHT_RANGE } from '../src/data/identity';
+import { updateMe, useMe } from '../src/data/session';
 
 export default function DiscoverFiltersScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const f = useFilters();
+  const me = useMe();
+  const showMe = me.showMe ?? [];
+  const hMin = useMemo(() => [f.heightMin], [f.heightMin]);
+  const hMax = useMemo(() => [f.heightMax], [f.heightMax]);
   const ageMinValue = useMemo(() => [f.ageMin], [f.ageMin]);
   const ageMaxValue = useMemo(() => [f.ageMax], [f.ageMax]);
 
@@ -57,6 +63,28 @@ export default function DiscoverFiltersScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <YStack>
+          <SectionTitle hint="Saved to your profile. People only see you if they want to see you too.">
+            Show me
+          </SectionTitle>
+          <XStack flexWrap="wrap" gap={8}>
+            {GENDERS.map((g) => (
+              <Chip
+                key={g.id}
+                label={g.plural}
+                selected={showMe.includes(g.id)}
+                onPress={() =>
+                  updateMe({
+                    showMe: showMe.includes(g.id)
+                      ? showMe.filter((x) => x !== g.id)
+                      : [...showMe, g.id],
+                  })
+                }
+              />
+            ))}
+          </XStack>
+        </YStack>
+
+        <YStack>
           <XStack items="baseline" justify="space-between">
             <SectionTitle>Age range</SectionTitle>
             <Text fontFamily="$semibold" fontSize={15} color="$accentText">
@@ -67,6 +95,33 @@ export default function DiscoverFiltersScreen() {
             <YStack gap={14}>
               <AgeSlider label="Youngest" value={ageMinValue} onChange={setAgeMin} />
               <AgeSlider label="Oldest" value={ageMaxValue} onChange={setAgeMax} />
+            </YStack>
+          </Card>
+        </YStack>
+
+        <YStack>
+          <XStack items="baseline" justify="space-between">
+            <SectionTitle>Height</SectionTitle>
+            <Text fontFamily="$semibold" fontSize={15} color="$accentText">
+              {f.heightMin} – {f.heightMax} cm
+            </Text>
+          </XStack>
+          <Card py={14}>
+            <YStack gap={14}>
+              <AgeSlider
+                label="Shortest"
+                value={hMin}
+                min={HEIGHT_RANGE.min}
+                max={HEIGHT_RANGE.max}
+                onChange={(v) => setFilters({ heightMin: Math.min(v, f.heightMax) })}
+              />
+              <AgeSlider
+                label="Tallest"
+                value={hMax}
+                min={HEIGHT_RANGE.min}
+                max={HEIGHT_RANGE.max}
+                onChange={(v) => setFilters({ heightMax: Math.max(v, f.heightMin) })}
+              />
             </YStack>
           </Card>
         </YStack>
@@ -128,10 +183,14 @@ function AgeSlider({
   label,
   value,
   onChange,
+  min = AGE_RANGE.min,
+  max = AGE_RANGE.max,
 }: {
   label: string;
   value: number[];
   onChange: (v: number) => void;
+  min?: number;
+  max?: number;
 }) {
   return (
     <YStack gap={10}>
@@ -143,13 +202,7 @@ function AgeSlider({
           {value[0]}
         </Text>
       </XStack>
-      <Slider
-        value={value}
-        min={AGE_RANGE.min}
-        max={AGE_RANGE.max}
-        step={1}
-        onValueChange={([v]) => onChange(v)}
-      >
+      <Slider value={value} min={min} max={max} step={1} onValueChange={([v]) => onChange(v)}>
         <Slider.Track bg="$surface" height={6}>
           <Slider.TrackActive bg="$accent" />
         </Slider.Track>

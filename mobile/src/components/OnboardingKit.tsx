@@ -84,7 +84,7 @@ export function OptionCard({
   selected,
   onPress,
 }: {
-  illo: IlloName;
+  illo?: IlloName;
   title: string;
   subtitle?: string;
   selected: boolean;
@@ -113,16 +113,18 @@ export function OptionCard({
         borderColor={selected ? '$accent' : '$border'}
         bg={selected ? '$accentSoft' : '$card'}
       >
-        <XStack
-          width={48}
-          height={48}
-          rounded={16}
-          items="center"
-          justify="center"
-          bg={selected ? '$card' : '$surface'}
-        >
-          <Illo name={illo} size={34} />
-        </XStack>
+        {illo ? (
+          <XStack
+            width={48}
+            height={48}
+            rounded={16}
+            items="center"
+            justify="center"
+            bg={selected ? '$card' : '$surface'}
+          >
+            <Illo name={illo} size={34} />
+          </XStack>
+        ) : null}
         <YStack flex={1}>
           <Text fontFamily="$bold" fontSize={17} color="$text">
             {title}
@@ -228,6 +230,7 @@ function DayBar({ label, on, onPress }: { label: string; on: boolean; onPress: (
       gap={8}
       accessibilityRole="button"
       accessibilityLabel={label}
+      aria-label={label}
       accessibilityState={{ selected: on }}
       onPress={() => {
         tapHaptic();

@@ -1,8 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
-import { Alert, Image } from 'react-native';
+import React, { useState } from 'react';
+import { ImageSourcePropType, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { Icon } from '../../src/components/Icon';
 import {
@@ -10,20 +9,24 @@ import {
   Heatmap,
   JourneyLadder,
   PersonalBests,
-  PromptCard,
   WhyMatch,
 } from '../../src/components/Proof';
 import { RhythmLegend, RhythmStrip, SyncBadge } from '../../src/components/Rhythm';
 import { Badge, Button, DisplayTitle } from '../../src/components/ui';
-import { athleteById } from '../../src/data/mockData';
+import { athleteById, SPORT_ILLO } from '../../src/data/mockData';
+import { LikeSheet } from '../../src/components/LikeSheet';
+import { PhotoStory, StoryPage } from '../../src/components/PhotoStory';
+import { SafetySheet } from '../../src/components/SafetySheet';
+import { hasLiked, LikeTarget, useChat } from '../../src/data/chat';
+import { formatHeight, freshnessLabel, genderLabel, lifestyleChips } from '../../src/data/identity';
 import { sharedDaysLabel } from '../../src/data/rhythm';
 import { depthFor } from '../../src/data/athleteDepth';
 import { compatibility } from '../../src/data/compat';
 import { sessionsTogether, stageWith, usePlans } from '../../src/data/plans';
 import { athletesTrainingFor, raceById } from '../../src/data/races';
 import { useMe } from '../../src/data/session';
-import { ATHLETE_ACTION_PHOTOS } from '../../src/data/photos';
-import { blockAthlete, useSocial } from '../../src/data/social';
+import { galleryFor } from '../../src/data/photos';
+import { useSocial } from '../../src/data/social';
 import { useColors } from '../../src/theme/appearance';
 import { formatLabel, shadow } from '../../src/theme/tokens';
 
@@ -36,6 +39,12 @@ export default function AthleteDetailScreen() {
   const me = useMe();
   const plansState = usePlans();
   const { matches } = useSocial();
+  const chat = useChat();
+  const { height } = useWindowDimensions();
+  const [safety, setSafety] = useState(false);
+  const [liking, setLiking] = useState<{ target: LikeTarget; source?: ImageSourcePropType } | null>(
+    null
+  );
 
   if (!athlete) {
     return (
@@ -55,57 +64,67 @@ export default function AthleteDetailScreen() {
   const matched = matches.includes(athlete.id);
   const stage = stageWith(plansState, athlete.id, matched);
   const together = sessionsTogether(plansState, athlete.id);
+  const gallery = galleryFor(athlete.slotId);
+  const liked = hasLiked(chat, athlete.id);
+  const basics = [
+    formatHeight(depth.heightCm),
+    genderLabel(depth.gender),
+    ...lifestyleChips(depth.lifestyle),
+  ].filter(Boolean);
 
-  function confirmBlock() {
+  const pages: StoryPage[] = [];
+  gallery.forEach((g, i) => {
+    pages.push({
+      kind: 'photo',
+      source: g.source,
+      label: g.label,
+      caption: g.caption,
+      motion: i === 0 && depth.motion,
+    });
+    if (depth.prompts[i]) pages.push({ kind: 'prompt', prompt: depth.prompts[i] });
+  });
+  depth.prompts.slice(gallery.length).forEach((p) => pages.push({ kind: 'prompt', prompt: p }));
+
+  function likePage(pg: StoryPage, index: number) {
     if (!athlete) return;
-    Alert.alert(
-      `Block ${athlete.name}?`,
-      "They won't be able to message you, and won't appear in Discover again.",
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Block',
-          style: 'destructive',
-          onPress: async () => {
-            await blockAthlete(athlete.id);
-            router.back();
-          },
-        },
-      ]
-    );
+    if (pg.kind === 'photo') {
+      setLiking({
+        target: { kind: 'photo', index, label: pg.caption ?? `${athlete.name}’s photo` },
+        source: pg.source,
+      });
+    } else if (pg.kind === 'prompt') {
+      setLiking({
+        target: { kind: 'prompt', index, label: pg.prompt.q, text: pg.prompt.a },
+      });
+    }
   }
 
   return (
     <YStack flex={1} bg="$canvas">
       <ScrollView flex={1} contentContainerStyle={{ pt: insets.top, pb: 24 }}>
-        <YStack width="100%" height={400} bg="$card" overflow="hidden">
-          {/* The image box is taller than the window and anchored to
-              its top, so the crop shows the top of the action shot —
-              a portrait source keeps its subject's head instead of
-              cover-centering and clipping it. */}
-          <Image
-            source={ATHLETE_ACTION_PHOTOS[athlete.slotId]}
-            style={styles.heroImage}
-            resizeMode="cover"
+        <YStack width="100%">
+          <PhotoStory
+            pages={pages}
+            height={Math.round(height * 0.62)}
+            bottomFade={false}
+            insetBottom={28}
+            labelAt="bottom"
+            liked={liked}
+            onLike={liked ? undefined : (pg, i) => likePage(pg, i)}
           />
-
-          {/* Header sits on the photo, held up by a light scrim so the
-              frosted buttons read cleanly over the image. */}
-          <YStack pointerEvents="none" position="absolute" t={0} l={0} r={0} height={150}>
-            <Svg width="100%" height="100%">
-              <Defs>
-                <LinearGradient id="heroTopFade" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor="#1C1917" stopOpacity={0.35} />
-                  <Stop offset="1" stopColor="#1C1917" stopOpacity={0} />
-                </LinearGradient>
-              </Defs>
-              <Rect width="100%" height="100%" fill="url(#heroTopFade)" />
-            </Svg>
-          </YStack>
-          <XStack position="absolute" l={20} r={20} t={8} items="center" justify="space-between">
+          <XStack
+            position="absolute"
+            l={20}
+            r={20}
+            t={36}
+            items="center"
+            justify="space-between"
+            pointerEvents="box-none"
+          >
             <XStack
               accessibilityRole="button"
               accessibilityLabel="Back"
+              aria-label="Back"
               onPress={() => router.back()}
               pressStyle={{ opacity: 0.7 }}
               width={40}
@@ -119,8 +138,9 @@ export default function AthleteDetailScreen() {
             </XStack>
             <XStack
               accessibilityRole="button"
-              accessibilityLabel={`Block ${athlete.name}`}
-              onPress={confirmBlock}
+              accessibilityLabel={`Safety options for ${athlete.name}`}
+              aria-label={`Safety options for ${athlete.name}`}
+              onPress={() => setSafety(true)}
               pressStyle={{ opacity: 0.7 }}
               width={40}
               height={40}
@@ -129,28 +149,14 @@ export default function AthleteDetailScreen() {
               justify="center"
               bg="$glass"
             >
-              <Icon name="ban" size={18} color={colors.text} />
+              <Icon name="more" size={18} color={colors.text} />
             </XStack>
           </XStack>
-
-          {/* Bottom fade dissolves the photo into the body — no hard
-              dividing line between the hero and the profile info. */}
-          <YStack pointerEvents="none" position="absolute" l={0} r={0} b={0} height={130}>
-            <Svg width="100%" height="100%">
-              <Defs>
-                <LinearGradient id="heroBottomFade" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor={colors.canvas} stopOpacity={0} />
-                  <Stop offset="1" stopColor={colors.canvas} stopOpacity={1} />
-                </LinearGradient>
-              </Defs>
-              <Rect width="100%" height="100%" fill="url(#heroBottomFade)" />
-            </Svg>
-          </YStack>
         </YStack>
 
         <YStack
           mx={16}
-          mt={-56}
+          mt={-28}
           p={20}
           rounded={28}
           bg="$card"
@@ -172,8 +178,20 @@ export default function AthleteDetailScreen() {
             </Text>
           </XStack>
           <XStack gap={8} mt={16} flexWrap="wrap">
-            <Badge tone="accent">{athlete.discipline}</Badge>
+            <Badge tone="accent" illo={SPORT_ILLO[athlete.discipline]}>
+              {athlete.discipline}
+            </Badge>
             <Badge>{athlete.pace}</Badge>
+            {basics.map((b) => (
+              <Badge key={b}>{b}</Badge>
+            ))}
+          </XStack>
+          <XStack items="center" gap={6} mt={12}>
+            <Icon name="camera" size={14} color={colors.muted} />
+            <Text fontSize={13} color="$muted">
+              {freshnessLabel(depth.photosDaysAgo)}
+              {athlete.verified ? ' · Selfie matches photos' : ''}
+            </Text>
           </XStack>
 
           <Text color="$text" fontSize={16} lineHeight={24} mt={18}>
@@ -220,12 +238,6 @@ export default function AthleteDetailScreen() {
             <PersonalBests pbs={depth.pbs} />
           </YStack>
         ) : null}
-
-        {depth.prompts.map((p) => (
-          <YStack key={p.q} mx={16} mt={12}>
-            <PromptCard prompt={p} />
-          </YStack>
-        ))}
 
         {depth.routes.length ? (
           <Section>
@@ -318,6 +330,22 @@ export default function AthleteDetailScreen() {
           Invite to train
         </Button>
       </XStack>
+
+      <SafetySheet
+        athlete={athlete}
+        visible={safety}
+        matched={matched}
+        onClose={() => setSafety(false)}
+        onDone={() => router.back()}
+      />
+      {liking ? (
+        <LikeSheet
+          athlete={athlete}
+          target={liking.target}
+          source={liking.source}
+          onClose={() => setLiking(null)}
+        />
+      ) : null}
     </YStack>
   );
 }
@@ -355,16 +383,6 @@ function StatCard({
     </YStack>
   );
 }
-
-const styles = {
-  heroImage: {
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    width: '100%' as const,
-    height: 620,
-  },
-};
 
 function Section({ children }: { children: React.ReactNode }) {
   return (

@@ -11,6 +11,7 @@ import { availableProviders, Provider, PROVIDER_INFO, PROVIDER_LABEL } from '../
 import { useIsPro } from '../src/data/pro';
 import type { LegalDoc } from '../src/data/legal';
 import { getAccount, MeProfile, signInLabel, signOut, useMe } from '../src/data/session';
+import { confirmResetDemo } from '../src/lib/demoReset';
 import { confirmAction } from '../src/lib/dialogs';
 import { inviteFriend } from '../src/lib/inviteFriend';
 import {
@@ -20,7 +21,7 @@ import {
   useColors,
 } from '../src/theme/appearance';
 import { formatLabel, shadow } from '../src/theme/tokens';
-import { demo } from '../src/config';
+import { DEMO_DATA, demo } from '../src/config';
 
 interface SettingsRow {
   icon: IconName;
@@ -87,6 +88,10 @@ export default function SettingsScreen() {
       destructive: true,
     });
     if (ok) await disconnectProvider(p);
+  }
+
+  async function onResetDemo() {
+    if (await confirmResetDemo()) router.navigate('/(tabs)/discover');
   }
 
   async function confirmDelete() {
@@ -213,6 +218,17 @@ export default function SettingsScreen() {
           ))}
         </Card>
       </YStack>
+
+      {DEMO_DATA ? (
+        <>
+          <GroupLabel>Demo</GroupLabel>
+          <YStack mx={20}>
+            <Card>
+              <Row icon="rotate-ccw" label="Reset demo" last onPress={onResetDemo} />
+            </Card>
+          </YStack>
+        </>
+      ) : null}
 
       <GroupLabel>Account</GroupLabel>
       <YStack mx={20}>

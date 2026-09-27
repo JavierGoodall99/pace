@@ -22,7 +22,8 @@ export type AnalyticsEvent =
   | 'consent_accepted'
   | 'consent_declined'
   | 'sync_disconnected'
-  | 'privacy_setting_changed';
+  | 'privacy_setting_changed'
+  | 'demo_reset';
 
 export type AnalyticsProps = Record<string, string | number | boolean | null>;
 

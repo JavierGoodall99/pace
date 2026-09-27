@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DEMO_DATA } from '../config';
 import { track } from '../lib/analytics';
 import { resetChat } from './chat';
 import { resetConsents } from './consent';
@@ -36,6 +38,36 @@ export async function deleteAccountAndData() {
   resetOnboardingProgress();
   resetPicks();
   resetConsents();
+}
+
+// Storage behind the demo world that resetDemo() puts back. The reset*()
+// functions only reset memory, so these are removed too: with no saved
+// copy, each store starts from its demo seed on the next launch.
+const DEMO_WORLD_KEYS = [
+  'pace.chat.v1',
+  'pace.plans.v1',
+  'pace.moments.v1',
+  'pace.notifications.v1',
+  'pace.explore.v1',
+  'pace.picks.v2',
+];
+
+// Demo builds only (testers): start the demo over as if onboarding had
+// just finished — every like, pass, match, chat and plan undone, the
+// demo matches for your gender back, today's picks drawn again. Your
+// account, profile, training log and settings stay.
+export async function resetDemo() {
+  if (!DEMO_DATA) return;
+  await AsyncStorage.multiRemove(DEMO_WORLD_KEYS).catch(() => {});
+  resetChat();
+  resetPlans();
+  resetMoments();
+  resetNotifications();
+  resetExplore();
+  resetFilters();
+  resetPicks();
+  await seedDemoFor(getMe().gender);
+  track('demo_reset');
 }
 
 // When onboarding finishes: give the new account a demo cast that fits

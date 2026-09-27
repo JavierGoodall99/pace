@@ -1,3 +1,4 @@
+import { depthFor } from './athleteDepth';
 import { dayIndex } from './dates';
 import { ATHLETES } from './mockData';
 import { isShowable, pacerDeck, wantEachOther } from './pacers';
@@ -37,7 +38,5 @@ test('the deck only shows people who want to see each other', () => {
   const woman = { ...me, gender: 'woman' as const };
   const drop = pacerDeck(woman, []);
   expect(drop.length).toBeGreaterThan(0);
-  drop.forEach(({ athlete }) =>
-    expect(['Sipho', 'Jacques', 'Dean', 'Kagiso']).toContain(athlete.name)
-  );
+  drop.forEach(({ athlete }) => expect(depthFor(athlete).gender).toBe('man'));
 });

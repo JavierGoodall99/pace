@@ -1,4 +1,5 @@
 import type { Athlete } from './mockData';
+import { DEMO_CAST } from './demoCast';
 import type { IlloName } from '../components/Illustrations';
 import type { Gender, Lifestyle } from './identity';
 import type { Intent } from './session';
@@ -285,6 +286,7 @@ export const DEPTH: Record<number, AthleteDepth> = {
     replies: 'usually',
     intent: 'partner',
   },
+  ...Object.fromEntries(DEMO_CAST.map((m) => [m.athlete.id, m.depth])),
 };
 
 export function depthFor(a: Pick<Athlete, 'id'>): AthleteDepth {

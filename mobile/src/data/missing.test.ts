@@ -29,17 +29,16 @@ describe('what you are here for', () => {
     expect(men.some((a) => wantEachOther(woman('love'), a))).toBe(true);
   });
 
-  test('training partners can be the same gender when both want that', () => {
-    const shown = women.filter((a) => wantEachOther(woman('partner'), a));
-    expect(shown.length).toBeGreaterThan(0);
-    shown.forEach((a) => expect(['partner', 'both']).toContain(depthFor(a).intent));
-    shown.forEach((a) => expect(matchKind(woman('partner'), a)).toBe('partner'));
+  test('nobody sees their own gender, whatever they are here for', () => {
+    (['love', 'partner', 'both'] as const).forEach((intent) => {
+      expect(women.some((a) => wantEachOther(woman(intent), a))).toBe(false);
+      expect(men.some((a) => wantEachOther(woman(intent), a))).toBe(true);
+    });
   });
 
-  test('a same-gender athlete who only wants love never sees you', () => {
-    const loveOnly = women.filter((a) => depthFor(a).intent === 'love');
-    expect(loveOnly.length).toBeGreaterThan(0);
-    loveOnly.forEach((a) => expect(wantEachOther(woman('both'), a)).toBe(false));
+  test('picking training partner makes the match a training match', () => {
+    const shown = men.filter((a) => wantEachOther(woman('partner'), a));
+    shown.forEach((a) => expect(matchKind(woman('partner'), a)).toBe('partner'));
   });
 });
 

@@ -38,7 +38,8 @@ import { EVENT_ATTENDEES, pacersAmong, useExplore } from '../../src/data/explore
 import { useColors } from '../../src/theme/appearance';
 import { useNow } from '../../src/lib/useNow';
 import { shadow } from '../../src/theme/tokens';
-import { LAUNCH_MODE } from '../../src/config';
+import { DEMO_DATA, LAUNCH_MODE } from '../../src/config';
+import { confirmResetDemo } from '../../src/lib/demoReset';
 
 // Pacers: a swipe deck of everyone near you who fits, best training fit
 // first. Swipe right (or tap the heart) to like, left to pass. Tapping the
@@ -192,6 +193,7 @@ export default function PacersScreen() {
             }}
             onFilters={() => router.push('/discover-filters')}
             onClubs={() => router.push('/(tabs)/sessions')}
+            onResetDemo={DEMO_DATA ? confirmResetDemo : undefined}
             goingNote={goingNote}
           />
         ) : areaHeight > 0 ? (
@@ -485,6 +487,7 @@ function DeckDone({
   onReviewPassed,
   onFilters,
   onClubs,
+  onResetDemo,
   goingNote,
   nextIn,
 }: {
@@ -495,8 +498,15 @@ function DeckDone({
   onReviewPassed: () => void;
   onFilters: () => void;
   onClubs: () => void;
+  // Demo builds: testers who've swiped everyone can start over.
+  onResetDemo?: () => void;
   goingNote?: string;
 }) {
+  const resetButton = onResetDemo ? (
+    <Button variant="secondary" icon="rotate-ccw" onPress={onResetDemo} style={{ width: '100%' }}>
+      Reset demo
+    </Button>
+  ) : null;
   // An honest empty state: we'd rather show nobody than show people who
   // are fake, inactive or two hours away.
   if (empty) {
@@ -523,6 +533,7 @@ function DeckDone({
           <Button variant="secondary" icon="sliders" onPress={onFilters} style={{ width: '100%' }}>
             Filters
           </Button>
+          {resetButton}
         </YStack>
       </YStack>
     );
@@ -558,6 +569,7 @@ function DeckDone({
         <Button variant="secondary" icon="sliders" onPress={onFilters} style={{ width: '100%' }}>
           Filters
         </Button>
+        {resetButton}
       </YStack>
     </YStack>
   );

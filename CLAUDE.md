@@ -127,9 +127,10 @@ Health sync), `log-training`, `races`, `race/[id]`, `event/[id]`, `spot/[id]`, `
 | Module | Owns |
 |---|---|
 | `session.ts` | account + `MeProfile` (own profile), sign up/in/out, `updateMe`, `useMe`. Mock auth (password stored locally). |
-| `account.ts` | `deleteAccountAndData` (resets every store), `seedDemoFor(gender)` |
+| `account.ts` | `deleteAccountAndData` (resets every store), `seedDemoFor(gender)`, `resetDemo` (demo builds: restart the demo world, keep the profile; list its storage keys in `DEMO_WORLD_KEYS`) |
 | `onboardingFlow.ts` | step list, pre/post-account steps, progress/resume, `saveProfileStep` |
-| `mockData.ts` | `ATHLETES`, `Discipline`, demo threads/notifications (ported from the mockup) |
+| `mockData.ts` | `ATHLETES` (10 core + the cast), `Discipline`, demo threads/notifications (ported from the mockup) |
+| `demoCast.ts` | 40 extra demo profiles (20 women, 20 men, ages 19–60) so every tester gender × intent × age gets ≥5 pacers; reuses the core 10's photos. `demoCast.test.ts` enforces coverage — rerun it if you change deck rules |
 | `athleteDepth.ts` | per-athlete extras keyed by id (`depthFor`): level, gender, PBs, prompts, last trained |
 | `photos.ts` | maps athlete slotIds → bundled images |
 | `pacers.ts` | deck eligibility (`isEligible`, `wantEachOther`), `rankScore`, `pacerDeck`, session suggestions |
@@ -170,7 +171,7 @@ Change both files when changing the API.
 Others: `analytics.ts` (`track()`, console sink), `dialogs.ts` (use `confirmAction`/`notify`
 instead of `Alert.alert` — Alert is a no-op on web), `haptics.ts`, `reminders.ts` (local
 notifications), `photoStore.ts` (copy picked photos out of the temp cache), `useNow.ts`
-(minute-ticking clock; use it instead of `new Date()` in mounted screens), `inviteFriend.ts`.
+(minute-ticking clock; use it instead of `new Date()` in mounted screens), `inviteFriend.ts`, `demoReset.ts` (`confirmResetDemo()`: confirm + `resetDemo`).
 
 ## UI conventions
 

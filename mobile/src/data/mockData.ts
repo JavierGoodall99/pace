@@ -1,5 +1,6 @@
 import type { IlloName } from '../components/Illustrations';
 import { demo } from '../config';
+import { DEMO_CAST } from './demoCast';
 
 // Mock data ported 1:1 from the DC script in `../Pace App.dc.html`.
 
@@ -151,6 +152,8 @@ export const ATHLETES: Athlete[] = demo<Athlete[]>(
       weekly: 3,
       verified: false,
     },
+    // The wider cast that fills every tester's deck (demoCast.ts).
+    ...DEMO_CAST.map((m) => m.athlete),
   ],
   []
 );

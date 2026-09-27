@@ -1,3 +1,4 @@
+import { DEMO_CAST } from './demoCast';
 import type { PhotoLabel } from './identity';
 
 // Maps mock athletes (by slotId) and the current user to the placeholder
@@ -73,6 +74,13 @@ export const ATHLETE_GALLERY: Record<string, GalleryPhoto[]> = {
   ),
   'athlete-10': G('athlete-10', 'athlete-10', ['offclock', 'post'], [undefined, 'Rest-day yoga']),
 };
+
+// The wider demo cast borrows the stock photos above (demoCast.ts).
+for (const { athlete, photos } of DEMO_CAST) {
+  ATHLETE_PHOTOS[athlete.slotId] = ATHLETE_PHOTOS[photos.portrait];
+  ATHLETE_ACTION_PHOTOS[athlete.slotId] = ATHLETE_ACTION_PHOTOS[photos.action];
+  ATHLETE_GALLERY[athlete.slotId] = G(athlete.slotId, athlete.slotId, ['offclock', 'action']);
+}
 
 export function galleryFor(slotId: string): GalleryPhoto[] {
   return ATHLETE_GALLERY[slotId] ?? [];

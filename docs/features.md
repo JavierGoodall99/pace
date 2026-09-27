@@ -13,7 +13,7 @@ athletes in Cape Town, built with Expo / React Native (`mobile/`).
 |---|---|---|
 | `LAUNCH_MODE` | on | Decks include people without a selfie check or recent training; those rank lower instead of being hidden. |
 | `RANK_WEIGHTS` | verified +15, active +10 (fades to 0 by 28 days) | Added to the "% in sync" score in launch mode. |
-| `DEMO_DATA` | on in dev builds only | 10 demo profiles, chats, plans, moments and notifications. Off = real empty states. |
+| `DEMO_DATA` | on in dev builds only | 50 demo profiles (10 core with chats, plans and moments + 40 more aged 19–60 so every tester gets a full Pacers deck), notifications, and a **Reset demo** button. Off = real empty states. |
 | `FEATURES.moments / passport / voiceNotes` | off | Parked for v1; every entry point is hidden. |
 | `PRO_EXTRA_PICKS` | 5 | Extra daily picks with Pro (entitlement `pro`). |
 
@@ -92,10 +92,9 @@ Welcome → Meet Pip → City → Age → Sports → Your week → Level → Tim
   - Launch mode: everyone who fits, with people who passed the live selfie check and trained
     recently ranked first; others are labelled "Not verified yet". Outside launch mode, only
     people with a live selfie check who trained in the last 14 days.
-  - Dates are women with men.
-  - Same-gender profiles appear only as **training partners**, when both people chose
-    "training partner" or "open to both".
-  - Cards show "Training partner" where that applies.
+  - Women see men and men see women, whatever they're here for. Same-gender profiles never
+    appear, not even as training partners.
+  - Cards show "Training partner" when either person is only here for a training partner.
 - Honest empty state when nobody fits, pointing to Explore.
 
 ## 4. Explore
@@ -220,6 +219,9 @@ Post one photo from today's session for your matches, with kudos and delete. Off
 - **Safety centre**, **Race mode**, **Subscription**.
 - **Invite a training friend**.
 - **Legal**: Terms, Privacy Policy, Community Code (drafts, pending legal review).
+- **Demo → Reset demo** (demo builds only): undoes every like, pass, match, chat and plan and
+  re-seeds the demo for your gender; profile, training and settings stay. Also offered on the
+  empty Pacers page.
 - Sign out and delete account.
 
 ## 12. Pro and paywall

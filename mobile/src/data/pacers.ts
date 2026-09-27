@@ -6,7 +6,7 @@ import { Compat, compatibility } from './compat';
 import { dayIndex, nextDateFor } from './dates';
 import { ATHLETES, Athlete, Discipline } from './mockData';
 import { spotsFor } from './places';
-import type { Intent, MeProfile } from './session';
+import type { MeProfile } from './session';
 
 // The pacer deck: everyone near you who fits (verified, recently active,
 // mutual gender and age preferences), best training fit first, shown one
@@ -60,17 +60,13 @@ export interface Pacer {
   suggestion: Suggestion;
 }
 
-const wantsPartner = (i: Intent | null) => i === 'partner' || i === 'both';
-
-// Dates are women with men. Training partners can be anyone, but only
-// when both people are here for a training partner ('partner' or
-// 'both') — nobody looking only for love sees their own gender. Before
-// gender is answered, nothing is filtered.
+// Women see men and men see women, whatever they're here for — even
+// training partners are never the same gender. Before gender is
+// answered, nothing is filtered.
 export function wantEachOther(me: MeProfile, a: Athlete): boolean {
   const d = depthFor(a);
   const want = seeking(me.gender);
-  if (want && d.gender !== want && !(wantsPartner(me.intent) && wantsPartner(d.intent)))
-    return false;
+  if (want && d.gender !== want) return false;
   // Their age range has to include you too.
   const myAge = Number(me.age);
   if (myAge && !inRange(myAge, d.ageRange)) return false;

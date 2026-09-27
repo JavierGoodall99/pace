@@ -187,6 +187,11 @@ notifications), `photoStore.ts` (copy picked photos out of the temp cache), `use
   and dark must work.
 - Screens in tabs add bottom padding with `useTabBarSpace()`; use `useSafeAreaInsets()` for top.
 - Imports are relative (`../../src/...`); there's no path alias.
+- Animation: no Reanimated; use RN `Animated` (`useNativeDriver` only for transform/opacity,
+  and never on web). `IOS_TAB_SPRING` in `TabBar.tsx` is the house spring.
+  Animate only transform/opacity where you can: width/left/padding animations run on the JS
+  thread and stutter while a screen renders (this made the tab bar feel sluggish). Respect Reduce
+  Motion (`AccessibilityInfo.isReduceMotionEnabled`).
 - Comments: short "why" comments at the top of modules and before non-obvious logic; match that.
 
 ## Domain vocabulary
@@ -210,6 +215,9 @@ notifications), `photoStore.ts` (copy picked photos out of the temp cache), `use
 - Pass an explicit `now: Date` to time-dependent functions instead of mocking the clock; most
   logic functions accept `now` for this reason.
 - Regression tests go in `regressions.test.ts` / `bugfixes.test.ts`.
+- Component tests (see `TabBar.test.tsx`): wrap in `SafeAreaProvider` (with `initialMetrics`) +
+  `TamaguiProvider config={tamagui.config}`. `@testing-library/react-native` is **v14: `render`,
+  `rerender`, `fireEvent.*` and `act` are async — always `await` them.**
 
 ## Gotchas
 
